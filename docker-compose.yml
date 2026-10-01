@@ -1,0 +1,20 @@
+name: ice-track-frontend
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ice-track-frontend
+    restart: unless-stopped
+    ports:
+      - "4200:80"
+    networks:
+      ice-track-net:
+        aliases:
+          - frontend
+
+networks:
+  ice-track-net:
+    external: true
+    name: ice-track-net
