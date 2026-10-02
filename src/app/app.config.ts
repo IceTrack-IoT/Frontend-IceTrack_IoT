@@ -7,20 +7,17 @@ import {
 import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideTranslateService, TranslateService } from '@ngx-translate/core';
 import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
 import { firstValueFrom } from 'rxjs';
-import { AuthenticationPort } from '@iam/application/ports/authentication.port';
-import { SessionStoragePort } from '@iam/application/ports/session-storage.port';
-import { IamApi } from '@iam/infrastructure/api/iam-api';
-import { BrowserClientSessionStorage } from '@iam/infrastructure/storage/browser-client-session-storage';
+import { authenticationInterceptor } from '@iam/infrastructure/http/authentication.interceptor';
+import { provideIam } from '@iam/infrastructure/iam.providers';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideHttpClient(),
-    { provide: AuthenticationPort, useExisting: IamApi },
-    { provide: SessionStoragePort, useExisting: BrowserClientSessionStorage },
+    provideHttpClient(withInterceptors([authenticationInterceptor])),
+    provideIam(),
     provideTranslateService({
       loader: provideTranslateHttpLoader({ prefix: './assets/i18n/', suffix: '.json' }),
       fallbackLang: 'en',
