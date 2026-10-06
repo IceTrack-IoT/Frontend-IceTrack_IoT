@@ -3,17 +3,15 @@ import { Role } from '@iam/domain/value-objects/role';
 import { AuthProvider } from '@iam/domain/value-objects/auth-provider';
 
 /**
- * Represents a user entity with properties such as username, role, authentication provider, external identifier, and email.
+ * Represents a user entity with properties such as username, role, authentication provider, and external identifier.
  *
- * `provider`, `externalId`, and `email` are null when the source representation does not include them.
+ * `externalId` are null when the source representation does not include them.
  */
 export class User implements BaseEntity {
   private _id: number;
   private _username: string;
   private _role: Role;
-  private _provider: AuthProvider | null;
-  private _externalId: string | null;
-  private _email: string | null;
+  private _provider: AuthProvider;
 
   /**
    * Creates a new User instance.
@@ -24,16 +22,12 @@ export class User implements BaseEntity {
     id: number;
     username: string;
     role: Role;
-    provider: AuthProvider | null;
-    externalId: string | null;
-    email: string | null;
+    provider: AuthProvider;
   }) {
     this._id = user.id;
     this._username = user.username;
     this._role = user.role;
     this._provider = user.provider;
-    this._externalId = user.externalId;
-    this._email = user.email;
   }
   get id(): number {
     return this._id;
@@ -53,23 +47,10 @@ export class User implements BaseEntity {
   set role(role: Role) {
     this._role = role;
   }
-  get provider(): AuthProvider | null {
+  get provider(): AuthProvider {
     return this._provider;
   }
-  set provider(provider: AuthProvider | null) {
+  set provider(provider: AuthProvider) {
     this._provider = provider;
   }
-  get externalId(): string | null {
-    return this._externalId;
-  }
-  set externalId(externalId: string | null) {
-    this._externalId = externalId;
-  }
-  get email(): string | null {
-    return this._email;
-  }
-  set email(email: string | null) {
-    this._email = email;
-  }
-
 }

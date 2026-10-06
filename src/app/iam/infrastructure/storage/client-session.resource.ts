@@ -1,4 +1,5 @@
 import { isRole, type Role } from '@iam/domain/value-objects/role';
+import { AuthProvider } from '@iam/domain/value-objects/auth-provider';
 
 /**
  * Version of the persisted ClientSessionResource format.
@@ -12,7 +13,7 @@ export interface ClientSessionUserResource {
   readonly id: number;
   readonly username: string;
   readonly role: Role;
-  readonly email: string | null;
+  readonly provider: AuthProvider;
 }
 
 /**
@@ -46,8 +47,7 @@ export function isClientSessionResource(value: unknown): value is ClientSessionR
     Number.isFinite(value['token_expires_at']) &&
     typeof user['id'] === 'number' &&
     typeof user['username'] === 'string' &&
-    isRole(user['role']) &&
-    (typeof user['email'] === 'string' || user['email'] === null)
+    isRole(user['role'])
   );
 }
 

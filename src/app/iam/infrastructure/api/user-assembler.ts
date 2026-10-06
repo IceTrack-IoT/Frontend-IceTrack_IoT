@@ -21,8 +21,6 @@ export class UserAssembler implements BaseAssembler<User, UserResource, UserResp
       username: resource.username,
       role: this.toRole(resource.role),
       provider: this.toAuthProvider(resource.provider),
-      externalId: resource.external_id,
-      email: null,
     });
   }
 
@@ -36,9 +34,7 @@ export class UserAssembler implements BaseAssembler<User, UserResource, UserResp
       id: resource.id,
       username: resource.username,
       role: this.toRole(resource.role),
-      provider: null,
-      externalId: null,
-      email: resource.email,
+      provider: this.toAuthProvider(resource.provider),
     });
   }
 
@@ -52,9 +48,7 @@ export class UserAssembler implements BaseAssembler<User, UserResource, UserResp
       id: resource.id,
       username: resource.username,
       role: this.toRole(resource.role),
-      provider: null,
-      externalId: null,
-      email: null,
+      provider: this.toAuthProvider(resource.provider),
     });
   }
 
@@ -72,7 +66,6 @@ export class UserAssembler implements BaseAssembler<User, UserResource, UserResp
       username: entity.username,
       role: entity.role,
       provider: entity.provider,
-      external_id: entity.externalId,
     };
   }
 

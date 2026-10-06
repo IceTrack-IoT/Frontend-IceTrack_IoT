@@ -6,4 +6,5 @@ export interface CurrentUserResource {
   username: string;
   email: string;
   role: string;
+  provider: string;
 }

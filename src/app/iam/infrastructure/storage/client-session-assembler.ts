@@ -4,6 +4,7 @@ import {
   CLIENT_SESSION_RESOURCE_VERSION,
   type ClientSessionResource,
 } from '@iam/infrastructure/storage/client-session.resource';
+import { isAuthProvider } from '@iam/domain/value-objects/auth-provider';
 
 /**
  * ClientSessionAssembler is responsible for converting between client sessions and their persisted resources.
@@ -20,9 +21,7 @@ export class ClientSessionAssembler {
         id: resource.user.id,
         username: resource.user.username,
         role: resource.user.role,
-        provider: null,
-        externalId: null,
-        email: resource.user.email,
+        provider: resource.user.provider,
       }),
       accessToken: resource.token,
       refreshToken: resource.refresh_token,
@@ -45,7 +44,7 @@ export class ClientSessionAssembler {
         id: session.user.id,
         username: session.user.username,
         role: session.user.role,
-        email: session.user.email,
+        provider: session.user.provider,
       },
     };
   }

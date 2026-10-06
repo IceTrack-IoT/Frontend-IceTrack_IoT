@@ -7,4 +7,5 @@ export interface AuthenticatedUserResource {
   role: string;
   token: string;
   refresh_token: string;
+  provider: string;
 }

@@ -1,9 +1,10 @@
-import {HttpClient, HttpErrorResponse} from '@angular/common/http';
-import {Observable, throwError} from 'rxjs';
+import {HttpClient} from '@angular/common/http';
+import {Observable} from 'rxjs';
 import {catchError, map} from 'rxjs/operators';
 import { BaseEntity } from '@shared/domain/model/base-entity';
 import { BaseResource, BaseResponse } from '@shared/infrastructure/api/base-response';
 import { BaseAssembler } from '@shared/infrastructure/api/base-assembler';
+import { handleError } from '@shared/infrastructure/http/handle-error-http';
 
 /**
  * Base class for API endpoint operations with generic CRUD functionality.
@@ -40,7 +41,7 @@ export abstract class BaseApiEndpoint<
         }
         return this.assembler.toEntitiesFromResponse(response as TResponse);
       }),
-      catchError(this.handleError('Failed to fetch entities'))
+      catchError(handleError('Failed to fetch entities'))
     );
   }
 
@@ -52,7 +53,7 @@ export abstract class BaseApiEndpoint<
   getById(id: number): Observable<TEntity> {
     return this.http.get<TResource>(`${this.endpointUrl}/${id}`).pipe(
       map(resource => this.assembler.toEntityFromResource(resource)),
-      catchError(this.handleError('Failed to fetch entity'))
+      catchError(handleError('Failed to fetch entity'))
     );
   }
 
@@ -65,7 +66,7 @@ export abstract class BaseApiEndpoint<
     const resource = this.assembler.toResourceFromEntity(entity);
     return this.http.post<TResource>(this.endpointUrl, resource).pipe(
       map(created => this.assembler.toEntityFromResource(created)),
-      catchError(this.handleError('Failed to create entity'))
+      catchError(handleError('Failed to create entity'))
     );
   }
 
@@ -79,7 +80,7 @@ export abstract class BaseApiEndpoint<
     const resource = this.assembler.toResourceFromEntity(entity);
     return this.http.put<TResource>(`${this.endpointUrl}/${id}`, resource).pipe(
       map(updated => this.assembler.toEntityFromResource(updated)),
-      catchError(this.handleError('Failed to update entity'))
+      catchError(handleError('Failed to update entity'))
     );
   }
 
@@ -90,26 +91,7 @@ export abstract class BaseApiEndpoint<
    */
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.endpointUrl}/${id}`).pipe(
-      catchError(this.handleError('Failed to delete entity'))
+      catchError(handleError('Failed to delete entity'))
     );
-  }
-
-  /**
-   * Handles HTTP errors and returns a user-friendly error message.
-   * @param operation - The operation that failed.
-   * @returns A function that transforms an error into an Observable.
-   */
-  protected handleError(operation: string) {
-    return (error: HttpErrorResponse): Observable<never> => {
-      let errorMessage = operation;
-      if (error.status === 404) {
-        errorMessage = `${operation}: Resource not found`;
-      } else if (error.error instanceof ErrorEvent) {
-        errorMessage = `${operation}: ${error.error.message}`;
-      } else {
-        errorMessage = `${operation}: ${error.error || 'Unexpected error'}`;
-      }
-      return throwError(() => new Error(errorMessage));
-    };
   }
 }

@@ -108,7 +108,7 @@ export class RefreshClientSessionUseCase {
             ? this.retryWithRotatedRefreshToken(stored.refreshToken, error)
             : throwError(() => error),
         ),
-        map((result) => this.toClientSession(result, stored)),
+        map((result) => this.toClientSession(result)),
         tap((session) => {
           this.clientSessionStorage.save(session);
           this.sessionSync.publish('refresh-completed');
@@ -158,11 +158,7 @@ export class RefreshClientSessionUseCase {
     );
   }
 
-  private toClientSession(result: AuthenticationResult, previous: ClientSession): ClientSession {
-    // Refresh responses do not include the email; keep the one already known for the same user.
-    if (result.user.email === null && result.user.id === previous.user.id) {
-      result.user.email = previous.user.email;
-    }
+  private toClientSession(result: AuthenticationResult): ClientSession {
     const declaredExpiresAt = this.tokenExpiration.readExpiresAt(result.accessToken);
     return createClientSession(result, resolveAccessTokenExpiresAt(declaredExpiresAt, Date.now()));
   }
