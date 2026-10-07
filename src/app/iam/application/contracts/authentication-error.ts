@@ -2,7 +2,13 @@
  * Machine-readable authentication error codes confirmed by the backend contract.
  */
 export const AUTHENTICATION_ERROR_CODES = [
+  // Local sign-in
+  'VALIDATION_ERROR',
+  'USER_NOT_FOUND',
+  'BUSINESS_RULE_VIOLATION',
+  // Google sign-in
   'GOOGLE_ACCOUNT_NOT_FOUND',
+  // Refresh token
   'REFRESH_TOKEN_RECENTLY_ROTATED',
   'REFRESH_TOKEN_REPLAY_DETECTED',
   'REFRESH_TOKEN_EXPIRED',
@@ -23,7 +29,7 @@ export function isAuthenticationErrorCode(value: unknown): value is Authenticati
 
 /**
  * AuthenticationError means the backend definitively rejected an authentication operation, such as
- * an unknown Google account or an unusable refresh token.
+ * invalid local credentials, an unknown Google account or an unusable refresh token.
  *
  * Errors of any other type (network failures, server errors) are transient and must not end the session.
  */
@@ -32,7 +38,8 @@ export class AuthenticationError extends Error {
 
   /**
    * @param code - The confirmed error code, or null when the backend returned an unrecognized one.
-   * @param message - A developer-facing description; never used to branch on the error condition.
+   * @param message - A human-readable description (the backend message when available), for display
+   *  only; never used to branch on the error condition.
    */
   constructor(
     readonly code: AuthenticationErrorCode | null,

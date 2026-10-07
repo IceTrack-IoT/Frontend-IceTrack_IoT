@@ -18,3 +18,17 @@ export function isErrorResource(body: unknown): body is Pick<ErrorResource, 'cod
     typeof body === 'object' && body !== null && 'code' in body && typeof body.code === 'string'
   );
 }
+
+/**
+ * Reads the human-readable ErrorResource `message` of an untrusted error body, for display only.
+ * @param body - The parsed error body.
+ * @returns The message, or null when the body has none.
+ */
+export function readErrorMessage(body: unknown): string | null {
+  return typeof body === 'object' &&
+    body !== null &&
+    'message' in body &&
+    typeof body.message === 'string'
+    ? body.message
+    : null;
+}

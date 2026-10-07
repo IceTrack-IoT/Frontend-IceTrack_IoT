@@ -8,13 +8,26 @@ import { RefreshTokenResource } from '@iam/infrastructure/api/refresh-token.requ
 import { CurrentUserResource } from '@iam/infrastructure/api/current-user.response';
 import { catchError } from 'rxjs/operators';
 import { handleError } from '@shared/infrastructure/http/handle-error-http';
+import { SignInWithLocalRequest } from '@iam/infrastructure/api/sign-in-with-local.request';
 
 export class AuthenticationApiEndpoint {
+  private readonly signInLocallyEndpointUrl = `${environment.iceTrackProviderApiBaseUrl}${environment.iceTrackProviderAuthenticationLocalEndpointPath}`;
   private readonly googleVerifyEndpointUrl = `${environment.iceTrackProviderApiBaseUrl}${environment.iceTrackProviderAuthenticationGoogleVerifyEndpointPath}`;
   private readonly refreshTokenEndpointUrl = `${environment.iceTrackProviderApiBaseUrl}${environment.iceTrackProviderRefreshTokensEndpointPath}`;
   private readonly logoutEndpointUrl = `${environment.iceTrackProviderApiBaseUrl}${environment.iceTrackProviderLogoutEndpointPath}`;
   private readonly currentUserEndpointUrl = `${environment.iceTrackProviderApiBaseUrl}${environment.iceTrackProviderMeEndpointPath}`;
   constructor(protected http: HttpClient) {}
+
+  /**
+   * Sends a local sign-in request to `POST /authentication/sign-in/local`.
+   * @param request The SignInWithLocalRequest containing the username and password.
+   * @returns An Observable of the AuthenticatedUserResource.
+   */
+  signInLocally(request: SignInWithLocalRequest): Observable<AuthenticatedUserResource> {
+    return this.http.post <AuthenticatedUserResource>(this.signInLocallyEndpointUrl, request, {
+      context: publicAuthenticationContext(),
+    });
+  }
 
   /**
    * Sends a Google ID token to `POST /authentication/google/verify`.

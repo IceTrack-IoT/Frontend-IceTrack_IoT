@@ -14,6 +14,8 @@ import { RestoreClientSessionUseCase } from '@iam/application/use-cases/restore-
 import { SignInWithGoogleUseCase } from '@iam/application/use-cases/sign-in-with-google.use-case';
 import { SignOutUseCase } from '@iam/application/use-cases/sign-out.use-case';
 import { SynchronizeClientSessionUseCase } from '@iam/application/use-cases/synchronize-client-session.use-case';
+import { LocalCredential } from '@iam/application/contracts/local-credential';
+import { SignInLocallyUseCase } from '@iam/application/use-cases/sign-in-locally.use-case';
 
 /**
  * Iam Store is a service that manages the state of users and session information in the application.
@@ -26,6 +28,7 @@ export class IamStore {
   private readonly restoreClientSessionUseCase = inject(RestoreClientSessionUseCase);
   private readonly refreshClientSessionUseCase = inject(RefreshClientSessionUseCase);
   private readonly synchronizeClientSessionUseCase = inject(SynchronizeClientSessionUseCase);
+  private readonly signInLocallyUseCase = inject(SignInLocallyUseCase);
   private readonly signInWithGoogleUseCase = inject(SignInWithGoogleUseCase);
   private readonly loadCurrentUserUseCase = inject(LoadCurrentUserUseCase);
   private readonly signOutUseCase = inject(SignOutUseCase);
@@ -91,6 +94,27 @@ export class IamStore {
           },
         }),
       );
+  }
+
+  /**
+   * Signs in locally with a username and password, and keeps the resulting client session.
+   *
+   * @param credential - The local credential containing the username and password.
+   */
+  signInLocally(credential: LocalCredential): void {
+    this.loadingSignal.set(true);
+    this.errorSignal.set(null);
+    this.errorCodeSignal.set(null);
+    this.signInLocallyUseCase
+      .execute(credential)
+      .pipe(finalize(() => this.loadingSignal.set(false)))
+      .subscribe({
+        next: (session) => this.sessionSignal.set(session),
+        error: (error: unknown) => {
+          this.errorCodeSignal.set(isAuthenticationError(error) ? error.code : null);
+          this.errorSignal.set(this.formatError(error, 'Failed to sign in locally'));
+        },
+      });
   }
 
   /**

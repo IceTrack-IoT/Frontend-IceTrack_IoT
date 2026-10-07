@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BaseApi } from '@shared/infrastructure/api/base-api';
-import { isErrorResource } from '@shared/infrastructure/api/error.response';
+import { isErrorResource, readErrorMessage } from '@shared/infrastructure/api/error.response';
 import { UserApiEndpoint } from '@iam/infrastructure/api/user-api-endpoint';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { catchError, map, Observable, throwError } from 'rxjs';
@@ -10,6 +10,7 @@ import type { GoogleCredential } from '@iam/application/contracts/google-credent
 import type { AuthenticationResult } from '@iam/application/contracts/authentication-result';
 import {
   AuthenticationError,
+  type AuthenticationErrorCode,
   isAuthenticationErrorCode,
 } from '@iam/application/contracts/authentication-error';
 import { AuthenticatedUserAssembler } from '@iam/infrastructure/api/authenticated-user-assembler';
@@ -18,6 +19,17 @@ import { isAuthErrorResource } from '@iam/infrastructure/api/auth-error.response
 import type { SignInWithGoogleRequest } from '@iam/infrastructure/api/sign-in-with-google.request';
 import type { RefreshTokenResource } from '@iam/infrastructure/api/refresh-token.request';
 import { AuthenticationApiEndpoint } from '@iam/infrastructure/api/authentication-api-endpoint';
+import { LocalCredential } from '@iam/application/contracts/local-credential';
+import { SignInWithLocalRequest } from '@iam/infrastructure/api/sign-in-with-local.request';
+
+/**
+ * ErrorResource codes with which `POST /authentication/sign-in/local` rejects a request.
+ */
+const LOCAL_SIGN_IN_REJECTION_CODES: readonly AuthenticationErrorCode[] = [
+  'VALIDATION_ERROR',
+  'USER_NOT_FOUND',
+  'BUSINESS_RULE_VIOLATION',
+];
 
 /**
  * IamApi is a service that provides methods to interact with the User API endpoint.
@@ -46,7 +58,7 @@ export class IamApi extends BaseApi implements AuthenticationPort {
    * Retrieves all users from the API.
    * @returns An Observable of an array of User entities.
    */
-  getUsers(): Observable<User[]>{
+  getUsers(): Observable<User[]> {
     return this.usersEndpoint.getAll();
   }
 
@@ -75,6 +87,22 @@ export class IamApi extends BaseApi implements AuthenticationPort {
    */
   deleteUser(id: number): Observable<void> {
     return this.usersEndpoint.delete(id);
+  }
+
+  /**
+   * Signs in locally with a username and password.
+   *
+   * @param credential The local credential containing the username and password.
+   * @returns An Observable of the AuthenticationResult.
+   */
+  signInLocally(credential: LocalCredential): Observable<AuthenticationResult> {
+    const request: SignInWithLocalRequest = { username: credential.username, password: credential.password };
+    return this.authenticationEndpoint.signInLocally(request).pipe(
+      map((resource) =>
+        this.authenticatedUserAssembler.toAuthenticationResultFromResource(resource),
+      ),
+      catchError((error: unknown) => throwError(() => this.toLocalSignInError(error))),
+    );
   }
 
   /**
@@ -132,6 +160,33 @@ export class IamApi extends BaseApi implements AuthenticationPort {
   }
 
   /**
+   * Maps local sign-in rejections to AuthenticationError using only the ErrorResource `code`, for any
+   * 4xx status (the status of `BUSINESS_RULE_VIOLATION` is not part of the confirmed contract):
+   * - `VALIDATION_ERROR` (400): blank fields or a wrong username/password;
+   * - `USER_NOT_FOUND` (404): no user matches the username;
+   * - `BUSINESS_RULE_VIOLATION`: the account is federated and must sign in with its provider.
+   * The backend message is kept for display only. Anything else falls back to toAuthenticationError.
+   */
+  private toLocalSignInError(error: unknown): unknown {
+    if (
+      error instanceof HttpErrorResponse &&
+      error.status >= 400 &&
+      error.status < 500 &&
+      isErrorResource(error.error)
+    ) {
+      const body = error.error;
+      const code = LOCAL_SIGN_IN_REJECTION_CODES.find((rejection) => rejection === body.code);
+      if (code !== undefined) {
+        return new AuthenticationError(
+          code,
+          readErrorMessage(body) ?? 'The backend rejected the local sign-in request.',
+        );
+      }
+    }
+    return this.toAuthenticationError(error);
+  }
+
+  /**
    * Maps definitive backend rejections to AuthenticationError using only the machine-readable `code`.
    * Any other error (network, server, unexpected status) is returned unchanged as transient.
    */
@@ -151,7 +206,10 @@ export class IamApi extends BaseApi implements AuthenticationPort {
       isErrorResource(error.error) &&
       error.error.code === 'GOOGLE_ACCOUNT_NOT_FOUND'
     ) {
-      return new AuthenticationError('GOOGLE_ACCOUNT_NOT_FOUND', 'The Google account is not registered.');
+      return new AuthenticationError(
+        'GOOGLE_ACCOUNT_NOT_FOUND',
+        'The Google account is not registered.',
+      );
     }
     return error;
   }

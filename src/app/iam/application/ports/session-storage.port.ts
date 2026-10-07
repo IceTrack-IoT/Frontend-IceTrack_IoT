@@ -8,7 +8,7 @@ import type { ClientSession } from '@iam/application/state/client-session';
 export abstract class SessionStoragePort {
   /**
    * Loads the persisted client session.
-   * @returns The persisted client session, or null when none is available or it is invalid.
+   * @returns The persisted client session, or null when none is available, or it is invalid.
    */
   abstract load(): ClientSession | null;
 
