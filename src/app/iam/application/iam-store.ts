@@ -16,6 +16,14 @@ import { SignOutUseCase } from '@iam/application/use-cases/sign-out.use-case';
 import { SynchronizeClientSessionUseCase } from '@iam/application/use-cases/synchronize-client-session.use-case';
 import { LocalCredential } from '@iam/application/contracts/local-credential';
 import { SignInLocallyUseCase } from '@iam/application/use-cases/sign-in-locally.use-case';
+import type { OwnerSignUp, TechnicianSignUp } from '@iam/application/contracts/local-sign-up';
+import { SignUpOwnerUseCase } from '@iam/application/use-cases/sign-up-owner.use-case';
+import { SignUpTechnicianUseCase } from '@iam/application/use-cases/sign-up-technician.use-case';
+import type {
+  GoogleOwnerRegistration,
+  GoogleTechnicianRegistration,
+} from '@iam/application/contracts/google-registration';
+import { CompleteGoogleRegistrationUseCase } from '@iam/application/use-cases/complete-google-registration.use-case';
 
 /**
  * Iam Store is a service that manages the state of users and session information in the application.
@@ -29,7 +37,10 @@ export class IamStore {
   private readonly refreshClientSessionUseCase = inject(RefreshClientSessionUseCase);
   private readonly synchronizeClientSessionUseCase = inject(SynchronizeClientSessionUseCase);
   private readonly signInLocallyUseCase = inject(SignInLocallyUseCase);
+  private readonly signUpOwnerUseCase = inject(SignUpOwnerUseCase);
+  private readonly signUpTechnicianUseCase = inject(SignUpTechnicianUseCase);
   private readonly signInWithGoogleUseCase = inject(SignInWithGoogleUseCase);
+  private readonly completeGoogleRegistrationUseCase = inject(CompleteGoogleRegistrationUseCase);
   private readonly loadCurrentUserUseCase = inject(LoadCurrentUserUseCase);
   private readonly signOutUseCase = inject(SignOutUseCase);
 
@@ -55,6 +66,25 @@ export class IamStore {
    * The machine-readable code of the last authentication failure, e.g. `GOOGLE_ACCOUNT_NOT_FOUND`.
    */
   readonly errorCode = this.errorCodeSignal.asReadonly();
+
+  private readonly registeredUserSignal = signal<User | null>(null);
+  /**
+   * The user created by the last successful sign-up. Registration does not start a session.
+   */
+  readonly registeredUser = this.registeredUserSignal.asReadonly();
+
+  /**
+   * The Google credential rejected with `GOOGLE_ACCOUNT_NOT_FOUND`. Completing the registration must
+   * send its ID token again, so it is kept in memory only (never persisted) until the registration
+   * completes, another sign-in starts, or the feedback is cleared.
+   */
+  private readonly pendingGoogleCredentialSignal = signal<GoogleCredential | null>(null);
+  /**
+   * True when the last Google sign-in found no account and the Google registration must be completed.
+   */
+  readonly googleRegistrationRequired = computed(
+    () => this.pendingGoogleCredentialSignal() !== null,
+  );
 
   readonly userCount = computed(() => this.users().length);
 
@@ -105,6 +135,7 @@ export class IamStore {
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
     this.errorCodeSignal.set(null);
+    this.pendingGoogleCredentialSignal.set(null);
     this.signInLocallyUseCase
       .execute(credential)
       .pipe(finalize(() => this.loadingSignal.set(false)))
@@ -118,19 +149,51 @@ export class IamStore {
   }
 
   /**
-   * Signs in with a Google credential and keeps the resulting client session.
+   * Registers a local owner account.
+   * @param signUp - The owner registration data.
+   */
+  signUpOwner(signUp: OwnerSignUp): void {
+    this.signUp(this.signUpOwnerUseCase.execute(signUp), 'Failed to sign up as owner');
+  }
+
+  /**
+   * Registers a local technician account.
+   * @param signUp - The technician registration data.
+   */
+  signUpTechnician(signUp: TechnicianSignUp): void {
+    this.signUp(this.signUpTechnicianUseCase.execute(signUp), 'Failed to sign up as technician');
+  }
+
+  /**
+   * Clears the feedback of the last operation (error, error code, registered user and pending Google
+   * registration).
+   */
+  clearFeedback(): void {
+    this.errorSignal.set(null);
+    this.errorCodeSignal.set(null);
+    this.registeredUserSignal.set(null);
+    this.pendingGoogleCredentialSignal.set(null);
+  }
+
+  /**
+   * Signs in with a Google credential and keeps the resulting client session. When the Google account
+   * is not registered, the credential is kept in memory so the registration can be completed.
    * @param credential - The Google credential containing the ID token issued by Google.
    */
   signInWithGoogle(credential: GoogleCredential): void {
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
     this.errorCodeSignal.set(null);
+    this.pendingGoogleCredentialSignal.set(null);
     this.signInWithGoogleUseCase
       .execute(credential)
       .pipe(finalize(() => this.loadingSignal.set(false)))
       .subscribe({
         next: (session) => this.sessionSignal.set(session),
         error: (error: unknown) => {
+          if (isAuthenticationError(error, 'GOOGLE_ACCOUNT_NOT_FOUND')) {
+            this.pendingGoogleCredentialSignal.set(credential);
+          }
           this.errorCodeSignal.set(isAuthenticationError(error) ? error.code : null);
           this.errorSignal.set(this.formatError(error, 'Failed to sign in with Google'));
         },
@@ -138,14 +201,43 @@ export class IamStore {
   }
 
   /**
+   * Completes the pending Google registration as an owner and keeps the resulting client session.
+   * @param registration - The owner onboarding data.
+   */
+  completeGoogleOwnerRegistration(registration: GoogleOwnerRegistration): void {
+    this.completeGoogleRegistration(
+      (credential) =>
+        this.completeGoogleRegistrationUseCase.executeAsOwner(credential, registration),
+      'Failed to complete the Google registration as owner',
+    );
+  }
+
+  /**
+   * Completes the pending Google registration as a technician and keeps the resulting client session.
+   * @param registration - The technician onboarding data.
+   */
+  completeGoogleTechnicianRegistration(registration: GoogleTechnicianRegistration): void {
+    this.completeGoogleRegistration(
+      (credential) =>
+        this.completeGoogleRegistrationUseCase.executeAsTechnician(credential, registration),
+      'Failed to complete the Google registration as technician',
+    );
+  }
+
+  /**
    * Reloads the authenticated user from the backend.
    */
   loadCurrentUser(): void {
-    this.loadCurrentUserUseCase.execute().subscribe({
-      next: (session) => this.sessionSignal.set(session),
-      error: (error: unknown) =>
-        this.errorSignal.set(this.formatError(error, 'Failed to load the current user')),
-    });
+    this.loadingSignal.set(true);
+    this.errorSignal.set(null);
+    this.loadCurrentUserUseCase
+      .execute()
+      .pipe(finalize(() => this.loadingSignal.set(false)))
+      .subscribe({
+        next: (session) => this.sessionSignal.set(session),
+        error: (error: unknown) =>
+          this.errorSignal.set(this.formatError(error, 'Failed to load the current user')),
+      });
   }
 
   /**
@@ -156,7 +248,46 @@ export class IamStore {
     this.sessionSignal.set(null);
     this.errorSignal.set(null);
     this.errorCodeSignal.set(null);
+    this.pendingGoogleCredentialSignal.set(null);
     this.signOutUseCase.execute(refreshToken).subscribe();
+  }
+
+  private completeGoogleRegistration(
+    complete: (credential: GoogleCredential) => Observable<ClientSession>,
+    fallbackError: string,
+  ): void {
+    const credential = this.pendingGoogleCredentialSignal();
+    if (credential === null) {
+      this.errorSignal.set('Sign in with Google before completing the registration.');
+      return;
+    }
+    this.loadingSignal.set(true);
+    this.errorSignal.set(null);
+    this.errorCodeSignal.set(null);
+    complete(credential)
+      .pipe(finalize(() => this.loadingSignal.set(false)))
+      .subscribe({
+        next: (session) => {
+          this.pendingGoogleCredentialSignal.set(null);
+          this.sessionSignal.set(session);
+        },
+        error: (error: unknown) => {
+          this.errorCodeSignal.set(isAuthenticationError(error) ? error.code : null);
+          this.errorSignal.set(this.formatError(error, fallbackError));
+        },
+      });
+  }
+
+  private signUp(registration: Observable<User>, fallbackError: string): void {
+    this.loadingSignal.set(true);
+    this.clearFeedback();
+    registration.pipe(finalize(() => this.loadingSignal.set(false))).subscribe({
+      next: (user) => this.registeredUserSignal.set(user),
+      error: (error: unknown) => {
+        this.errorCodeSignal.set(isAuthenticationError(error) ? error.code : null);
+        this.errorSignal.set(this.formatError(error, fallbackError));
+      },
+    });
   }
 
   /**

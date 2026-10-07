@@ -21,6 +21,23 @@ import type { RefreshTokenResource } from '@iam/infrastructure/api/refresh-token
 import { AuthenticationApiEndpoint } from '@iam/infrastructure/api/authentication-api-endpoint';
 import { LocalCredential } from '@iam/application/contracts/local-credential';
 import { SignInWithLocalRequest } from '@iam/infrastructure/api/sign-in-with-local.request';
+import type {
+  LocalSignUp,
+  OwnerSignUp,
+  TechnicianSignUp,
+} from '@iam/application/contracts/local-sign-up';
+import type {
+  SignUpOwnerRequest,
+  SignUpRequest,
+  SignUpTechnicianRequest,
+} from '@iam/infrastructure/api/sign-up.request';
+import type {
+  GoogleOwnerRegistration,
+  GoogleRegistrationProfile,
+  GoogleTechnicianRegistration,
+} from '@iam/application/contracts/google-registration';
+import type { CompleteGoogleOwnerRegistrationRequest } from '@iam/infrastructure/api/complete-google-owner-registration.request';
+import type { CompleteGoogleTechnicianRegistrationRequest } from '@iam/infrastructure/api/complete-google-technician-registration.request';
 
 /**
  * ErrorResource codes with which `POST /authentication/sign-in/local` rejects a request.
@@ -96,12 +113,47 @@ export class IamApi extends BaseApi implements AuthenticationPort {
    * @returns An Observable of the AuthenticationResult.
    */
   signInLocally(credential: LocalCredential): Observable<AuthenticationResult> {
-    const request: SignInWithLocalRequest = { username: credential.username, password: credential.password };
+    const request: SignInWithLocalRequest = {
+      username: credential.username,
+      password: credential.password,
+    };
     return this.authenticationEndpoint.signInLocally(request).pipe(
       map((resource) =>
         this.authenticatedUserAssembler.toAuthenticationResultFromResource(resource),
       ),
       catchError((error: unknown) => throwError(() => this.toLocalSignInError(error))),
+    );
+  }
+
+  /**
+   * Registers a local owner account.
+   *
+   * @param signUp The owner registration data.
+   * @returns An Observable of the registered User entity.
+   */
+  signUpOwner(signUp: OwnerSignUp): Observable<User> {
+    const request: SignUpOwnerRequest = { ...this.toSignUpRequest(signUp), ruc: signUp.ruc };
+    return this.authenticationEndpoint.signUpOwner(request).pipe(
+      map((resource) => this.userAssembler.toEntityFromResource(resource)),
+      catchError((error: unknown) => throwError(() => this.toRegistrationError(error))),
+    );
+  }
+
+  /**
+   * Registers a local technician account.
+   *
+   * @param signUp The technician registration data.
+   * @returns An Observable of the registered User entity.
+   */
+  signUpTechnician(signUp: TechnicianSignUp): Observable<User> {
+    const request: SignUpTechnicianRequest = {
+      ...this.toSignUpRequest(signUp),
+      speciality: signUp.speciality,
+      certification_number: signUp.certificationNumber,
+    };
+    return this.authenticationEndpoint.signUpTechnician(request).pipe(
+      map((resource) => this.userAssembler.toEntityFromResource(resource)),
+      catchError((error: unknown) => throwError(() => this.toRegistrationError(error))),
     );
   }
 
@@ -118,6 +170,53 @@ export class IamApi extends BaseApi implements AuthenticationPort {
         this.authenticatedUserAssembler.toAuthenticationResultFromResource(resource),
       ),
       catchError((error: unknown) => throwError(() => this.toAuthenticationError(error))),
+    );
+  }
+
+  /**
+   * Completes the registration of an unregistered Google account as an owner.
+   *
+   * @param credential The Google credential rejected with `GOOGLE_ACCOUNT_NOT_FOUND`.
+   * @param registration The owner onboarding data.
+   * @returns An Observable of the AuthenticationResult of the new account.
+   */
+  completeGoogleOwnerRegistration(
+    credential: GoogleCredential,
+    registration: GoogleOwnerRegistration,
+  ): Observable<AuthenticationResult> {
+    const request: CompleteGoogleOwnerRegistrationRequest = {
+      ...this.toGoogleRegistrationRequest(credential, registration),
+      ruc: registration.ruc,
+    };
+    return this.authenticationEndpoint.completeGoogleOwnerRegistration(request).pipe(
+      map((resource) =>
+        this.authenticatedUserAssembler.toAuthenticationResultFromResource(resource),
+      ),
+      catchError((error: unknown) => throwError(() => this.toRegistrationError(error))),
+    );
+  }
+
+  /**
+   * Completes the registration of an unregistered Google account as a technician.
+   *
+   * @param credential The Google credential rejected with `GOOGLE_ACCOUNT_NOT_FOUND`.
+   * @param registration The technician onboarding data.
+   * @returns An Observable of the AuthenticationResult of the new account.
+   */
+  completeGoogleTechnicianRegistration(
+    credential: GoogleCredential,
+    registration: GoogleTechnicianRegistration,
+  ): Observable<AuthenticationResult> {
+    const request: CompleteGoogleTechnicianRegistrationRequest = {
+      ...this.toGoogleRegistrationRequest(credential, registration),
+      speciality: registration.speciality,
+      certification_number: registration.certificationNumber,
+    };
+    return this.authenticationEndpoint.completeGoogleTechnicianRegistration(request).pipe(
+      map((resource) =>
+        this.authenticatedUserAssembler.toAuthenticationResultFromResource(resource),
+      ),
+      catchError((error: unknown) => throwError(() => this.toRegistrationError(error))),
     );
   }
 
@@ -184,6 +283,56 @@ export class IamApi extends BaseApi implements AuthenticationPort {
       }
     }
     return this.toAuthenticationError(error);
+  }
+
+  private toSignUpRequest(signUp: LocalSignUp): SignUpRequest {
+    return {
+      username: signUp.username,
+      password: signUp.password,
+      email: signUp.email,
+      full_name: signUp.fullName,
+      phone: signUp.phone,
+      street: signUp.street,
+      number: signUp.number,
+      city: signUp.city,
+      postal_code: signUp.postalCode,
+      country: signUp.country,
+    };
+  }
+
+  private toGoogleRegistrationRequest(
+    credential: GoogleCredential,
+    profile: GoogleRegistrationProfile,
+  ): Omit<CompleteGoogleOwnerRegistrationRequest, 'ruc'> {
+    return {
+      id_token: credential.idToken,
+      phone: profile.phone,
+      street: profile.street,
+      number: profile.number,
+      city: profile.city,
+      postal_code: profile.postalCode,
+      country: profile.country,
+    };
+  }
+
+  /**
+   * Maps any 4xx rejection of a registration request (local sign-up or Google registration
+   * completion, e.g. 400 invalid form or ID token, 409 username/email/profile already taken) to
+   * AuthenticationError, keeping the backend message for display. The code is kept only when it is a
+   * known AuthenticationErrorCode.
+   *
+   * TODO: Confirm the registration error codes with the backend (e.g. the 409 conflict code).
+   */
+  private toRegistrationError(error: unknown): unknown {
+    if (!(error instanceof HttpErrorResponse) || error.status < 400 || error.status >= 500) {
+      return error;
+    }
+    const code = isErrorResource(error.error) ? error.error.code : null;
+    return new AuthenticationError(
+      isAuthenticationErrorCode(code) ? code : null,
+      readErrorMessage(error.error) ??
+        `The backend rejected the registration request (HTTP ${error.status}).`,
+    );
   }
 
   /**

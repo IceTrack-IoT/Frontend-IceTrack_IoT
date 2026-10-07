@@ -1,1 +1,17 @@
-<p>home works!</p>
+<h1>Home</h1>
+
+@if (iamStore.restoring()) {
+  <p>Restoring session…</p>
+} @else if (iamStore.currentUser(); as user) {
+  <p>Signed in as {{ user.username }} (id {{ user.id }}, {{ user.role }}, {{ user.provider }})</p>
+  <button type="button" [disabled]="iamStore.loading()" (click)="iamStore.loadCurrentUser()">
+    GET /authentication/me
+  </button>
+  <button type="button" (click)="iamStore.signOut()">Sign out</button>
+} @else {
+  <p>Not signed in. <a routerLink="/iam/login">Login</a> · <a routerLink="/iam/register">Register</a></p>
+}
+
+@if (iamStore.error(); as error) {
+  <p role="alert">{{ error }}</p>
+}

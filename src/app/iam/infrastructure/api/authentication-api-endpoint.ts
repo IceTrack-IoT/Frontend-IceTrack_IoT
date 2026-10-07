@@ -9,10 +9,21 @@ import { CurrentUserResource } from '@iam/infrastructure/api/current-user.respon
 import { catchError } from 'rxjs/operators';
 import { handleError } from '@shared/infrastructure/http/handle-error-http';
 import { SignInWithLocalRequest } from '@iam/infrastructure/api/sign-in-with-local.request';
+import type {
+  SignUpOwnerRequest,
+  SignUpTechnicianRequest,
+} from '@iam/infrastructure/api/sign-up.request';
+import type { UserResource } from '@iam/infrastructure/api/user.response';
+import type { CompleteGoogleOwnerRegistrationRequest } from '@iam/infrastructure/api/complete-google-owner-registration.request';
+import type { CompleteGoogleTechnicianRegistrationRequest } from '@iam/infrastructure/api/complete-google-technician-registration.request';
 
 export class AuthenticationApiEndpoint {
   private readonly signInLocallyEndpointUrl = `${environment.iceTrackProviderApiBaseUrl}${environment.iceTrackProviderAuthenticationLocalEndpointPath}`;
+  private readonly signUpOwnerEndpointUrl = `${environment.iceTrackProviderApiBaseUrl}${environment.iceTrackProviderSignUpOwnerEndpointPath}`;
+  private readonly signUpTechnicianEndpointUrl = `${environment.iceTrackProviderApiBaseUrl}${environment.iceTrackProviderSignUpTechnicianEndpointPath}`;
   private readonly googleVerifyEndpointUrl = `${environment.iceTrackProviderApiBaseUrl}${environment.iceTrackProviderAuthenticationGoogleVerifyEndpointPath}`;
+  private readonly completeGoogleOwnerRegistrationEndpointUrl = `${environment.iceTrackProviderApiBaseUrl}${environment.iceTrackProviderCompleteRegistrationOwnerEndpointPath}`;
+  private readonly completeGoogleTechnicianRegistrationEndpointUrl = `${environment.iceTrackProviderApiBaseUrl}${environment.iceTrackProviderCompleteRegistrationTechnicianEndpointPath}`;
   private readonly refreshTokenEndpointUrl = `${environment.iceTrackProviderApiBaseUrl}${environment.iceTrackProviderRefreshTokensEndpointPath}`;
   private readonly logoutEndpointUrl = `${environment.iceTrackProviderApiBaseUrl}${environment.iceTrackProviderLogoutEndpointPath}`;
   private readonly currentUserEndpointUrl = `${environment.iceTrackProviderApiBaseUrl}${environment.iceTrackProviderMeEndpointPath}`;
@@ -24,7 +35,29 @@ export class AuthenticationApiEndpoint {
    * @returns An Observable of the AuthenticatedUserResource.
    */
   signInLocally(request: SignInWithLocalRequest): Observable<AuthenticatedUserResource> {
-    return this.http.post <AuthenticatedUserResource>(this.signInLocallyEndpointUrl, request, {
+    return this.http.post<AuthenticatedUserResource>(this.signInLocallyEndpointUrl, request, {
+      context: publicAuthenticationContext(),
+    });
+  }
+
+  /**
+   * Registers a local owner through `POST /authentication/sign-up/owner`.
+   * @param request The SignUpOwnerRequest.
+   * @returns An Observable of the registered UserResource.
+   */
+  signUpOwner(request: SignUpOwnerRequest): Observable<UserResource> {
+    return this.http.post<UserResource>(this.signUpOwnerEndpointUrl, request, {
+      context: publicAuthenticationContext(),
+    });
+  }
+
+  /**
+   * Registers a local technician through `POST /authentication/sign-up/technician`.
+   * @param request The SignUpTechnicianRequest.
+   * @returns An Observable of the registered UserResource.
+   */
+  signUpTechnician(request: SignUpTechnicianRequest): Observable<UserResource> {
+    return this.http.post<UserResource>(this.signUpTechnicianEndpointUrl, request, {
       context: publicAuthenticationContext(),
     });
   }
@@ -38,6 +71,38 @@ export class AuthenticationApiEndpoint {
     return this.http.post<AuthenticatedUserResource>(this.googleVerifyEndpointUrl, request, {
       context: publicAuthenticationContext(),
     });
+  }
+
+  /**
+   * Completes a Google owner registration through
+   * `POST /authentication/google/complete-registration/owner`, which answers 201.
+   * @param request The CompleteGoogleOwnerRegistrationRequest.
+   * @returns An Observable of the AuthenticatedUserResource of the new account.
+   */
+  completeGoogleOwnerRegistration(
+    request: CompleteGoogleOwnerRegistrationRequest,
+  ): Observable<AuthenticatedUserResource> {
+    return this.http.post<AuthenticatedUserResource>(
+      this.completeGoogleOwnerRegistrationEndpointUrl,
+      request,
+      { context: publicAuthenticationContext() },
+    );
+  }
+
+  /**
+   * Completes a Google technician registration through
+   * `POST /authentication/google/complete-registration/technician`, which answers 201.
+   * @param request The CompleteGoogleTechnicianRegistrationRequest.
+   * @returns An Observable of the AuthenticatedUserResource of the new account.
+   */
+  completeGoogleTechnicianRegistration(
+    request: CompleteGoogleTechnicianRegistrationRequest,
+  ): Observable<AuthenticatedUserResource> {
+    return this.http.post<AuthenticatedUserResource>(
+      this.completeGoogleTechnicianRegistrationEndpointUrl,
+      request,
+      { context: publicAuthenticationContext() },
+    );
   }
 
   /**

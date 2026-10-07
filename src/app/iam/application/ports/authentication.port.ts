@@ -3,6 +3,11 @@ import type { User } from '@iam/domain/model/user.entity';
 import type { GoogleCredential } from '@iam/application/contracts/google-credential';
 import type { AuthenticationResult } from '@iam/application/contracts/authentication-result';
 import { LocalCredential } from '@iam/application/contracts/local-credential';
+import type { OwnerSignUp, TechnicianSignUp } from '@iam/application/contracts/local-sign-up';
+import type {
+  GoogleOwnerRegistration,
+  GoogleTechnicianRegistration,
+} from '@iam/application/contracts/google-registration';
 
 /**
  * AuthenticationPort is the outbound port used by IAM use cases to authenticate against the backend.
@@ -22,11 +27,49 @@ export abstract class AuthenticationPort {
   abstract signInLocally(credential: LocalCredential): Observable<AuthenticationResult>;
 
   /**
+   * Registers a local owner account. No session is issued: the user signs in afterwards.
+   * Backend rejections (4xx with an error code) fail with AuthenticationError.
+   * @param signUp - The owner registration data.
+   * @returns An Observable of the registered user.
+   */
+  abstract signUpOwner(signUp: OwnerSignUp): Observable<User>;
+
+  /**
+   * Registers a local technician account. No session is issued: the user signs in afterwards.
+   * Backend rejections (4xx with an error code) fail with AuthenticationError.
+   * @param signUp - The technician registration data.
+   * @returns An Observable of the registered user.
+   */
+  abstract signUpTechnician(signUp: TechnicianSignUp): Observable<User>;
+
+  /**
    * Exchanges a Google credential for a platform token pair. The backend validates the Google ID token.
    * Fails with AuthenticationError code `GOOGLE_ACCOUNT_NOT_FOUND` when the account is not registered.
    * @param credential - The Google credential to verify.
    */
   abstract signInWithGoogle(credential: GoogleCredential): Observable<AuthenticationResult>;
+
+  /**
+   * Completes the registration of an unregistered Google account as an owner and signs it in.
+   * Backend rejections (e.g. 400 invalid ID token or form, 409 already taken) fail with AuthenticationError.
+   * @param credential - The Google credential that was rejected with `GOOGLE_ACCOUNT_NOT_FOUND`.
+   * @param registration - The owner onboarding data.
+   */
+  abstract completeGoogleOwnerRegistration(
+    credential: GoogleCredential,
+    registration: GoogleOwnerRegistration,
+  ): Observable<AuthenticationResult>;
+
+  /**
+   * Completes the registration of an unregistered Google account as a technician and signs it in.
+   * Backend rejections (e.g. 400 invalid ID token or form, 409 already taken) fail with AuthenticationError.
+   * @param credential - The Google credential that was rejected with `GOOGLE_ACCOUNT_NOT_FOUND`.
+   * @param registration - The technician onboarding data.
+   */
+  abstract completeGoogleTechnicianRegistration(
+    credential: GoogleCredential,
+    registration: GoogleTechnicianRegistration,
+  ): Observable<AuthenticationResult>;
 
   /**
    * Rotates the platform token pair. The given refresh token is single-use.

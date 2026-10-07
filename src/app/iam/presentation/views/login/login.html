@@ -1,1 +1,28 @@
-<p>login works!</p>
+<h1>Login</h1>
+
+<form [formGroup]="form" (ngSubmit)="submit()">
+  <p>
+    <label>Username <input formControlName="username" autocomplete="username" /></label>
+  </p>
+  <p>
+    <label
+      >Password
+      <input type="password" formControlName="password" autocomplete="current-password" />
+    </label>
+  </p>
+  <button type="submit" [disabled]="form.invalid || iamStore.loading()">Sign in</button>
+</form>
+
+<p>or</p>
+<app-google-sign-in-button (credential)="iamStore.signInWithGoogle($event)" />
+
+@if (iamStore.error(); as error) {
+  <p role="alert">{{ iamStore.errorCode() ?? 'ERROR' }}: {{ error }}</p>
+}
+
+@if (iamStore.googleRegistrationRequired()) {
+  <h2>Complete your Google registration</h2>
+  <app-google-registration-form />
+}
+
+<p><a routerLink="/iam/register">Register</a> · <a routerLink="/home">Home</a></p>

@@ -1,17 +1,17 @@
-FROM node:24.21.0-alpine3.21 AS build
+FROM node:24-alpine AS build
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm ci
+COPY package.json pnpm-lock.yaml ./
+RUN corepack enable && pnpm install --frozen-lockfile --dangerously-allow-all-builds
 
 COPY . .
 
-RUN npm run build -- --configuration=production
+RUN pnpm run build --configuration=production
 
 FROM nginx:1.27-alpine
 
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/templates/default.conf.template
 
 COPY --from=build /app/dist/ice-track-frontend/browser /usr/share/nginx/html
 

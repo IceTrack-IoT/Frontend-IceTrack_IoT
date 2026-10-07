@@ -1,27 +1,24 @@
 import { Component, effect, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { IamStore } from '@iam/application/iam-store';
 
 type AccountType = 'owner' | 'technician';
 
+/**
+ * Onboarding form that completes the pending Google registration as an owner or a technician.
+ */
 @Component({
-  imports: [ReactiveFormsModule, RouterLink],
-  selector: 'app-register',
-  styleUrl: './register.css',
-  templateUrl: './register.html',
+  imports: [ReactiveFormsModule],
+  selector: 'app-google-registration-form',
+  templateUrl: './google-registration-form.html',
 })
-export class Register {
+export class GoogleRegistrationForm {
   protected readonly iamStore = inject(IamStore);
   private readonly formBuilder = inject(NonNullableFormBuilder);
 
   protected readonly form = this.formBuilder.group({
     accountType: this.formBuilder.control<AccountType>('owner'),
-    username: ['', Validators.required],
-    password: ['', Validators.required],
-    email: ['', [Validators.required, Validators.email]],
-    fullName: ['', Validators.required],
     phone: ['', Validators.required],
     street: ['', Validators.required],
     number: ['', Validators.required],
@@ -29,7 +26,10 @@ export class Register {
     postalCode: ['', Validators.required],
     country: ['', Validators.required],
     owner: this.formBuilder.group({
-      ruc: this.formBuilder.control<number | null>(null, Validators.required),
+      ruc: this.formBuilder.control<number | null>(null, [
+        Validators.required,
+        Validators.pattern(/^\d{11}$/),
+      ]),
     }),
     technician: this.formBuilder.group({
       speciality: ['', Validators.required],
@@ -42,7 +42,6 @@ export class Register {
   });
 
   constructor() {
-    this.iamStore.clearFeedback();
     effect(() => {
       const { owner, technician } = this.form.controls;
       if (this.accountType() === 'owner') {
@@ -59,11 +58,11 @@ export class Register {
     if (this.form.invalid) {
       return;
     }
-    const { accountType, owner, technician, ...signUp } = this.form.getRawValue();
+    const { accountType, owner, technician, ...profile } = this.form.getRawValue();
     if (accountType === 'technician') {
-      this.iamStore.signUpTechnician({ ...signUp, ...technician });
+      this.iamStore.completeGoogleTechnicianRegistration({ ...profile, ...technician });
     } else if (owner.ruc !== null) {
-      this.iamStore.signUpOwner({ ...signUp, ruc: owner.ruc });
+      this.iamStore.completeGoogleOwnerRegistration({ ...profile, ruc: owner.ruc });
     }
   }
 }

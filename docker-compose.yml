@@ -7,6 +7,8 @@ services:
       dockerfile: Dockerfile
     container_name: ice-track-frontend
     restart: unless-stopped
+    environment:
+      BACKEND_URL: ${BACKEND_URL:-http://spring-app:8080}
     ports:
       - "4200:80"
     networks:
