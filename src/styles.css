@@ -1,85 +1,437 @@
-/* Global Styles */
-:root {
-  /* Color Palette */
-  --color-primary: #004AAD;
-  --color-first-complementary: #0C8DDF;
-  --color-second-complementary: #FF5757;
-  --color-dark: #000000;
-  --color-light: #FFFFFF;
+/* ==========================================================================
+   IceTrack — Design System & Visual Tokens
+   Typography: Exo 2 · 12-col grid · 8pt spacing · Dual-layer elevation
+   ========================================================================== */
 
-  /** Font Families **/
-  --font-sans: "RobotoSerif", sans-serif;
-  --font-regular: "RobotoSerif", sans-serif;
-  --font-medium: "RobotoSerifMedium", sans-serif;
-  --font-semibold: "RobotoSerifSemiBold", sans-serif;
-  --font-bold: "RobotoSerifBold", sans-serif;
-  --font-extrabold: "RobotoSerifExtraBold", sans-serif;
-  --font-italic: "RobotoSerifItalic", sans-serif;
-}
-
-body {
-  margin: 0;
-  width: 100%;
-  height: 100%;
-  font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
-  Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  scroll-behavior: smooth;
-}
-
-html, body {
-  height: 100%;
-}
-
-.icon use {
-  fill: currentColor;
-}
-
+/* --------------------------------------------------------------------------
+   0. Exo 2 — Local @font-face (single unified family, weight-mapped)
+   NOTE: file names below match `public/assets/fonts/` exactly (case-sensitive
+   for Linux/nginx production builds).
+   `exo2-medium.woff2` does not exist in the repo, so weight 500 resolves to
+   the nearest defined face (400/600) — no broken-network request is emitted.
+   -------------------------------------------------------------------------- */
 @font-face {
-  font-family: RobotoSerif;
-  src: url("/assets/fonts/robotoserif-regular.woff2") format("woff2");
-  font-weight: normal;
+  font-family: 'Exo 2';
+  src: url('/assets/fonts/exo2-regular.woff2') format('woff2');
+  font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: RobotoSerifMedium;
-  src: url("/assets/fonts/robotoserif-medium.woff2") format("woff2");
-  font-weight: 500;
-  font-style: normal;
+  font-family: 'Exo 2';
+  src: url('/assets/fonts/exo2-italic.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
   font-display: swap;
 }
 
 @font-face {
-  font-family: RobotoSerifSemiBold;
-  src: url("/assets/fonts/robotoserif-semibold.woff2") format("woff2");
+  font-family: 'Exo 2';
+  src: url('/assets/fonts/exo2-semiBold.woff2') format('woff2');
   font-weight: 600;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: RobotoSerifBold;
-  src: url("/assets/fonts/robotoserif-bold.woff2") format("woff2");
+  font-family: 'Exo 2';
+  src: url('/assets/fonts/exo2-bold.woff2') format('woff2');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: RobotoSerifExtraBold;
-  src: url("/assets/fonts/robotoserif-extrabold.woff2") format("woff2");
+  font-family: 'Exo 2';
+  src: url('/assets/fonts/exo2-extrabold.woff2') format('woff2');
   font-weight: 800;
   font-style: normal;
   font-display: swap;
 }
 
-@font-face {
-  font-family: RobotoSerifItalic;
-  src: url("/assets/fonts/robotoserif-italic.woff2") format("woff2");
-  font-weight: normal;
-  font-style: italic;
-  font-display: swap;
+/* --------------------------------------------------------------------------
+   1. Design tokens
+   -------------------------------------------------------------------------- */
+:root {
+  /* ---- Typography ---- */
+  --font-sans: 'Exo 2', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  --font-family-primary: var(--font-sans);
+
+  /* Typographic scale (desktop first; mobile overrides further below) */
+  --text-display-1-size: 48px;
+  --text-display-1-line: 1.15;
+  --text-display-1-spacing: -0.02em;
+  --text-display-1-weight: 700;
+
+  --text-h1-size: 32px;
+  --text-h1-line: 1.25;
+  --text-h1-spacing: -0.01em;
+  --text-h1-weight: 600;
+
+  --text-h2-size: 32px;
+  --text-h2-line: 1.25;
+  --text-h2-spacing: -0.01em;
+  --text-h2-weight: 600;
+
+  --text-h3-size: 18px;
+  --text-h3-line: 1.35;
+  --text-h3-spacing: 0;
+  --text-h3-weight: 600;
+
+  --text-body-size: 16px;
+  --text-body-line: 1.5;
+  --text-body-spacing: 0.01em;
+  --text-body-weight: 400;
+
+  --text-badge-size: 12px;
+  --text-badge-line: 1.333;
+  --text-badge-spacing: 0.05em;
+  --text-badge-weight: 500;
+
+  /* Numeric / telemetry readouts: tabular figures prevent horizontal jitter */
+  --text-numeric-weight: 700;
+
+  /* ---- Brand identity ---- */
+  --brand-600: #004aad; /* Primary Navy — primary actions, active emphasis */
+  --brand-900: #0a2540; /* Deep Corporate Navy — dark backgrounds, headers */
+  --brand-900-deep: #001e47; /* Deep Corporate Navy variant — high contrast */
+  --brand-accent-500: #0c8ddf; /* Cold Cyan Accent — IoT signal, sparklines, links */
+  --brand-100: #e6f0fa; /* Subtle Tint — badges, icon surface backgrounds */
+
+  /* ---- Semantic telemetry status ---- */
+  --status-optimal: #10b981; /* Optimal Cold / Normal */
+  --status-warning: #f59e0b; /* Warning / Drift */
+  --status-critical: #ef4444; /* Critical Alarm */
+  --status-offline: #64748b; /* Offline / Inactive */
+
+  /* ---- Surfaces & neutrals ---- */
+  --canvas-bg: #f8fafc;
+  --surface-card: #ffffff;
+  --border-subtle: #e2e8f0;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+
+  /* ---- Layout & grid ---- */
+  --layout-max-width: 1280px;
+  --layout-gutter: 24px;
+
+  /* ---- 8pt modular spacing ---- */
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+  --space-6: 48px;
+  --space-8: 64px;
+
+  /* ---- Radii ---- */
+  --radius-control: 8px; /* inputs / buttons */
+  --radius-card: 12px; /* cards / modules */
+  --radius-pill: 9999px; /* pill tags */
+
+  /* ---- Dual-layer subtle elevation ---- */
+  --elevation-card: 0 1px 3px rgb(15 23 42 / 0.08), 0 4px 12px rgb(15 23 42 / 0.05);
+
+  /* ---- Legacy aliases (backward compatibility — do not remove) ---- */
+  --color-primary: var(--brand-600);
+  --color-first-complementary: var(--brand-accent-500);
+  --color-second-complementary: var(--status-critical);
+  --color-dark: #000000;
+  --color-light: #ffffff;
+  --font-regular: var(--font-sans);
+  --font-medium: var(--font-sans);
+  --font-semibold: var(--font-sans);
+  --font-bold: var(--font-sans);
+  --font-extrabold: var(--font-sans);
+  --font-italic: var(--font-sans);
+}
+
+/* --------------------------------------------------------------------------
+   2. Base reset & document
+   -------------------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100%;
+  background-color: var(--canvas-bg);
+  color: var(--text-primary);
+  font-family: var(--font-family-primary), serif;
+  font-size: var(--text-body-size);
+  font-weight: var(--text-body-weight);
+  line-height: var(--text-body-line);
+  letter-spacing: var(--text-body-spacing);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+.icon use {
+  fill: currentColor;
+}
+
+::selection {
+  background-color: var(--brand-100);
+  color: var(--brand-900-deep);
+}
+
+/* Visible keyboard focus — WCAG 2.4.7 / AXE compliant */
+:focus-visible {
+  outline: 3px solid var(--brand-accent-500);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+img {
+  max-width: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   3. Typographic scale
+   -------------------------------------------------------------------------- */
+.display-1 {
+  font-family: var(--font-family-primary), serif;
+  font-size: var(--text-display-1-size);
+  font-weight: var(--text-display-1-weight);
+  line-height: var(--text-display-1-line);
+  letter-spacing: var(--text-display-1-spacing);
+  text-wrap: balance;
+}
+
+h1,
+.h1 {
+  font-family: var(--font-family-primary), serif;
+  font-size: var(--text-h1-size);
+  font-weight: var(--text-h1-weight);
+  line-height: var(--text-h1-line);
+  letter-spacing: var(--text-h1-spacing);
+  text-wrap: balance;
+}
+
+h2,
+.h2 {
+  font-family: var(--font-family-primary), serif;
+  font-size: var(--text-h2-size);
+  font-weight: var(--text-h2-weight);
+  line-height: var(--text-h2-line);
+  letter-spacing: var(--text-h2-spacing);
+  text-wrap: balance;
+}
+
+h3,
+.h3 {
+  font-family: var(--font-family-primary), serif;
+  font-size: var(--text-h3-size);
+  font-weight: var(--text-h3-weight);
+  line-height: var(--text-h3-line);
+  letter-spacing: var(--text-h3-spacing);
+}
+
+p,
+.body-text {
+  font-size: var(--text-body-size);
+  font-weight: var(--text-body-weight);
+  line-height: var(--text-body-line);
+  letter-spacing: var(--text-body-spacing);
+}
+
+/* Badge / label: 12px Medium, uppercase, +0.05em tracking */
+.badge,
+.label,
+.badge-label {
+  font-family: var(--font-family-primary);
+  font-size: var(--text-badge-size);
+  font-weight: var(--text-badge-weight);
+  line-height: var(--text-badge-line);
+  letter-spacing: var(--text-badge-spacing);
+  text-transform: uppercase;
+}
+
+/* --------------------------------------------------------------------------
+   4. Numeric & telemetry rule (anti-jitter live readouts)
+   Apply `.telemetry` (or the attribute `[data-telemetry]`) to every dynamic
+   numeric readout: temperatures (°C), power (kW/kWh), timestamps.
+   -------------------------------------------------------------------------- */
+.telemetry,
+.numeric-readout,
+.telemetry-value,
+[data-telemetry] {
+  font-family: var(--font-family-primary), serif;
+  font-weight: var(--text-numeric-weight);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1, 'lnum' 1;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+time.telemetry,
+time[data-telemetry] {
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   5. Layout: 12-column responsive grid, max-width 1280px, 24px gutter
+   -------------------------------------------------------------------------- */
+.container {
+  width: 100%;
+  max-width: var(--layout-max-width);
+  margin-inline: auto;
+  padding-inline: var(--layout-gutter);
+}
+
+.grid-12 {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--space-3);
+  width: 100%;
+  max-width: var(--layout-max-width);
+  margin-inline: auto;
+  padding-inline: var(--layout-gutter);
+}
+
+/* --------------------------------------------------------------------------
+   6. Surfaces, elevation & radii
+   -------------------------------------------------------------------------- */
+.surface-card,
+.card {
+  background-color: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-card);
+  box-shadow: var(--elevation-card);
+}
+
+.elevation-card {
+  box-shadow: var(--elevation-card);
+}
+
+.radius-control {
+  border-radius: var(--radius-control);
+}
+
+.radius-card {
+  border-radius: var(--radius-card);
+}
+
+.radius-pill,
+.pill,
+.pill-tag {
+  border-radius: var(--radius-pill);
+}
+
+button,
+input,
+select,
+textarea {
+  border-radius: var(--radius-control);
+  font-family: inherit;
+}
+
+/* --------------------------------------------------------------------------
+   7. Semantic status helpers (cold-chain tokens)
+   -------------------------------------------------------------------------- */
+.status-optimal {
+  color: var(--status-optimal);
+}
+
+.status-warning {
+  color: var(--status-warning);
+}
+
+.status-critical {
+  color: var(--status-critical);
+}
+
+.status-offline {
+  color: var(--status-offline);
+}
+
+.dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: currentcolor;
+  flex-shrink: 0;
+}
+
+.text-primary {
+  color: var(--text-primary);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.bg-tint {
+  background-color: var(--brand-100);
+}
+
+.bg-navy {
+  background-color: var(--brand-900);
+  color: #ffffff;
+}
+
+.bg-navy-deep {
+  background-color: var(--brand-900-deep);
+  color: #ffffff;
+}
+
+/* --------------------------------------------------------------------------
+   8. Mobile typographic scale
+   display-1: 48px → 36px · h1/h2: 32px → 24px · h3: 18px → 16px
+   body: 16px → 15px
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  :root {
+    --text-display-1-size: 36px;
+    --text-h1-size: 24px;
+    --text-h2-size: 24px;
+    --text-h3-size: 16px;
+    --text-body-size: 15px;
+  }
+
+  .container,
+  .grid-12 {
+    padding-inline: var(--space-2);
+  }
+
+  .grid-12 {
+    gap: var(--space-2);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   9. Reduced motion — WCAG 2.3.3
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
