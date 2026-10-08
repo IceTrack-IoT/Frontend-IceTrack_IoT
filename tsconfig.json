@@ -18,6 +18,12 @@
       "@shared/*": ["./src/app/shared/*"],
       "@iam/*": ["./src/app/iam/*"],
       "@profiles/*": ["./src/app/profiles/*"],
+      "@assets/*": ["./src/assets/*"],
+      "@device/*": ["./src/app/device/*"],
+      "@monitoring/*": ["./src/app/monitoring/*"],
+      "@notifications/*": ["./src/app/notifications/*"],
+      "@reporting/*": ["./src/app/reporting/*"],
+      "@service/*": ["./src/app/service/*"],
     }
   },
   "angularCompilerOptions": {
