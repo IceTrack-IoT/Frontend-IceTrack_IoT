@@ -7,6 +7,18 @@ import type { GoogleCredential } from '@iam/application/contracts/google-credent
 
 const GSI_SCRIPT_SELECTOR = 'script[src^="https://accounts.google.com/gsi/client"]';
 const GSI_LOAD_TIMEOUT_MS = 10_000;
+const GSI_BUTTON_MIN_WIDTH = 200;
+const GSI_BUTTON_MAX_WIDTH = 400;
+
+/**
+ * Presentation options of the rendered Google button.
+ */
+export interface GoogleButtonOptions {
+  /** The language of the button text, e.g. `en` or `es`. Google picks one when omitted. */
+  readonly locale?: string;
+  /** The preferred width in pixels, clamped to the range supported by Google. */
+  readonly width?: number;
+}
 
 /*
  * Minimal Google Identity Services members used by IAM.
@@ -59,10 +71,11 @@ export class GoogleIdentityServices {
    * This method initializes the Google Identity Services and replaces the content of the container with the button.
    *
    * @param container The HTML element where the Google Sign-In button will be rendered. Must be connected to the document.
+   * @param options The language and width of the button.
    * @returns A promise that resolves when the button is successfully rendered.
    * @throws Error if the container is not connected to the document or if Google Identity Services cannot be loaded.
    */
-  async renderButton(container: HTMLElement): Promise<void> {
+  async renderButton(container: HTMLElement, options: GoogleButtonOptions = {}): Promise<void> {
     this.assertBrowser();
 
     if (!container || !container.isConnected) {
@@ -77,7 +90,9 @@ export class GoogleIdentityServices {
       type: 'standard',
       theme: 'outline',
       size: 'large',
-      text: 'signin_with',
+      text: 'continue_with',
+      ...(options.locale ? { locale: options.locale } : {}),
+      ...(options.width ? { width: clampButtonWidth(options.width) } : {}),
     });
   }
 
@@ -237,6 +252,10 @@ export class GoogleIdentityServices {
       throw new Error('Google Identity Services is only available in the browser.');
     }
   }
+}
+
+function clampButtonWidth(width: number): number {
+  return Math.min(GSI_BUTTON_MAX_WIDTH, Math.max(GSI_BUTTON_MIN_WIDTH, Math.floor(width)));
 }
 
 function readProperty(value: unknown, key: string): unknown {

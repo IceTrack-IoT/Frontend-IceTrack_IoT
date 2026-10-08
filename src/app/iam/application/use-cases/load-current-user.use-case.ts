@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { map, type Observable } from 'rxjs';
-import { AuthenticationPort } from '@iam/application/ports/authentication.port';
+import { AuthenticationPort } from '@iam/application/ports/iam.port';
 import { SessionStoragePort } from '@iam/application/ports/session-storage.port';
 import type { ClientSession } from '@iam/application/state/client-session';
 

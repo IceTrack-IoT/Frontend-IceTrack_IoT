@@ -1,0 +1,6 @@
+@if (unavailable()) {
+  <p class="google-sign-in__unavailable" role="status">
+    {{ 'iam.errors.googleUnavailable' | translate }}
+  </p>
+}
+<div #button class="google-sign-in__button" [hidden]="unavailable()"></div>

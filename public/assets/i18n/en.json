@@ -1,0 +1,118 @@
+{
+  "shared": {
+    "appName": "IceTrack",
+    "publicLayout": {
+      "tagline": "Thermal Monitoring Platform"
+    }
+  },
+  "iam": {
+    "fields": {
+      "username": "Username",
+      "password": "Password",
+      "confirmPassword": "Confirm password",
+      "fullName": "Full name",
+      "email": "Business email",
+      "phone": "Contact phone",
+      "ruc": "Company tax ID (RUC)",
+      "street": "Street",
+      "number": "Number",
+      "city": "City",
+      "postalCode": "Postal code",
+      "country": "Country"
+    },
+    "placeholders": {
+      "username": "e.g. roberto_morales",
+      "password": "Enter your password",
+      "newPassword": "At least 8 characters",
+      "confirmPassword": "Repeat the password",
+      "fullName": "e.g. Roberto Morales",
+      "email": "contact@company.com",
+      "phone": "e.g. +51 987 654 321",
+      "ruc": "e.g. 20123456789",
+      "street": "e.g. Av. Los Pinos",
+      "number": "e.g. 245",
+      "city": "e.g. Lima",
+      "postalCode": "e.g. 15001",
+      "country": "e.g. Peru"
+    },
+    "hints": {
+      "password": "Use at least 8 characters.",
+      "ruc": "11 digits, numbers only."
+    },
+    "sections": {
+      "address": "Business address"
+    },
+    "validation": {
+      "required": "This field is required.",
+      "email": "Enter a valid email address, for example name@company.com.",
+      "phone": "Enter a valid phone number: digits, spaces, hyphens or parentheses, with an optional leading +.",
+      "ruc": "The RUC must have exactly 11 digits.",
+      "passwordLength": "The password must have at least 8 characters.",
+      "passwordMismatch": "The passwords don't match."
+    },
+    "errors": {
+      "invalidCredentials": "We couldn't sign you in. Check your username and password and try again.",
+      "federatedAccount": "This account signs in with Google. Use Continue with Google to access it.",
+      "googleSignInFailed": "We couldn't continue with Google. Try again, or use the form below.",
+      "googleUnavailable": "Google sign-in is unavailable right now. You can continue with the form below.",
+      "invalidRegistration": "Some of your details were rejected. Review them and try again.",
+      "registrationRejected": "We couldn't create your account. Your username, email or RUC may already be registered. Review your details and try again."
+    },
+    "actions": {
+      "signOut": "Sign out",
+      "goToSignIn": "Go to sign in",
+      "backToSignIn": "Back to sign in"
+    },
+    "login": {
+      "title": "Sign in",
+      "subtitle": "Access the management portal for your refrigeration equipment.",
+      "divider": "Or with your username",
+      "showPassword": "Show password",
+      "submit": "Sign in",
+      "submitting": "Signing in…",
+      "noAccount": "Don't have an owner account?",
+      "registerLink": "Register here"
+    },
+    "register": {
+      "title": "Create your business account",
+      "subtitle": "Monitor and protect your refrigeration equipment in real time.",
+      "divider": "Or with your details",
+      "submit": "Create owner account",
+      "submitting": "Creating account…",
+      "haveAccount": "Already have an account?",
+      "signInLink": "Sign in",
+      "successTitle": "Your owner account is ready",
+      "successMessage": "Sign in with your username and password to start monitoring your equipment."
+    },
+    "completeGoogleRegistration": {
+      "title": "Complete your owner account",
+      "notice": "Additional information is required to complete your account.",
+      "subtitle": "We need these details to set up your business owner profile.",
+      "submit": "Complete registration",
+      "submitting": "Completing registration…",
+      "expiredTitle": "Continue with Google again",
+      "expiredMessage": "To complete your registration, return to sign in and select Continue with Google again.",
+      "completed": "Your account is ready. Signing you in…"
+    },
+    "technicianRedirect": {
+      "title": "The web platform is for business owners",
+      "message": "Technician operations are available in the IceTrack mobile application.",
+      "qrAlt": "QR code to download the IceTrack mobile application",
+      "qrUnavailable": "The QR code isn't available right now. Follow the instructions below to continue.",
+      "stepsTitle": "How to continue",
+      "steps": {
+        "scan": "Open your phone's camera and scan the QR code.",
+        "install": "Install the IceTrack mobile application from the page that opens.",
+        "signIn": "Sign in to the application with the same account you use here."
+      },
+      "alternative": "Can't scan the code? Install the IceTrack mobile application on your phone and sign in with the same account."
+    },
+    "unauthorized": {
+      "title": "Access not allowed",
+      "message": "You don't have permission to access this part of the IceTrack platform.",
+      "checkingSession": "Checking your session…",
+      "goToDashboard": "Go to dashboard",
+      "goToTechnicianArea": "Go to technician area"
+    }
+  }
+}

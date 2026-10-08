@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { AuthenticationPort } from '@iam/application/ports/authentication.port';
+import { AuthenticationPort } from '@iam/application/ports/iam.port';
 import { SessionStoragePort } from '@iam/application/ports/session-storage.port';
 import { SessionSyncPort } from '@iam/application/ports/session-sync.port';
 import { TokenExpirationPort } from '@iam/application/ports/token-expiration.port';

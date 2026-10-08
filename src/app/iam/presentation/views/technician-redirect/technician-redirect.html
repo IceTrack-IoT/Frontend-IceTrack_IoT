@@ -1,0 +1,45 @@
+<app-public-layout>
+  <section class="iam-card" aria-labelledby="technician-redirect-title">
+    <header class="iam-card__header">
+      <span class="iam-card__icon">
+        <app-icon class="iam-card__icon-glyph" name="device-mobile" />
+      </span>
+      <h1 class="iam-card__title" id="technician-redirect-title">
+        {{ 'iam.technicianRedirect.title' | translate }}
+      </h1>
+      <p class="iam-card__subtitle">{{ 'iam.technicianRedirect.message' | translate }}</p>
+    </header>
+
+    <div class="technician-redirect__qr">
+      @if (qrCodeUnavailable()) {
+        <p class="technician-redirect__qr-unavailable">
+          {{ 'iam.technicianRedirect.qrUnavailable' | translate }}
+        </p>
+      } @else {
+        <img
+          [ngSrc]="qrCodePath"
+          width="200"
+          height="200"
+          [alt]="'iam.technicianRedirect.qrAlt' | translate"
+          (error)="qrCodeUnavailable.set(true)"
+        />
+      }
+    </div>
+
+    <h2 class="technician-redirect__steps-title">
+      {{ 'iam.technicianRedirect.stepsTitle' | translate }}
+    </h2>
+    <ol class="technician-redirect__steps">
+      <li>{{ 'iam.technicianRedirect.steps.scan' | translate }}</li>
+      <li>{{ 'iam.technicianRedirect.steps.install' | translate }}</li>
+      <li>{{ 'iam.technicianRedirect.steps.signIn' | translate }}</li>
+    </ol>
+    <p class="technician-redirect__alternative">
+      {{ 'iam.technicianRedirect.alternative' | translate }}
+    </p>
+
+    <button class="iam-button iam-button--secondary" type="button" (click)="signOut()">
+      {{ 'iam.actions.signOut' | translate }}
+    </button>
+  </section>
+</app-public-layout>

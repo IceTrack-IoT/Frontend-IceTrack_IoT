@@ -20,11 +20,3 @@ export interface SignUpRequest {
 export interface SignUpOwnerRequest extends SignUpRequest {
   ruc: number;
 }
-
-/**
- * SignUpTechnicianRequest is the request body of `POST /authentication/sign-up/technician`.
- */
-export interface SignUpTechnicianRequest extends SignUpRequest {
-  speciality: string;
-  certification_number: string;
-}

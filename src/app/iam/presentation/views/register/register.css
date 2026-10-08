@@ -1,0 +1,9 @@
+.register__sign-in {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.iam-card__title:focus {
+  outline: none;
+}

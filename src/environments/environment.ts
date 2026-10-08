@@ -2,19 +2,25 @@ export const environment = {
   production: true,
   iceTrackProviderApiBaseUrl: 'http://localhost:8080/api/v1',
 
-  /** API endpoint paths */
+  /** User endpoint */
   iceTrackProviderUsersEndpointPath: '/users',
 
   /** Authentication endpoints */
   iceTrackProviderMeEndpointPath: '/authentication/me',
   iceTrackProviderAuthenticationLocalEndpointPath: '/authentication/sign-in/local',
   iceTrackProviderSignUpOwnerEndpointPath: '/authentication/sign-up/owner',
-  iceTrackProviderSignUpTechnicianEndpointPath: '/authentication/sign-up/technician',
   iceTrackProviderAuthenticationGoogleVerifyEndpointPath: '/authentication/google/verify',
-  iceTrackProviderCompleteRegistrationOwnerEndpointPath: '/authentication/google/complete-registration/owner',
-  iceTrackProviderCompleteRegistrationTechnicianEndpointPath: '/authentication/google/complete-registration/technician',
+  iceTrackProviderCompleteRegistrationOwnerEndpointPath:
+    '/authentication/google/complete-registration/owner',
   iceTrackProviderRefreshTokensEndpointPath: '/authentication/refresh-token',
   iceTrackProviderLogoutEndpointPath: '/authentication/logout',
+
+  /** Profile endpoints */
+  iceTrackProviderOwnerProfilesEndpointPath: '/profiles/owners',
+  iceTrackProviderTechnicianProfilesEndpointPath: '/profiles/technicians',
+
+  /** Notification endpoints */
+  iceTrackProviderNotificationsEndpointPath: '/notifications',
 
   /** Google Identity Services */
   googleClientId: '',

@@ -1,0 +1,9 @@
+<svg
+  class="icon__svg"
+  focusable="false"
+  [attr.role]="label() ? 'img' : null"
+  [attr.aria-label]="label() || null"
+  [attr.aria-hidden]="label() ? null : 'true'"
+>
+  <use [attr.href]="href()" />
+</svg>

@@ -11,19 +11,15 @@ import { handleError } from '@shared/infrastructure/http/handle-error-http';
 import { SignInWithLocalRequest } from '@iam/infrastructure/api/sign-in-with-local.request';
 import type {
   SignUpOwnerRequest,
-  SignUpTechnicianRequest,
 } from '@iam/infrastructure/api/sign-up.request';
 import type { UserResource } from '@iam/infrastructure/api/user.response';
 import type { CompleteGoogleOwnerRegistrationRequest } from '@iam/infrastructure/api/complete-google-owner-registration.request';
-import type { CompleteGoogleTechnicianRegistrationRequest } from '@iam/infrastructure/api/complete-google-technician-registration.request';
 
 export class AuthenticationApiEndpoint {
   private readonly signInLocallyEndpointUrl = `${environment.iceTrackProviderApiBaseUrl}${environment.iceTrackProviderAuthenticationLocalEndpointPath}`;
   private readonly signUpOwnerEndpointUrl = `${environment.iceTrackProviderApiBaseUrl}${environment.iceTrackProviderSignUpOwnerEndpointPath}`;
-  private readonly signUpTechnicianEndpointUrl = `${environment.iceTrackProviderApiBaseUrl}${environment.iceTrackProviderSignUpTechnicianEndpointPath}`;
   private readonly googleVerifyEndpointUrl = `${environment.iceTrackProviderApiBaseUrl}${environment.iceTrackProviderAuthenticationGoogleVerifyEndpointPath}`;
   private readonly completeGoogleOwnerRegistrationEndpointUrl = `${environment.iceTrackProviderApiBaseUrl}${environment.iceTrackProviderCompleteRegistrationOwnerEndpointPath}`;
-  private readonly completeGoogleTechnicianRegistrationEndpointUrl = `${environment.iceTrackProviderApiBaseUrl}${environment.iceTrackProviderCompleteRegistrationTechnicianEndpointPath}`;
   private readonly refreshTokenEndpointUrl = `${environment.iceTrackProviderApiBaseUrl}${environment.iceTrackProviderRefreshTokensEndpointPath}`;
   private readonly logoutEndpointUrl = `${environment.iceTrackProviderApiBaseUrl}${environment.iceTrackProviderLogoutEndpointPath}`;
   private readonly currentUserEndpointUrl = `${environment.iceTrackProviderApiBaseUrl}${environment.iceTrackProviderMeEndpointPath}`;
@@ -52,17 +48,6 @@ export class AuthenticationApiEndpoint {
   }
 
   /**
-   * Registers a local technician through `POST /authentication/sign-up/technician`.
-   * @param request The SignUpTechnicianRequest.
-   * @returns An Observable of the registered UserResource.
-   */
-  signUpTechnician(request: SignUpTechnicianRequest): Observable<UserResource> {
-    return this.http.post<UserResource>(this.signUpTechnicianEndpointUrl, request, {
-      context: publicAuthenticationContext(),
-    });
-  }
-
-  /**
    * Sends a Google ID token to `POST /authentication/google/verify`.
    * @param request The SignInWithGoogleRequest containing the Google ID token.
    * @returns An Observable of the AuthenticatedUserResource.
@@ -84,22 +69,6 @@ export class AuthenticationApiEndpoint {
   ): Observable<AuthenticatedUserResource> {
     return this.http.post<AuthenticatedUserResource>(
       this.completeGoogleOwnerRegistrationEndpointUrl,
-      request,
-      { context: publicAuthenticationContext() },
-    );
-  }
-
-  /**
-   * Completes a Google technician registration through
-   * `POST /authentication/google/complete-registration/technician`, which answers 201.
-   * @param request The CompleteGoogleTechnicianRegistrationRequest.
-   * @returns An Observable of the AuthenticatedUserResource of the new account.
-   */
-  completeGoogleTechnicianRegistration(
-    request: CompleteGoogleTechnicianRegistrationRequest,
-  ): Observable<AuthenticatedUserResource> {
-    return this.http.post<AuthenticatedUserResource>(
-      this.completeGoogleTechnicianRegistrationEndpointUrl,
       request,
       { context: publicAuthenticationContext() },
     );

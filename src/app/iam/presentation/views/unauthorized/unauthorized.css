@@ -1,0 +1,6 @@
+.unauthorized__status {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  text-align: center;
+}

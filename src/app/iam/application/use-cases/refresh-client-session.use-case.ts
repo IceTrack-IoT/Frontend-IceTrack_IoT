@@ -19,7 +19,7 @@ import {
   isAuthenticationError,
 } from '@iam/application/contracts/authentication-error';
 import type { AuthenticationResult } from '@iam/application/contracts/authentication-result';
-import { AuthenticationPort } from '@iam/application/ports/authentication.port';
+import { AuthenticationPort } from '@iam/application/ports/iam.port';
 import { SessionStoragePort } from '@iam/application/ports/session-storage.port';
 import { SessionSyncPort } from '@iam/application/ports/session-sync.port';
 import { TokenExpirationPort } from '@iam/application/ports/token-expiration.port';

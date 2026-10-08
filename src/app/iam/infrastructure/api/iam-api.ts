@@ -5,7 +5,7 @@ import { UserApiEndpoint } from '@iam/infrastructure/api/user-api-endpoint';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { User } from '@iam/domain/model/user.entity';
-import type { AuthenticationPort } from '@iam/application/ports/authentication.port';
+import type { AuthenticationPort } from '@iam/application/ports/iam.port';
 import type { GoogleCredential } from '@iam/application/contracts/google-credential';
 import type { AuthenticationResult } from '@iam/application/contracts/authentication-result';
 import {
@@ -24,20 +24,16 @@ import { SignInWithLocalRequest } from '@iam/infrastructure/api/sign-in-with-loc
 import type {
   LocalSignUp,
   OwnerSignUp,
-  TechnicianSignUp,
 } from '@iam/application/contracts/local-sign-up';
 import type {
   SignUpOwnerRequest,
   SignUpRequest,
-  SignUpTechnicianRequest,
 } from '@iam/infrastructure/api/sign-up.request';
 import type {
   GoogleOwnerRegistration,
   GoogleRegistrationProfile,
-  GoogleTechnicianRegistration,
 } from '@iam/application/contracts/google-registration';
 import type { CompleteGoogleOwnerRegistrationRequest } from '@iam/infrastructure/api/complete-google-owner-registration.request';
-import type { CompleteGoogleTechnicianRegistrationRequest } from '@iam/infrastructure/api/complete-google-technician-registration.request';
 
 /**
  * ErrorResource codes with which `POST /authentication/sign-in/local` rejects a request.
@@ -140,24 +136,6 @@ export class IamApi extends BaseApi implements AuthenticationPort {
   }
 
   /**
-   * Registers a local technician account.
-   *
-   * @param signUp The technician registration data.
-   * @returns An Observable of the registered User entity.
-   */
-  signUpTechnician(signUp: TechnicianSignUp): Observable<User> {
-    const request: SignUpTechnicianRequest = {
-      ...this.toSignUpRequest(signUp),
-      speciality: signUp.speciality,
-      certification_number: signUp.certificationNumber,
-    };
-    return this.authenticationEndpoint.signUpTechnician(request).pipe(
-      map((resource) => this.userAssembler.toEntityFromResource(resource)),
-      catchError((error: unknown) => throwError(() => this.toRegistrationError(error))),
-    );
-  }
-
-  /**
    * Signs in with a Google credential. The Google ID token is only forwarded to the backend.
    *
    * @param credential The Google credential containing the ID token.
@@ -189,30 +167,6 @@ export class IamApi extends BaseApi implements AuthenticationPort {
       ruc: registration.ruc,
     };
     return this.authenticationEndpoint.completeGoogleOwnerRegistration(request).pipe(
-      map((resource) =>
-        this.authenticatedUserAssembler.toAuthenticationResultFromResource(resource),
-      ),
-      catchError((error: unknown) => throwError(() => this.toRegistrationError(error))),
-    );
-  }
-
-  /**
-   * Completes the registration of an unregistered Google account as a technician.
-   *
-   * @param credential The Google credential rejected with `GOOGLE_ACCOUNT_NOT_FOUND`.
-   * @param registration The technician onboarding data.
-   * @returns An Observable of the AuthenticationResult of the new account.
-   */
-  completeGoogleTechnicianRegistration(
-    credential: GoogleCredential,
-    registration: GoogleTechnicianRegistration,
-  ): Observable<AuthenticationResult> {
-    const request: CompleteGoogleTechnicianRegistrationRequest = {
-      ...this.toGoogleRegistrationRequest(credential, registration),
-      speciality: registration.speciality,
-      certification_number: registration.certificationNumber,
-    };
-    return this.authenticationEndpoint.completeGoogleTechnicianRegistration(request).pipe(
       map((resource) =>
         this.authenticatedUserAssembler.toAuthenticationResultFromResource(resource),
       ),
@@ -306,6 +260,7 @@ export class IamApi extends BaseApi implements AuthenticationPort {
   ): Omit<CompleteGoogleOwnerRegistrationRequest, 'ruc'> {
     return {
       id_token: credential.idToken,
+      username: profile.username,
       phone: profile.phone,
       street: profile.street,
       number: profile.number,

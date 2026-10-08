@@ -1,0 +1,249 @@
+<app-public-layout>
+  <section class="iam-card iam-card--wide" aria-labelledby="complete-registration-title">
+    @switch (state()) {
+      @case ('pending') {
+        <header class="iam-card__header">
+          <h1 class="iam-card__title" id="complete-registration-title">
+            {{ 'iam.completeGoogleRegistration.title' | translate }}
+          </h1>
+          <p class="iam-card__subtitle">{{ 'iam.completeGoogleRegistration.subtitle' | translate }}</p>
+        </header>
+
+        <p class="iam-alert iam-alert--info">
+          {{ 'iam.completeGoogleRegistration.notice' | translate }}
+        </p>
+
+        @if (errorKey(); as key) {
+          <p class="iam-alert iam-alert--error" role="alert">{{ key | translate }}</p>
+        }
+
+        <form class="iam-form" [formGroup]="form" (ngSubmit)="submit()">
+          <div class="iam-form__grid">
+            @let usernameError = fieldErrorKey('username');
+            <div class="iam-field">
+              <label class="iam-field__label" for="complete-registration-username">
+                {{ 'iam.fields.username' | translate }}
+              </label>
+              <input
+                class="iam-field__input"
+                id="complete-registration-username"
+                formControlName="username"
+                autocomplete="username"
+                [placeholder]="'iam.placeholders.username' | translate"
+                [attr.aria-invalid]="usernameError ? true : null"
+                [attr.aria-describedby]="usernameError ? 'complete-registration-username-error' : null"
+              />
+              @if (usernameError) {
+                <p class="iam-field__error" id="complete-registration-username-error">
+                  {{ usernameError | translate }}
+                </p>
+              }
+            </div>
+
+            @let phoneError = fieldErrorKey('phone');
+            <div class="iam-field">
+              <label class="iam-field__label" for="complete-registration-phone">
+                {{ 'iam.fields.phone' | translate }}
+              </label>
+              <input
+                class="iam-field__input"
+                id="complete-registration-phone"
+                type="tel"
+                formControlName="phone"
+                autocomplete="tel"
+                [placeholder]="'iam.placeholders.phone' | translate"
+                [attr.aria-invalid]="phoneError ? true : null"
+                [attr.aria-describedby]="phoneError ? 'complete-registration-phone-error' : null"
+              />
+              @if (phoneError) {
+                <p class="iam-field__error" id="complete-registration-phone-error">
+                  {{ phoneError | translate }}
+                </p>
+              }
+            </div>
+
+            @let rucError = fieldErrorKey('ruc');
+            <div class="iam-field iam-field--full">
+              <label class="iam-field__label" for="complete-registration-ruc">
+                {{ 'iam.fields.ruc' | translate }}
+              </label>
+              <input
+                class="iam-field__input"
+                id="complete-registration-ruc"
+                formControlName="ruc"
+                inputmode="numeric"
+                maxlength="11"
+                [placeholder]="'iam.placeholders.ruc' | translate"
+                [attr.aria-invalid]="rucError ? true : null"
+                [attr.aria-describedby]="
+                  rucError
+                    ? 'complete-registration-ruc-hint complete-registration-ruc-error'
+                    : 'complete-registration-ruc-hint'
+                "
+              />
+              <p class="iam-field__hint" id="complete-registration-ruc-hint">
+                {{ 'iam.hints.ruc' | translate }}
+              </p>
+              @if (rucError) {
+                <p class="iam-field__error" id="complete-registration-ruc-error">
+                  {{ rucError | translate }}
+                </p>
+              }
+            </div>
+          </div>
+
+          <fieldset class="iam-form__section">
+            <legend class="iam-form__legend">{{ 'iam.sections.address' | translate }}</legend>
+            <div class="iam-form__grid">
+              @let streetError = fieldErrorKey('street');
+              <div class="iam-field">
+                <label class="iam-field__label" for="complete-registration-street">
+                  {{ 'iam.fields.street' | translate }}
+                </label>
+                <input
+                  class="iam-field__input"
+                  id="complete-registration-street"
+                  formControlName="street"
+                  autocomplete="address-line1"
+                  [placeholder]="'iam.placeholders.street' | translate"
+                  [attr.aria-invalid]="streetError ? true : null"
+                  [attr.aria-describedby]="streetError ? 'complete-registration-street-error' : null"
+                />
+                @if (streetError) {
+                  <p class="iam-field__error" id="complete-registration-street-error">
+                    {{ streetError | translate }}
+                  </p>
+                }
+              </div>
+
+              @let numberError = fieldErrorKey('number');
+              <div class="iam-field">
+                <label class="iam-field__label" for="complete-registration-number">
+                  {{ 'iam.fields.number' | translate }}
+                </label>
+                <input
+                  class="iam-field__input"
+                  id="complete-registration-number"
+                  formControlName="number"
+                  [placeholder]="'iam.placeholders.number' | translate"
+                  [attr.aria-invalid]="numberError ? true : null"
+                  [attr.aria-describedby]="numberError ? 'complete-registration-number-error' : null"
+                />
+                @if (numberError) {
+                  <p class="iam-field__error" id="complete-registration-number-error">
+                    {{ numberError | translate }}
+                  </p>
+                }
+              </div>
+
+              @let cityError = fieldErrorKey('city');
+              <div class="iam-field">
+                <label class="iam-field__label" for="complete-registration-city">
+                  {{ 'iam.fields.city' | translate }}
+                </label>
+                <input
+                  class="iam-field__input"
+                  id="complete-registration-city"
+                  formControlName="city"
+                  autocomplete="address-level2"
+                  [placeholder]="'iam.placeholders.city' | translate"
+                  [attr.aria-invalid]="cityError ? true : null"
+                  [attr.aria-describedby]="cityError ? 'complete-registration-city-error' : null"
+                />
+                @if (cityError) {
+                  <p class="iam-field__error" id="complete-registration-city-error">
+                    {{ cityError | translate }}
+                  </p>
+                }
+              </div>
+
+              @let postalCodeError = fieldErrorKey('postalCode');
+              <div class="iam-field">
+                <label class="iam-field__label" for="complete-registration-postalCode">
+                  {{ 'iam.fields.postalCode' | translate }}
+                </label>
+                <input
+                  class="iam-field__input"
+                  id="complete-registration-postalCode"
+                  formControlName="postalCode"
+                  autocomplete="postal-code"
+                  [placeholder]="'iam.placeholders.postalCode' | translate"
+                  [attr.aria-invalid]="postalCodeError ? true : null"
+                  [attr.aria-describedby]="
+                    postalCodeError ? 'complete-registration-postalCode-error' : null
+                  "
+                />
+                @if (postalCodeError) {
+                  <p class="iam-field__error" id="complete-registration-postalCode-error">
+                    {{ postalCodeError | translate }}
+                  </p>
+                }
+              </div>
+
+              @let countryError = fieldErrorKey('country');
+              <div class="iam-field iam-field--full">
+                <label class="iam-field__label" for="complete-registration-country">
+                  {{ 'iam.fields.country' | translate }}
+                </label>
+                <input
+                  class="iam-field__input"
+                  id="complete-registration-country"
+                  formControlName="country"
+                  autocomplete="country-name"
+                  [placeholder]="'iam.placeholders.country' | translate"
+                  [attr.aria-invalid]="countryError ? true : null"
+                  [attr.aria-describedby]="countryError ? 'complete-registration-country-error' : null"
+                />
+                @if (countryError) {
+                  <p class="iam-field__error" id="complete-registration-country-error">
+                    {{ countryError | translate }}
+                  </p>
+                }
+              </div>
+            </div>
+          </fieldset>
+
+          <div class="complete-registration__actions">
+            <button
+              class="iam-button iam-button--primary"
+              type="submit"
+              [disabled]="iamStore.loading()"
+            >
+              @if (iamStore.loading()) {
+                {{ 'iam.completeGoogleRegistration.submitting' | translate }}
+              } @else {
+                {{ 'iam.completeGoogleRegistration.submit' | translate }}
+              }
+            </button>
+            <a class="iam-button iam-button--secondary" routerLink="/iam/login">
+              {{ 'iam.actions.backToSignIn' | translate }}
+            </a>
+          </div>
+        </form>
+      }
+      @case ('completed') {
+        <header class="iam-card__header">
+          <h1 class="iam-card__title" id="complete-registration-title">
+            {{ 'iam.completeGoogleRegistration.title' | translate }}
+          </h1>
+          <p class="iam-card__subtitle" role="status">
+            {{ 'iam.completeGoogleRegistration.completed' | translate }}
+          </p>
+        </header>
+      }
+      @default {
+        <header class="iam-card__header">
+          <h1 class="iam-card__title" id="complete-registration-title">
+            {{ 'iam.completeGoogleRegistration.expiredTitle' | translate }}
+          </h1>
+          <p class="iam-card__subtitle">
+            {{ 'iam.completeGoogleRegistration.expiredMessage' | translate }}
+          </p>
+        </header>
+        <a class="iam-button iam-button--primary" routerLink="/iam/login">
+          {{ 'iam.actions.backToSignIn' | translate }}
+        </a>
+      }
+    }
+  </section>
+</app-public-layout>

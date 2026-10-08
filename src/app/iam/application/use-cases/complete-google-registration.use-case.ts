@@ -2,11 +2,8 @@ import { inject, Injectable } from '@angular/core';
 import { map, type Observable, tap } from 'rxjs';
 import type { AuthenticationResult } from '@iam/application/contracts/authentication-result';
 import type { GoogleCredential } from '@iam/application/contracts/google-credential';
-import type {
-  GoogleOwnerRegistration,
-  GoogleTechnicianRegistration,
-} from '@iam/application/contracts/google-registration';
-import { AuthenticationPort } from '@iam/application/ports/authentication.port';
+import type { GoogleOwnerRegistration } from '@iam/application/contracts/google-registration';
+import { AuthenticationPort } from '@iam/application/ports/iam.port';
 import { SessionStoragePort } from '@iam/application/ports/session-storage.port';
 import { SessionSyncPort } from '@iam/application/ports/session-sync.port';
 import { TokenExpirationPort } from '@iam/application/ports/token-expiration.port';
@@ -37,20 +34,6 @@ export class CompleteGoogleRegistrationUseCase {
   ): Observable<ClientSession> {
     return this.establishSession(
       this.authentication.completeGoogleOwnerRegistration(credential, registration),
-    );
-  }
-
-  /**
-   * @param credential - The Google credential that was rejected with `GOOGLE_ACCOUNT_NOT_FOUND`.
-   * @param registration - The technician onboarding data.
-   * @returns An Observable of the authenticated client session.
-   */
-  executeAsTechnician(
-    credential: GoogleCredential,
-    registration: GoogleTechnicianRegistration,
-  ): Observable<ClientSession> {
-    return this.establishSession(
-      this.authentication.completeGoogleTechnicianRegistration(credential, registration),
     );
   }
 

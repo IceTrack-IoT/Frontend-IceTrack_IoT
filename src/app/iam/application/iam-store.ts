@@ -1,6 +1,6 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { finalize, type Observable, tap } from 'rxjs';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
+import { filter, finalize, map, type Observable, of, take, tap } from 'rxjs';
 import type { User } from '@iam/domain/model/user.entity';
 import type { GoogleCredential } from '@iam/application/contracts/google-credential';
 import {
@@ -16,12 +16,10 @@ import { SignOutUseCase } from '@iam/application/use-cases/sign-out.use-case';
 import { SynchronizeClientSessionUseCase } from '@iam/application/use-cases/synchronize-client-session.use-case';
 import { LocalCredential } from '@iam/application/contracts/local-credential';
 import { SignInLocallyUseCase } from '@iam/application/use-cases/sign-in-locally.use-case';
-import type { OwnerSignUp, TechnicianSignUp } from '@iam/application/contracts/local-sign-up';
+import type { OwnerSignUp } from '@iam/application/contracts/local-sign-up';
 import { SignUpOwnerUseCase } from '@iam/application/use-cases/sign-up-owner.use-case';
-import { SignUpTechnicianUseCase } from '@iam/application/use-cases/sign-up-technician.use-case';
 import type {
   GoogleOwnerRegistration,
-  GoogleTechnicianRegistration,
 } from '@iam/application/contracts/google-registration';
 import { CompleteGoogleRegistrationUseCase } from '@iam/application/use-cases/complete-google-registration.use-case';
 
@@ -38,7 +36,6 @@ export class IamStore {
   private readonly synchronizeClientSessionUseCase = inject(SynchronizeClientSessionUseCase);
   private readonly signInLocallyUseCase = inject(SignInLocallyUseCase);
   private readonly signUpOwnerUseCase = inject(SignUpOwnerUseCase);
-  private readonly signUpTechnicianUseCase = inject(SignUpTechnicianUseCase);
   private readonly signInWithGoogleUseCase = inject(SignInWithGoogleUseCase);
   private readonly completeGoogleRegistrationUseCase = inject(CompleteGoogleRegistrationUseCase);
   private readonly loadCurrentUserUseCase = inject(LoadCurrentUserUseCase);
@@ -54,6 +51,7 @@ export class IamStore {
 
   private readonly restoringSignal = signal<boolean>(false);
   readonly restoring = this.restoringSignal.asReadonly();
+  private readonly restoring$ = toObservable(this.restoringSignal);
 
   private readonly loadingSignal = signal<boolean>(false);
   readonly loading = this.loadingSignal.asReadonly();
@@ -107,6 +105,22 @@ export class IamStore {
   }
 
   /**
+   * Emits once no session restoration is in progress: immediately when none is running, otherwise as
+   * soon as the running restoration completes.
+   * @returns An Observable that emits once and completes.
+   */
+  whenSessionResolved(): Observable<void> {
+    if (!this.restoringSignal()) {
+      return of(undefined);
+    }
+    return this.restoring$.pipe(
+      filter((restoring) => !restoring),
+      take(1),
+      map(() => undefined),
+    );
+  }
+
+  /**
    * Obtains a usable session after the backend rejected an access token, sharing a single refresh per tab.
    * @param rejectedAccessToken - The access token the backend rejected, or null when none was sent.
    * @returns An Observable of the usable client session.
@@ -157,14 +171,6 @@ export class IamStore {
   }
 
   /**
-   * Registers a local technician account.
-   * @param signUp - The technician registration data.
-   */
-  signUpTechnician(signUp: TechnicianSignUp): void {
-    this.signUp(this.signUpTechnicianUseCase.execute(signUp), 'Failed to sign up as technician');
-  }
-
-  /**
    * Clears the feedback of the last operation (error, error code, registered user and pending Google
    * registration).
    */
@@ -209,18 +215,6 @@ export class IamStore {
       (credential) =>
         this.completeGoogleRegistrationUseCase.executeAsOwner(credential, registration),
       'Failed to complete the Google registration as owner',
-    );
-  }
-
-  /**
-   * Completes the pending Google registration as a technician and keeps the resulting client session.
-   * @param registration - The technician onboarding data.
-   */
-  completeGoogleTechnicianRegistration(registration: GoogleTechnicianRegistration): void {
-    this.completeGoogleRegistration(
-      (credential) =>
-        this.completeGoogleRegistrationUseCase.executeAsTechnician(credential, registration),
-      'Failed to complete the Google registration as technician',
     );
   }
 

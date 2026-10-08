@@ -1,0 +1,108 @@
+/* Form layout and fields shared by the IAM sign-in and registration views. */
+
+.iam-form {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.iam-form__grid {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.iam-form__section {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.iam-form__legend {
+  margin-block-end: var(--space-1);
+  padding: 0;
+  font-size: var(--text-badge-size);
+  font-weight: 700;
+  letter-spacing: var(--text-badge-spacing);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+@container (min-width: 30rem) {
+  .iam-form__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .iam-field--full {
+    grid-column: 1 / -1;
+  }
+}
+
+.iam-field {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+}
+
+.iam-field__label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.iam-field__input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--text-muted);
+  background-color: var(--canvas-bg);
+  font-size: 0.9375rem;
+  color: var(--text-primary);
+}
+
+.iam-field__input::placeholder {
+  color: var(--text-secondary);
+  opacity: 1;
+}
+
+.iam-field__input:focus {
+  border-color: var(--brand-600);
+  background-color: var(--surface-card);
+}
+
+.iam-field__input[aria-invalid='true'] {
+  border-color: var(--status-critical);
+}
+
+.iam-field__hint,
+.iam-field__error {
+  margin: 0;
+  font-size: 0.8125rem;
+}
+
+.iam-field__hint {
+  color: var(--text-secondary);
+}
+
+.iam-field__error {
+  color: color-mix(in srgb, var(--status-critical), #000 35%);
+}
+
+.iam-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-3) 0;
+  font-size: var(--text-badge-size);
+  font-weight: 600;
+  letter-spacing: var(--text-badge-spacing);
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--text-secondary);
+}
+
+.iam-divider::before,
+.iam-divider::after {
+  content: '';
+  flex: 1;
+  border-block-start: 1px solid var(--border-subtle);
+}

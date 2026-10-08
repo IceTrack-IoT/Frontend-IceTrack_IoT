@@ -20,11 +20,3 @@ export interface LocalSignUp {
 export interface OwnerSignUp extends LocalSignUp {
   readonly ruc: number;
 }
-
-/**
- * TechnicianSignUp is the local registration of a technician. The backend assigns the technician role.
- */
-export interface TechnicianSignUp extends LocalSignUp {
-  readonly speciality: string;
-  readonly certificationNumber: string;
-}

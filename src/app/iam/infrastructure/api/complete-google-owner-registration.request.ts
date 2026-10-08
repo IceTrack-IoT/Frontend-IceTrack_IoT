@@ -3,6 +3,7 @@
  */
 export interface CompleteGoogleOwnerRegistrationRequest {
   id_token: string;
+  username: string;
   phone: string;
   street: string;
   number: string;

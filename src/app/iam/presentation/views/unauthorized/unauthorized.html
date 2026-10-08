@@ -1,0 +1,41 @@
+<app-public-layout>
+  <section class="iam-card" aria-labelledby="unauthorized-title">
+    <header class="iam-card__header">
+      <span class="iam-card__icon">
+        <app-icon class="iam-card__icon-glyph" name="lock" />
+      </span>
+      <h1 class="iam-card__title" id="unauthorized-title">
+        {{ 'iam.unauthorized.title' | translate }}
+      </h1>
+      <p class="iam-card__subtitle">{{ 'iam.unauthorized.message' | translate }}</p>
+    </header>
+
+    @switch (exit()) {
+      @case ('restoring') {
+        <p class="unauthorized__status" role="status">
+          {{ 'iam.unauthorized.checkingSession' | translate }}
+        </p>
+      }
+      @case ('owner-home') {
+        <a class="iam-button iam-button--primary" [routerLink]="landingUrls['owner-home']">
+          {{ 'iam.unauthorized.goToDashboard' | translate }}
+        </a>
+      }
+      @case ('technician-redirect') {
+        <a class="iam-button iam-button--primary" [routerLink]="landingUrls['technician-redirect']">
+          {{ 'iam.unauthorized.goToTechnicianArea' | translate }}
+        </a>
+      }
+      @case ('signed-out') {
+        <a class="iam-button iam-button--primary" routerLink="/iam/login">
+          {{ 'iam.actions.goToSignIn' | translate }}
+        </a>
+      }
+      @default {
+        <button class="iam-button iam-button--secondary" type="button" (click)="signOut()">
+          {{ 'iam.actions.signOut' | translate }}
+        </button>
+      }
+    }
+  </section>
+</app-public-layout>

@@ -1,28 +1,91 @@
-<h1>Login</h1>
+<app-public-layout>
+  <section class="iam-card" aria-labelledby="login-title">
+    <header class="iam-card__header">
+      <h1 class="iam-card__title" id="login-title">{{ 'iam.login.title' | translate }}</h1>
+      <p class="iam-card__subtitle">{{ 'iam.login.subtitle' | translate }}</p>
+    </header>
 
-<form [formGroup]="form" (ngSubmit)="submit()">
-  <p>
-    <label>Username <input formControlName="username" autocomplete="username" /></label>
-  </p>
-  <p>
-    <label
-      >Password
-      <input type="password" formControlName="password" autocomplete="current-password" />
-    </label>
-  </p>
-  <button type="submit" [disabled]="form.invalid || iamStore.loading()">Sign in</button>
-</form>
+    <app-google-sign-in-button (credential)="signInWithGoogle($event)" />
 
-<p>or</p>
-<app-google-sign-in-button (credential)="iamStore.signInWithGoogle($event)" />
+    <p class="iam-divider">{{ 'iam.login.divider' | translate }}</p>
 
-@if (iamStore.error(); as error) {
-  <p role="alert">{{ iamStore.errorCode() ?? 'ERROR' }}: {{ error }}</p>
-}
+    @if (errorKey(); as key) {
+      <p class="iam-alert iam-alert--error" id="login-error" role="alert">
+        {{ key | translate }}
+      </p>
+    }
 
-@if (iamStore.googleRegistrationRequired()) {
-  <h2>Complete your Google registration</h2>
-  <app-google-registration-form />
-}
+    <form class="iam-form" [formGroup]="form" (ngSubmit)="submit()">
+      <div class="iam-field">
+        <label class="iam-field__label" for="login-username">
+          {{ 'iam.fields.username' | translate }}
+        </label>
+        <div class="login__control">
+          <app-icon class="login__field-icon" name="user" />
+          <input
+            class="iam-field__input login__input"
+            id="login-username"
+            formControlName="username"
+            autocomplete="username"
+            [placeholder]="'iam.placeholders.username' | translate"
+            [attr.aria-invalid]="showError('username') || null"
+            [attr.aria-describedby]="describedBy('username')"
+          />
+        </div>
+        @if (showError('username')) {
+          <p class="iam-field__error" id="login-username-error">
+            {{ 'iam.validation.required' | translate }}
+          </p>
+        }
+      </div>
 
-<p><a routerLink="/iam/register">Register</a> · <a routerLink="/home">Home</a></p>
+      <div class="iam-field">
+        <label class="iam-field__label" for="login-password">
+          {{ 'iam.fields.password' | translate }}
+        </label>
+        <div class="login__control">
+          <app-icon class="login__field-icon" name="lock" />
+          <input
+            class="iam-field__input login__input login__input--with-toggle"
+            id="login-password"
+            formControlName="password"
+            autocomplete="current-password"
+            [type]="passwordVisible() ? 'text' : 'password'"
+            [placeholder]="'iam.placeholders.password' | translate"
+            [attr.aria-invalid]="showError('password') || null"
+            [attr.aria-describedby]="describedBy('password')"
+          />
+          <button
+            class="login__password-toggle"
+            type="button"
+            aria-controls="login-password"
+            [attr.aria-label]="'iam.login.showPassword' | translate"
+            [attr.aria-pressed]="passwordVisible()"
+            (click)="passwordVisible.set(!passwordVisible())"
+          >
+            <app-icon class="login__toggle-icon" [name]="passwordVisible() ? 'eye-off' : 'eye'" />
+          </button>
+        </div>
+        @if (showError('password')) {
+          <p class="iam-field__error" id="login-password-error">
+            {{ 'iam.validation.required' | translate }}
+          </p>
+        }
+      </div>
+
+      <button class="iam-button iam-button--primary" type="submit" [disabled]="iamStore.loading()">
+        @if (iamStore.loading()) {
+          {{ 'iam.login.submitting' | translate }}
+        } @else {
+          {{ 'iam.login.submit' | translate }}
+          <app-icon class="iam-button__icon" name="arrow-right" />
+        }
+      </button>
+    </form>
+
+    <p class="iam-card__footer">
+      {{ 'iam.login.noAccount' | translate }}
+      <a class="iam-link" routerLink="/iam/register">{{ 'iam.login.registerLink' | translate }}</a>
+    </p>
+  </section>
+</app-public-layout>

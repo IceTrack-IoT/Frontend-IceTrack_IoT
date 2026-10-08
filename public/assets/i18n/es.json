@@ -1,0 +1,118 @@
+{
+  "shared": {
+    "appName": "IceTrack",
+    "publicLayout": {
+      "tagline": "Plataforma de Monitoreo Térmico"
+    }
+  },
+  "iam": {
+    "fields": {
+      "username": "Nombre de usuario",
+      "password": "Contraseña",
+      "confirmPassword": "Confirmar contraseña",
+      "fullName": "Nombre completo",
+      "email": "Correo corporativo",
+      "phone": "Teléfono de contacto",
+      "ruc": "Identificación fiscal (RUC)",
+      "street": "Calle",
+      "number": "Número",
+      "city": "Ciudad",
+      "postalCode": "Código postal",
+      "country": "País"
+    },
+    "placeholders": {
+      "username": "Ej. roberto_morales",
+      "password": "Ingresa tu contraseña",
+      "newPassword": "Mínimo 8 caracteres",
+      "confirmPassword": "Repite la contraseña",
+      "fullName": "Ej. Roberto Morales",
+      "email": "contacto@empresa.com",
+      "phone": "Ej. +51 987 654 321",
+      "ruc": "Ej. 20123456789",
+      "street": "Ej. Av. Los Pinos",
+      "number": "Ej. 245",
+      "city": "Ej. Lima",
+      "postalCode": "Ej. 15001",
+      "country": "Ej. Perú"
+    },
+    "hints": {
+      "password": "Usa al menos 8 caracteres.",
+      "ruc": "11 dígitos, solo números."
+    },
+    "sections": {
+      "address": "Dirección del negocio"
+    },
+    "validation": {
+      "required": "Este campo es obligatorio.",
+      "email": "Ingresa un correo válido, por ejemplo nombre@empresa.com.",
+      "phone": "Ingresa un teléfono válido: dígitos, espacios, guiones o paréntesis, con un + inicial opcional.",
+      "ruc": "El RUC debe tener exactamente 11 dígitos.",
+      "passwordLength": "La contraseña debe tener al menos 8 caracteres.",
+      "passwordMismatch": "Las contraseñas no coinciden."
+    },
+    "errors": {
+      "invalidCredentials": "No pudimos iniciar tu sesión. Revisa tu usuario y contraseña e inténtalo de nuevo.",
+      "federatedAccount": "Esta cuenta inicia sesión con Google. Usa Continuar con Google para acceder.",
+      "googleSignInFailed": "No pudimos continuar con Google. Inténtalo de nuevo o usa el formulario de abajo.",
+      "googleUnavailable": "El acceso con Google no está disponible en este momento. Puedes continuar con el formulario de abajo.",
+      "invalidRegistration": "Algunos de tus datos fueron rechazados. Revísalos e inténtalo de nuevo.",
+      "registrationRejected": "No pudimos crear tu cuenta. Es posible que tu usuario, correo o RUC ya estén registrados. Revisa tus datos e inténtalo de nuevo."
+    },
+    "actions": {
+      "signOut": "Cerrar sesión",
+      "goToSignIn": "Ir a iniciar sesión",
+      "backToSignIn": "Volver a iniciar sesión"
+    },
+    "login": {
+      "title": "Iniciar sesión",
+      "subtitle": "Accede al portal de gestión de tus equipos de refrigeración.",
+      "divider": "O con tu usuario",
+      "showPassword": "Mostrar contraseña",
+      "submit": "Iniciar sesión",
+      "submitting": "Iniciando sesión…",
+      "noAccount": "¿No tienes una cuenta de propietario?",
+      "registerLink": "Regístrate aquí"
+    },
+    "register": {
+      "title": "Crea tu cuenta de empresa",
+      "subtitle": "Monitorea y protege tus equipos de refrigeración en tiempo real.",
+      "divider": "O con tus datos",
+      "submit": "Crear cuenta de propietario",
+      "submitting": "Creando cuenta…",
+      "haveAccount": "¿Ya tienes cuenta?",
+      "signInLink": "Iniciar sesión",
+      "successTitle": "Tu cuenta de propietario está lista",
+      "successMessage": "Inicia sesión con tu usuario y contraseña para empezar a monitorear tus equipos."
+    },
+    "completeGoogleRegistration": {
+      "title": "Completa tu cuenta de propietario",
+      "notice": "Se necesita información adicional para completar tu cuenta.",
+      "subtitle": "Necesitamos estos datos para configurar tu perfil de propietario.",
+      "submit": "Completar registro",
+      "submitting": "Completando registro…",
+      "expiredTitle": "Vuelve a continuar con Google",
+      "expiredMessage": "Para completar tu registro, vuelve a iniciar sesión y selecciona Continuar con Google nuevamente.",
+      "completed": "Tu cuenta está lista. Iniciando sesión…"
+    },
+    "technicianRedirect": {
+      "title": "La plataforma web es para propietarios de negocios",
+      "message": "Las operaciones de técnicos están disponibles en la aplicación móvil de IceTrack.",
+      "qrAlt": "Código QR para descargar la aplicación móvil de IceTrack",
+      "qrUnavailable": "El código QR no está disponible en este momento. Sigue las instrucciones de abajo para continuar.",
+      "stepsTitle": "Cómo continuar",
+      "steps": {
+        "scan": "Abre la cámara de tu teléfono y escanea el código QR.",
+        "install": "Instala la aplicación móvil de IceTrack desde la página que se abre.",
+        "signIn": "Inicia sesión en la aplicación con la misma cuenta que usas aquí."
+      },
+      "alternative": "¿No puedes escanear el código? Instala la aplicación móvil de IceTrack en tu teléfono e inicia sesión con la misma cuenta."
+    },
+    "unauthorized": {
+      "title": "Acceso no permitido",
+      "message": "No tienes permiso para acceder a esta parte de la plataforma IceTrack.",
+      "checkingSession": "Verificando tu sesión…",
+      "goToDashboard": "Ir al panel",
+      "goToTechnicianArea": "Ir al área de técnicos"
+    }
+  }
+}

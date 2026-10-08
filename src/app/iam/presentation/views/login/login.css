@@ -1,0 +1,45 @@
+.login__control {
+  position: relative;
+}
+
+.login__field-icon {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: 14px;
+  width: 18px;
+  height: 18px;
+  color: var(--text-secondary);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.iam-field__input.login__input {
+  padding-inline-start: 42px;
+}
+
+.iam-field__input.login__input--with-toggle {
+  padding-inline-end: 48px;
+}
+
+.login__password-toggle {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.login__password-toggle:hover {
+  color: var(--brand-600);
+}
+
+.login__toggle-icon {
+  width: 20px;
+  height: 20px;
+}

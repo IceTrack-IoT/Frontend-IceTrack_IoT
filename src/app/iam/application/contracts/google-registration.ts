@@ -3,6 +3,7 @@
  * registration. The username and email come from the Google account.
  */
 export interface GoogleRegistrationProfile {
+  readonly username: string;
   readonly phone: string;
   readonly street: string;
   readonly number: string;
@@ -16,12 +17,4 @@ export interface GoogleRegistrationProfile {
  */
 export interface GoogleOwnerRegistration extends GoogleRegistrationProfile {
   readonly ruc: number;
-}
-
-/**
- * GoogleTechnicianRegistration completes the registration of a Google user as a technician.
- */
-export interface GoogleTechnicianRegistration extends GoogleRegistrationProfile {
-  readonly speciality: string;
-  readonly certificationNumber: string;
 }

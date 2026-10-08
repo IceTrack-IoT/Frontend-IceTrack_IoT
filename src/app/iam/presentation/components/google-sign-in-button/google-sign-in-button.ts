@@ -8,27 +8,28 @@ import {
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import type { GoogleCredential } from '@iam/application/contracts/google-credential';
 import { GoogleIdentityServices } from '@iam/infrastructure/google/google-identity-services';
 
 /**
- * Renders Google's sign-in button and emits the credential issued by Google.
+ * Renders Google's "Continue with Google" button in the active language and emits the credential issued
+ * by Google. When Google sign-in cannot be loaded, a translated notice replaces the button; provider
+ * details are never shown.
  */
 @Component({
+  imports: [TranslatePipe],
   selector: 'app-google-sign-in-button',
-  template: `
-    @if (unavailable(); as reason) {
-      <p role="status">{{ reason }}</p>
-    }
-    <div #button></div>
-  `,
+  styleUrl: './google-sign-in-button.css',
+  templateUrl: './google-sign-in-button.html',
 })
 export class GoogleSignInButton {
   readonly credential = output<GoogleCredential>();
 
   private readonly googleIdentity = inject(GoogleIdentityServices);
+  private readonly translate = inject(TranslateService);
   private readonly button = viewChild.required<ElementRef<HTMLElement>>('button');
-  protected readonly unavailable = signal<string | null>(null);
+  protected readonly unavailable = signal(false);
 
   constructor() {
     this.googleIdentity.credentials
@@ -36,13 +37,13 @@ export class GoogleSignInButton {
       .subscribe((credential) => this.credential.emit(credential));
 
     afterNextRender(() => {
+      const container = this.button().nativeElement;
       this.googleIdentity
-        .renderButton(this.button().nativeElement)
-        .catch((error: unknown) =>
-          this.unavailable.set(
-            error instanceof Error ? error.message : 'Google sign-in is unavailable.',
-          ),
-        );
+        .renderButton(container, {
+          locale: this.translate.getCurrentLang() ?? undefined,
+          width: container.clientWidth,
+        })
+        .catch(() => this.unavailable.set(true));
     });
   }
 }

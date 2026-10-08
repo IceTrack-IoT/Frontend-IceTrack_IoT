@@ -1,0 +1,5 @@
+.complete-registration__actions {
+  display: grid;
+  gap: var(--space-1);
+  margin-block-start: var(--space-1);
+}

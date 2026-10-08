@@ -1,0 +1,147 @@
+/* Card, actions and feedback shared by the IAM views rendered inside the public layout. */
+
+.iam-card {
+  container-type: inline-size;
+  width: 100%;
+  max-width: 28rem;
+  padding: var(--space-4);
+  background-color: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-card);
+  box-shadow: var(--elevation-card);
+}
+
+.iam-card--wide {
+  max-width: 38rem;
+}
+
+.iam-card__header {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-1);
+  margin-block-end: var(--space-3);
+  text-align: center;
+}
+
+.iam-card__title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.iam-card__subtitle {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+}
+
+.iam-card__icon {
+  display: inline-grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-pill);
+  background-color: var(--brand-600);
+  color: var(--color-light);
+}
+
+.iam-card__icon-glyph {
+  width: 28px;
+  height: 28px;
+}
+
+.iam-card__footer {
+  margin: var(--space-3) 0 0;
+  padding-block-start: var(--space-3);
+  border-block-start: 1px solid var(--border-subtle);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.iam-link {
+  font-weight: 600;
+  color: var(--brand-600);
+  text-decoration: none;
+}
+
+.iam-link:hover {
+  text-decoration: underline;
+}
+
+.iam-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  width: 100%;
+  min-height: 48px;
+  padding: 0 var(--space-3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.iam-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.iam-button--primary {
+  background-color: var(--brand-600);
+  color: var(--color-light);
+}
+
+.iam-button--primary:hover:enabled {
+  background-color: var(--brand-900-deep);
+}
+
+.iam-button--secondary {
+  background-color: var(--surface-card);
+  border-color: var(--text-muted);
+  color: var(--text-primary);
+}
+
+.iam-button--secondary:hover {
+  background-color: var(--canvas-bg);
+}
+
+.iam-button__icon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+
+.iam-alert {
+  margin: 0 0 var(--space-2);
+  padding: 12px var(--space-2);
+  border: 1px solid;
+  border-radius: var(--radius-control);
+  font-size: 0.875rem;
+}
+
+.iam-alert--error {
+  border-color: color-mix(in srgb, var(--status-critical) 45%, transparent);
+  background-color: color-mix(in srgb, var(--status-critical) 8%, var(--surface-card));
+  color: color-mix(in srgb, var(--status-critical), #000 35%);
+}
+
+.iam-alert--info {
+  border-color: color-mix(in srgb, var(--brand-600) 30%, transparent);
+  background-color: var(--brand-100);
+  color: var(--brand-900);
+}
+
+@media (max-width: 480px) {
+  .iam-card {
+    padding: var(--space-3) var(--space-2);
+  }
+
+  .iam-card__title {
+    font-size: 1.5rem;
+  }
+}

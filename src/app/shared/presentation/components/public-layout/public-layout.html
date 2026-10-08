@@ -1,0 +1,15 @@
+<header class="public-layout__header">
+  <div class="container public-layout__bar">
+    <span class="public-layout__brand">
+      <img class="public-layout__logo" src="logo.svg" width="40" height="40" alt="" />
+      {{ 'shared.appName' | translate }}
+    </span>
+    <ng-content select="[publicLayoutActions]">
+      <p class="public-layout__tagline">{{ 'shared.publicLayout.tagline' | translate }}</p>
+    </ng-content>
+  </div>
+</header>
+
+<main class="public-layout__main">
+  <ng-content />
+</main>

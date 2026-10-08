@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { catchError, defer, type Observable, of } from 'rxjs';
-import { AuthenticationPort } from '@iam/application/ports/authentication.port';
+import { AuthenticationPort } from '@iam/application/ports/iam.port';
 import { SessionStoragePort } from '@iam/application/ports/session-storage.port';
 import { SessionSyncPort } from '@iam/application/ports/session-sync.port';
 
