@@ -1,0 +1,56 @@
+.assign-dialog__list {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.assign-dialog__candidate {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px var(--space-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-card);
+  cursor: pointer;
+}
+
+.assign-dialog__candidate:has(input:checked) {
+  border-color: var(--brand-600);
+  background-color: #f5f9fe;
+}
+
+.assign-dialog__candidate input {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin: 2px 0 0;
+  accent-color: var(--brand-600);
+}
+
+.assign-dialog__details {
+  display: grid;
+  gap: 2px;
+}
+
+.assign-dialog__name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+  font-weight: 600;
+}
+
+.assign-dialog__meta {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.assign-dialog__star {
+  color: var(--tone-warning-fg);
+}

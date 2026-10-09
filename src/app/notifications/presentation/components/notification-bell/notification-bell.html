@@ -1,0 +1,15 @@
+<a
+  class="notification-bell"
+  routerLink="/notifications"
+  routerLinkActive="notification-bell--active"
+  ariaCurrentWhenActive="page"
+  [attr.aria-label]="
+    (unreadCount > 0 ? 'notifications.bell.labelWithUnread' : 'notifications.bell.label')
+      | translate: { count: unreadCount }
+  "
+>
+  <app-icon class="notification-bell__icon" name="bell" />
+  @if (unreadCount > 0) {
+    <span class="notification-bell__badge" aria-hidden="true">{{ unreadCount }}</span>
+  }
+</a>

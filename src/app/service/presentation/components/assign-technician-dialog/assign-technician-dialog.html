@@ -1,0 +1,108 @@
+<app-dialog
+  [heading]="'serviceRequests.assign.title' | translate"
+  [description]="requestLabel()"
+  (closed)="closed.emit()"
+>
+  <div
+    class="ui-segmented"
+    role="group"
+    [attr.aria-label]="'serviceRequests.assign.specialtyFilter' | translate"
+  >
+    @for (filter of specialtyFilters; track filter) {
+      <button
+        class="ui-segmented__option"
+        type="button"
+        [attr.aria-pressed]="specialty() === filter"
+        (click)="specialty.set(filter)"
+      >
+        {{
+          (filter === 'ALL'
+            ? 'serviceRequests.assign.allSpecialties'
+            : 'serviceRequests.specialty.' + filter
+          ) | translate
+        }}
+      </button>
+    }
+  </div>
+
+  <fieldset
+    class="ui-fieldset"
+    [attr.aria-describedby]="selection.touched && selection.invalid ? 'assign-error' : null"
+  >
+    <legend class="visually-hidden">{{ 'serviceRequests.assign.legend' | translate }}</legend>
+    @if (visible().length === 0) {
+      <p class="ui-field__hint" role="status">
+        {{ 'serviceRequests.assign.noCandidates' | translate }}
+      </p>
+    }
+    <ul class="assign-dialog__list">
+      @for (candidate of visible(); track candidate.technicianProfileId) {
+        <li>
+          <label class="assign-dialog__candidate">
+            <input
+              type="radio"
+              name="technician"
+              [formControl]="selection"
+              [value]="candidate.technicianProfileId"
+            />
+            <span class="assign-dialog__details">
+              <span class="assign-dialog__name">
+                {{ candidate.fullName }}
+                @if (candidate.technicianProfileId === currentTechnicianId()) {
+                  <span class="ui-tag ui-tag--info">{{
+                    'serviceRequests.assign.current' | translate
+                  }}</span>
+                }
+              </span>
+              <span class="assign-dialog__meta">
+                {{ 'serviceRequests.specialty.' + candidate.specialty | translate }} ·
+                {{
+                  'serviceRequests.assign.certification'
+                    | translate: { number: candidate.certificationNumber }
+                }}
+              </span>
+              <span class="assign-dialog__meta">
+                @if (candidate.averageRating !== null) {
+                  <app-icon class="assign-dialog__star" name="star-filled" />
+                  {{
+                    'serviceRequests.assign.rating'
+                      | translate: { rating: (candidate.averageRating | localizedNumber: 1) }
+                  }}
+                } @else {
+                  {{ 'serviceRequests.assign.noRatings' | translate }}
+                }
+                ·
+                {{
+                  'serviceRequests.assign.completedServices'
+                    | translate: { count: candidate.completedServices }
+                }}
+              </span>
+            </span>
+          </label>
+        </li>
+      }
+    </ul>
+    @if (selection.touched && selection.invalid) {
+      <p class="ui-field__error" id="assign-error">
+        {{ 'serviceRequests.assign.required' | translate }}
+      </p>
+    }
+  </fieldset>
+
+  <div dialogActions class="ui-form__actions">
+    <button class="ui-button ui-button--secondary" type="button" (click)="closed.emit()">
+      {{ 'shared.actions.cancel' | translate }}
+    </button>
+    <button
+      class="ui-button ui-button--primary"
+      type="button"
+      [disabled]="pending()"
+      (click)="confirm()"
+    >
+      {{
+        (pending() ? 'serviceRequests.assign.pending' : 'serviceRequests.assign.confirm')
+          | translate
+      }}
+    </button>
+  </div>
+</app-dialog>

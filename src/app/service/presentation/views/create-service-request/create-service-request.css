@@ -1,0 +1,64 @@
+.create-request {
+  max-width: 48rem;
+}
+
+.ui-alert .ui-link {
+  margin-inline-start: var(--space-1);
+}
+
+.create-request__priorities {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: var(--space-1);
+  margin-block-start: 6px;
+}
+
+.create-request__priority {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--border-control);
+  border-radius: var(--radius-control);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.create-request__priority:has(input:checked) {
+  border-color: var(--brand-600);
+  background-color: var(--brand-100);
+  color: var(--brand-900);
+}
+
+.create-request__priority input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--brand-600);
+}
+
+.create-request__confirmation {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.create-request__confirmation-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-pill);
+  background-color: var(--tone-success-bg);
+  font-size: 1.75rem;
+  color: var(--tone-success-fg);
+}
+
+.create-request__text {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.create-request__confirmation-actions {
+  justify-content: flex-start;
+}

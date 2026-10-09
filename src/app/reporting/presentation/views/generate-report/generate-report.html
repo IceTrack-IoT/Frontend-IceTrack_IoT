@@ -1,0 +1,203 @@
+<div class="ui-stack generate-report">
+  <a class="ui-link ui-back-link" routerLink="/reports">
+    <app-icon name="arrow-left" />
+    {{ 'reporting.form.back' | translate }}
+  </a>
+
+  @if (created(); as report) {
+    <section
+      class="ui-panel generate-report__confirmation"
+      aria-labelledby="report-confirmation-title"
+    >
+      <span class="generate-report__confirmation-icon"><app-icon name="clock" /></span>
+      <h1
+        #confirmationHeading
+        class="ui-page-header__title"
+        id="report-confirmation-title"
+        tabindex="-1"
+      >
+        {{ 'reporting.form.requestedTitle' | translate }}
+      </h1>
+      <p class="generate-report__text">{{ 'reporting.form.requestedMessage' | translate }}</p>
+      <dl class="ui-details">
+        <div>
+          <dt>{{ 'reporting.fields.report' | translate }}</dt>
+          <dd>{{ report.title }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'reporting.fields.type' | translate }}</dt>
+          <dd>{{ 'reporting.type.' + report.type | translate }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'reporting.fields.format' | translate }}</dt>
+          <dd>{{ 'reporting.format.' + report.format | translate }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'reporting.fields.status' | translate }}</dt>
+          <dd>
+            <app-status-tag
+              [label]="'reporting.status.' + report.status | translate"
+              [appearance]="statusAppearance[report.status]"
+            />
+          </dd>
+        </div>
+      </dl>
+      <div class="ui-form__actions generate-report__confirmation-actions">
+        <button class="ui-button ui-button--secondary" type="button" (click)="requestAnother()">
+          {{ 'reporting.form.requestAnother' | translate }}
+        </button>
+        <a class="ui-button ui-button--primary" routerLink="/reports">{{
+          'reporting.form.goToReports' | translate
+        }}</a>
+      </div>
+    </section>
+  } @else {
+    <header class="ui-page-header">
+      <div>
+        <p class="ui-page-header__eyebrow">{{ 'reporting.eyebrow' | translate }}</p>
+        <h1 class="ui-page-header__title">{{ 'reporting.form.title' | translate }}</h1>
+        <p class="ui-page-header__subtitle">{{ 'reporting.form.subtitle' | translate }}</p>
+      </div>
+    </header>
+
+    <form class="ui-panel ui-form" novalidate [formGroup]="form" (ngSubmit)="submit()">
+      @let titleError = errorKey('title');
+      <div class="ui-field">
+        <label class="ui-field__label" for="report-title">{{
+          'reporting.fields.title' | translate
+        }}</label>
+        <input
+          class="ui-field__control"
+          id="report-title"
+          formControlName="title"
+          [attr.maxlength]="titleMaxLength"
+          [placeholder]="'reporting.form.titlePlaceholder' | translate"
+          [attr.aria-invalid]="titleError ? true : null"
+          [attr.aria-describedby]="titleError ? 'report-title-error' : null"
+        />
+        @if (titleError) {
+          <p class="ui-field__error" id="report-title-error">{{ titleError | translate }}</p>
+        }
+      </div>
+
+      @let typeError = errorKey('type');
+      <div class="ui-field">
+        <label class="ui-field__label" for="report-type">{{
+          'reporting.fields.type' | translate
+        }}</label>
+        <select
+          class="ui-field__control"
+          id="report-type"
+          formControlName="type"
+          [attr.aria-invalid]="typeError ? true : null"
+          [attr.aria-describedby]="typeError ? 'report-type-error' : 'report-type-hint'"
+        >
+          <option value="">{{ 'reporting.form.selectType' | translate }}</option>
+          @for (type of types; track type) {
+            <option [value]="type">{{ 'reporting.type.' + type | translate }}</option>
+          }
+        </select>
+        <p class="ui-field__hint" id="report-type-hint">
+          {{ 'reporting.form.typeHint' | translate }}
+        </p>
+        @if (typeError) {
+          <p class="ui-field__error" id="report-type-error">{{ typeError | translate }}</p>
+        }
+      </div>
+
+      <fieldset class="ui-fieldset">
+        <legend class="ui-fieldset__legend">{{ 'reporting.fields.format' | translate }}</legend>
+        <div class="generate-report__formats">
+          @for (format of formats; track format) {
+            <label class="generate-report__format">
+              <input type="radio" formControlName="format" [value]="format" />
+              {{ 'reporting.format.' + format | translate }}
+            </label>
+          }
+        </div>
+      </fieldset>
+
+      <div class="ui-form__grid">
+        <div class="ui-field">
+          <label class="ui-field__label" for="report-site">{{
+            'reporting.fields.site' | translate
+          }}</label>
+          <select class="ui-field__control" id="report-site" formControlName="siteId">
+            <option [ngValue]="null">{{ 'reporting.form.allSites' | translate }}</option>
+            @for (site of sites; track site.id) {
+              <option [ngValue]="site.id">{{ site.name }}</option>
+            }
+          </select>
+        </div>
+        <div class="ui-field">
+          <label class="ui-field__label" for="report-equipment">{{
+            'reporting.fields.equipment' | translate
+          }}</label>
+          <select class="ui-field__control" id="report-equipment" formControlName="equipmentId">
+            <option [ngValue]="null">{{ 'reporting.form.allEquipment' | translate }}</option>
+            @for (item of equipmentOptions(); track item.id) {
+              <option [ngValue]="item.id">{{ item.name }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <fieldset class="ui-fieldset">
+        <legend class="ui-fieldset__legend">{{ 'reporting.fields.dateRange' | translate }}</legend>
+        <div class="ui-form__grid">
+          @let fromError = errorKey('from');
+          <div class="ui-field">
+            <label class="ui-field__label" for="report-from">{{
+              'reporting.form.from' | translate
+            }}</label>
+            <input
+              class="ui-field__control"
+              id="report-from"
+              type="date"
+              formControlName="from"
+              [attr.aria-invalid]="fromError ? true : null"
+              [attr.aria-describedby]="fromError ? 'report-from-error' : null"
+            />
+            @if (fromError) {
+              <p class="ui-field__error" id="report-from-error">{{ fromError | translate }}</p>
+            }
+          </div>
+          @let toError = errorKey('to');
+          <div class="ui-field">
+            <label class="ui-field__label" for="report-to">{{
+              'reporting.form.to' | translate
+            }}</label>
+            <input
+              class="ui-field__control"
+              id="report-to"
+              type="date"
+              formControlName="to"
+              [attr.aria-invalid]="toError ? true : null"
+              [attr.aria-describedby]="toError ? 'report-to-error' : null"
+            />
+            @if (toError) {
+              <p class="ui-field__error" id="report-to-error">{{ toError | translate }}</p>
+            }
+          </div>
+        </div>
+      </fieldset>
+
+      <p class="ui-alert ui-alert--info">
+        <app-icon class="ui-alert__icon" name="info-circle" />
+        {{ 'reporting.form.asyncNotice' | translate }}
+      </p>
+
+      <div class="ui-form__actions">
+        <a class="ui-button ui-button--secondary" routerLink="/reports">{{
+          'shared.actions.cancel' | translate
+        }}</a>
+        <button class="ui-button ui-button--primary" type="submit" [disabled]="source.pending()">
+          <app-icon class="ui-button__icon" name="report-analytics" />
+          {{
+            (source.pending() ? 'reporting.form.submitting' : 'reporting.form.submit') | translate
+          }}
+        </button>
+      </div>
+    </form>
+  }
+</div>

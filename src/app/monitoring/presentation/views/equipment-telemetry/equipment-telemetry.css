@@ -1,0 +1,96 @@
+.telemetry-view__section-title {
+  margin-block-end: var(--space-2);
+}
+
+.telemetry-view__current {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.telemetry-view__current p {
+  margin: 0;
+}
+
+.telemetry-view__value {
+  font-size: 3rem;
+  line-height: 1.1;
+}
+
+.telemetry-view__value--out {
+  color: var(--tone-critical-fg);
+}
+
+.telemetry-view__value--stale {
+  color: var(--text-secondary);
+}
+
+.telemetry-view__state {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.telemetry-view__current-facts {
+  flex: 1 1 24rem;
+}
+
+.telemetry-view__age {
+  display: block;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.telemetry-view__notice {
+  margin-block-start: var(--space-2);
+}
+
+.telemetry-view__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin: 0 0 var(--space-2);
+}
+
+.telemetry-view__stats dt {
+  font-size: var(--text-badge-size);
+  font-weight: 600;
+  letter-spacing: var(--text-badge-spacing);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.telemetry-view__stats dd {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.telemetry-view__figure {
+  margin: 0;
+}
+
+.telemetry-view__caption {
+  margin-block-start: var(--space-1);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.telemetry-view__table {
+  margin-block-start: var(--space-2);
+}
+
+.telemetry-view__table summary {
+  min-height: 44px;
+  padding-block: 10px;
+  font-weight: 600;
+  color: var(--brand-600);
+  cursor: pointer;
+}
+
+.telemetry-view__outside {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--tone-critical-fg);
+}

@@ -1,0 +1,187 @@
+@let chart = layout();
+@let active = activePoint();
+
+<ul class="temperature-chart__legend">
+  <li>
+    <span class="temperature-chart__key temperature-chart__key--line"></span
+    >{{ 'monitoring.chart.average' | translate }}
+  </li>
+  <li>
+    <span class="temperature-chart__key temperature-chart__key--band"></span
+    >{{ 'monitoring.chart.range' | translate }}
+  </li>
+  <li>
+    <span class="temperature-chart__key temperature-chart__key--threshold"></span
+    >{{ 'monitoring.chart.threshold' | translate }}
+  </li>
+  <li>
+    <span class="temperature-chart__key temperature-chart__key--outside"></span
+    >{{ 'monitoring.chart.outside' | translate }}
+  </li>
+</ul>
+
+<div
+  class="temperature-chart__plot"
+  role="slider"
+  tabindex="0"
+  aria-valuemin="1"
+  [attr.aria-label]="'monitoring.chart.sliderLabel' | translate"
+  [attr.aria-valuemax]="chart.points.length"
+  [attr.aria-valuenow]="(activeIndex() ?? chart.points.length - 1) + 1"
+  [attr.aria-valuetext]="
+    active
+      ? ('monitoring.chart.valueText'
+        | translate
+          : {
+              time: (active.reading.recorded_at | localizedDate: 'dateTime'),
+              temperature: (active.reading.average_temperature | temperature),
+            })
+      : ('monitoring.chart.sliderHint' | translate)
+  "
+  (keydown)="step($event)"
+  (focus)="focusLatest()"
+  (blur)="activeIndex.set(null)"
+>
+  <svg
+    class="temperature-chart__svg"
+    aria-hidden="true"
+    [attr.width]="width()"
+    [attr.height]="height"
+    [attr.viewBox]="'0 0 ' + width() + ' ' + height"
+    (pointermove)="track($event)"
+    (pointerleave)="activeIndex.set(null)"
+  >
+    <text
+      class="temperature-chart__axis"
+      [attr.x]="chart.left - 8"
+      [attr.y]="chart.top - 4"
+      text-anchor="end"
+    >
+      °C
+    </text>
+    @for (tick of chart.yTicks; track tick.value) {
+      <line
+        class="temperature-chart__grid"
+        [attr.x1]="chart.left"
+        [attr.x2]="chart.right"
+        [attr.y1]="tick.y"
+        [attr.y2]="tick.y"
+      />
+      <text
+        class="temperature-chart__axis"
+        [attr.x]="chart.left - 8"
+        [attr.y]="tick.y + 4"
+        text-anchor="end"
+      >
+        {{ tick.value | localizedNumber }}
+      </text>
+    }
+    @for (tick of chart.xTicks; track tick.time.getTime()) {
+      <text
+        class="temperature-chart__axis"
+        [attr.x]="tick.x"
+        [attr.y]="chart.bottom + 22"
+        text-anchor="middle"
+      >
+        {{ tick.time | localizedDate: timeDisplay() }}
+      </text>
+    }
+
+    @for (band of chart.bands; track $index) {
+      <path class="temperature-chart__band" [attr.d]="band" />
+    }
+
+    <line
+      class="temperature-chart__threshold"
+      [attr.x1]="chart.left"
+      [attr.x2]="chart.right"
+      [attr.y1]="chart.maxY"
+      [attr.y2]="chart.maxY"
+    />
+    <text
+      class="temperature-chart__threshold-label"
+      [attr.x]="chart.right"
+      [attr.y]="chart.maxY - 6"
+      text-anchor="end"
+    >
+      {{ 'monitoring.chart.maxLabel' | translate: { value: (maxCelsius() | temperature) } }}
+    </text>
+    <line
+      class="temperature-chart__threshold"
+      [attr.x1]="chart.left"
+      [attr.x2]="chart.right"
+      [attr.y1]="chart.minY"
+      [attr.y2]="chart.minY"
+    />
+    <text
+      class="temperature-chart__threshold-label"
+      [attr.x]="chart.right"
+      [attr.y]="chart.minY + 16"
+      text-anchor="end"
+    >
+      {{ 'monitoring.chart.minLabel' | translate: { value: (minCelsius() | temperature) } }}
+    </text>
+
+    @for (line of chart.lines; track $index) {
+      <path class="temperature-chart__line" [attr.d]="line" />
+    }
+    @for (point of chart.points; track point.reading.id) {
+      @if (point.outside) {
+        <circle
+          class="temperature-chart__outside"
+          r="4.5"
+          [attr.cx]="point.x"
+          [attr.cy]="point.y"
+        />
+      }
+    }
+
+    @if (active) {
+      <line
+        class="temperature-chart__crosshair"
+        [attr.x1]="active.x"
+        [attr.x2]="active.x"
+        [attr.y1]="chart.top"
+        [attr.y2]="chart.bottom"
+      />
+      <circle class="temperature-chart__active" r="5" [attr.cx]="active.x" [attr.cy]="active.y" />
+    }
+    <rect
+      class="temperature-chart__hit"
+      [attr.x]="chart.left"
+      [attr.y]="chart.top"
+      [attr.width]="chart.right - chart.left"
+      [attr.height]="chart.bottom - chart.top"
+    />
+  </svg>
+
+  @if (active) {
+    <div
+      class="temperature-chart__tooltip"
+      aria-hidden="true"
+      [class.temperature-chart__tooltip--start]="active.x > width() / 2"
+      [style.left.px]="active.x"
+    >
+      <span class="temperature-chart__tooltip-value telemetry">{{
+        active.reading.average_temperature | temperature
+      }}</span>
+      <span>{{ active.reading.recorded_at | localizedDate: 'dateTime' }}</span>
+      <span>
+        {{
+          'monitoring.chart.rangeValue'
+            | translate
+              : {
+                  min: (active.reading.min_temperature | temperature),
+                  max: (active.reading.max_temperature | temperature),
+                }
+        }}
+      </span>
+      <span>{{ 'monitoring.chart.humidity' | translate: { value: active.reading.humidity } }}</span>
+      @if (active.outside) {
+        <span class="temperature-chart__tooltip-outside">{{
+          'monitoring.chart.outside' | translate
+        }}</span>
+      }
+    </div>
+  }
+</div>

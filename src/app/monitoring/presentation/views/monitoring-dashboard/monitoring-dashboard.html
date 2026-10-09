@@ -1,0 +1,241 @@
+<div class="ui-stack">
+  <header class="ui-page-header">
+    <div>
+      <p class="ui-page-header__eyebrow">{{ 'monitoring.eyebrow' | translate }}</p>
+      <h1 class="ui-page-header__title">{{ 'monitoring.dashboard.title' | translate }}</h1>
+      <p class="ui-page-header__subtitle">{{ 'monitoring.dashboard.subtitle' | translate }}</p>
+    </div>
+    <div class="ui-page-header__actions dashboard__refresh">
+      <p class="dashboard__updated" role="status">
+        @if (source.status() === 'loading') {
+          {{ 'monitoring.dashboard.refreshing' | translate }}
+        } @else if (updatedAt(); as updated) {
+          {{
+            'monitoring.dashboard.updatedAt'
+              | translate: { time: (updated | localizedDate: 'time') }
+          }}
+        }
+      </p>
+      <button
+        class="ui-button ui-button--secondary"
+        type="button"
+        [disabled]="source.status() === 'loading'"
+        (click)="load()"
+      >
+        <app-icon class="ui-button__icon" name="refresh" />
+        {{ 'monitoring.dashboard.refresh' | translate }}
+      </button>
+    </div>
+  </header>
+
+  @switch (source.status()) {
+    @case ('loading') {
+      <app-state-panel kind="loading" [heading]="'monitoring.dashboard.loading' | translate" />
+    }
+    @case ('error') {
+      <app-state-panel
+        kind="error"
+        [heading]="'monitoring.dashboard.errorTitle' | translate"
+        [message]="'shared.states.errorMessage' | translate"
+      >
+        <button class="ui-button ui-button--primary" type="button" (click)="load()">
+          <app-icon class="ui-button__icon" name="refresh" />
+          {{ 'shared.actions.retry' | translate }}
+        </button>
+      </app-state-panel>
+    }
+    @default {
+      @if (temperatures().length === 0) {
+        <app-state-panel
+          kind="empty"
+          [heading]="'monitoring.dashboard.emptyTitle' | translate"
+          [message]="'monitoring.dashboard.emptyMessage' | translate"
+        >
+          <a class="ui-button ui-button--primary" routerLink="/assets/equipment">
+            {{ 'monitoring.dashboard.goToEquipment' | translate }}
+          </a>
+        </app-state-panel>
+      } @else {
+        <section aria-labelledby="dashboard-summary-title">
+          <h2 class="visually-hidden" id="dashboard-summary-title">
+            {{ 'monitoring.dashboard.summaryTitle' | translate }}
+          </h2>
+          <ul class="dashboard__tiles">
+            <li>
+              <a class="ui-panel dashboard__tile" routerLink="/assets/sites">
+                <span class="dashboard__tile-label"
+                  ><app-icon name="building-store" />{{
+                    'monitoring.dashboard.sites' | translate
+                  }}</span
+                >
+                <span class="dashboard__tile-value">{{ counts.sites }}</span>
+              </a>
+            </li>
+            <li>
+              <a class="ui-panel dashboard__tile" routerLink="/assets/equipment">
+                <span class="dashboard__tile-label"
+                  ><app-icon name="fridge" />{{
+                    'monitoring.dashboard.monitoredEquipment' | translate
+                  }}</span
+                >
+                <span class="dashboard__tile-value">{{ monitoredCount() }}</span>
+                <span class="dashboard__tile-detail">
+                  {{
+                    'monitoring.dashboard.ofEquipment' | translate: { total: temperatures().length }
+                  }}
+                </span>
+              </a>
+            </li>
+            <li>
+              <a class="ui-panel dashboard__tile" routerLink="/monitoring/alerts">
+                <span class="dashboard__tile-label"
+                  ><app-icon name="bell-ringing" />{{
+                    'monitoring.dashboard.openAlerts' | translate
+                  }}</span
+                >
+                <span class="dashboard__tile-value">{{ openAlerts().length }}</span>
+                <span
+                  class="dashboard__tile-detail"
+                  [class.dashboard__tile-detail--critical]="criticalCount() > 0"
+                >
+                  {{
+                    'monitoring.dashboard.criticalAlerts' | translate: { count: criticalCount() }
+                  }}
+                </span>
+              </a>
+            </li>
+            <li>
+              <a class="ui-panel dashboard__tile" routerLink="/service-requests">
+                <span class="dashboard__tile-label"
+                  ><app-icon name="tools" />{{
+                    'monitoring.dashboard.activeServiceRequests' | translate
+                  }}</span
+                >
+                <span class="dashboard__tile-value">{{ counts.activeServiceRequests }}</span>
+              </a>
+            </li>
+          </ul>
+        </section>
+
+        <div class="dashboard__columns">
+          <section class="ui-panel" aria-labelledby="dashboard-current-title">
+            <div class="ui-panel__header">
+              <div>
+                <h2 class="ui-panel__title" id="dashboard-current-title">
+                  {{ 'monitoring.dashboard.currentTitle' | translate }}
+                </h2>
+                <p class="ui-panel__subtitle">
+                  {{ 'monitoring.dashboard.currentSubtitle' | translate }}
+                </p>
+              </div>
+            </div>
+            <ul class="dashboard__temperatures">
+              @for (item of temperatures(); track item.equipment.id) {
+                <li
+                  class="dashboard__temperature"
+                  [class.dashboard__temperature--outside]="item.state === 'outside'"
+                >
+                  <h3 class="dashboard__temperature-name">
+                    <a
+                      class="ui-link"
+                      [routerLink]="['/monitoring/equipment', item.equipment.id, 'telemetry']"
+                    >
+                      {{ item.equipment.name }}
+                    </a>
+                  </h3>
+                  <p class="dashboard__temperature-site">{{ item.equipment.siteName }}</p>
+                  @if (item.reading; as reading) {
+                    <p class="telemetry dashboard__temperature-value">
+                      {{ reading.average_temperature | temperature }}
+                    </p>
+                  } @else {
+                    <p
+                      class="dashboard__temperature-value dashboard__temperature-value--none"
+                      aria-hidden="true"
+                    >
+                      —
+                    </p>
+                  }
+                  <p class="dashboard__temperature-state">
+                    @switch (item.state) {
+                      @case ('outside') {
+                        <app-icon name="alert-triangle" />
+                      }
+                      @case ('offline') {
+                        <app-icon name="wifi-off" />
+                      }
+                      @case ('within') {
+                        <app-icon name="circle-check" />
+                      }
+                      @default {
+                        <app-icon name="info-circle" />
+                      }
+                    }
+                    {{ 'monitoring.state.' + item.state | translate }}
+                  </p>
+                  <p class="dashboard__temperature-meta">
+                    {{
+                      'monitoring.dashboard.thresholdShort'
+                        | translate
+                          : {
+                              min: (item.equipment.minCelsius | temperature),
+                              max: (item.equipment.maxCelsius | temperature),
+                            }
+                    }}
+                    @if (item.reading; as reading) {
+                      <br />
+                      <time [attr.datetime]="reading.recorded_at.toISOString()">
+                        {{
+                          'monitoring.dashboard.readingAge'
+                            | translate: { age: (reading.recorded_at | relativeTime) }
+                        }}
+                      </time>
+                    }
+                  </p>
+                </li>
+              }
+            </ul>
+          </section>
+
+          <section class="ui-panel" aria-labelledby="dashboard-alerts-title">
+            <div class="ui-panel__header">
+              <h2 class="ui-panel__title" id="dashboard-alerts-title">
+                {{ 'monitoring.dashboard.alertsTitle' | translate }}
+              </h2>
+              <a class="ui-link" routerLink="/monitoring/alerts">{{
+                'monitoring.dashboard.viewAllAlerts' | translate
+              }}</a>
+            </div>
+            @if (recentAlerts().length === 0) {
+              <app-state-panel
+                kind="empty"
+                [heading]="'monitoring.dashboard.noOpenAlerts' | translate"
+              />
+            } @else {
+              <ul class="dashboard__alerts">
+                @for (alert of recentAlerts(); track alert.id) {
+                  <li class="dashboard__alert">
+                    <app-icon class="dashboard__alert-icon" [name]="typeIcons[alert.type]" />
+                    <div>
+                      <a class="ui-link" [routerLink]="['/monitoring/alerts', alert.id]">
+                        {{ 'monitoring.alertType.' + alert.type | translate }} ·
+                        {{ equipmentById().get(alert.equipment_id)?.name }}
+                      </a>
+                      <p class="dashboard__alert-meta">
+                        <app-status-tag
+                          [label]="'monitoring.severity.' + alert.severity | translate"
+                          [appearance]="severityAppearance[alert.severity]"
+                        />
+                        {{ alert.opened_at | relativeTime }}
+                      </p>
+                    </div>
+                  </li>
+                }
+              </ul>
+            }
+          </section>
+        </div>
+      }
+    }
+  }
+</div>

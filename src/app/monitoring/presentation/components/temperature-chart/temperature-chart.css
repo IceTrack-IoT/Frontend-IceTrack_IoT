@@ -1,0 +1,145 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.temperature-chart__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+  margin: 0 0 var(--space-1);
+  padding: 0;
+  list-style: none;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.temperature-chart__legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.temperature-chart__key {
+  display: inline-block;
+  width: 18px;
+}
+
+.temperature-chart__key--line {
+  height: 2px;
+  background-color: var(--brand-600);
+}
+
+.temperature-chart__key--band {
+  height: 10px;
+  background-color: rgb(0 74 173 / 0.12);
+}
+
+.temperature-chart__key--threshold {
+  border-block-start: 2px dashed var(--tone-critical-fg);
+}
+
+.temperature-chart__key--outside {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-pill);
+  background-color: var(--tone-critical-fg);
+}
+
+.temperature-chart__plot {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-control);
+}
+
+.temperature-chart__svg {
+  display: block;
+  touch-action: pan-y;
+}
+
+.temperature-chart__axis,
+.temperature-chart__threshold-label {
+  font-size: 12px;
+  fill: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.temperature-chart__threshold-label {
+  font-weight: 600;
+  fill: var(--tone-critical-fg);
+}
+
+.temperature-chart__grid {
+  stroke: var(--border-subtle);
+  stroke-width: 1;
+}
+
+.temperature-chart__band {
+  fill: rgb(0 74 173 / 0.12);
+}
+
+.temperature-chart__threshold {
+  stroke: var(--tone-critical-fg);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 4;
+}
+
+.temperature-chart__line {
+  fill: none;
+  stroke: var(--brand-600);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.temperature-chart__outside {
+  fill: var(--tone-critical-fg);
+  stroke: var(--surface-card);
+  stroke-width: 2;
+}
+
+.temperature-chart__crosshair {
+  stroke: var(--text-secondary);
+  stroke-width: 1;
+}
+
+.temperature-chart__active {
+  fill: var(--brand-600);
+  stroke: var(--surface-card);
+  stroke-width: 2;
+}
+
+.temperature-chart__hit {
+  fill: transparent;
+}
+
+.temperature-chart__tooltip {
+  position: absolute;
+  inset-block-start: var(--space-2);
+  display: grid;
+  gap: 2px;
+  min-width: 11rem;
+  padding: var(--space-1) 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-control);
+  background-color: var(--surface-card);
+  box-shadow: var(--elevation-card);
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  transform: translateX(12px);
+  pointer-events: none;
+}
+
+.temperature-chart__tooltip--start {
+  transform: translateX(calc(-100% - 12px));
+}
+
+.temperature-chart__tooltip-value {
+  font-size: 1.125rem;
+  color: var(--text-primary);
+}
+
+.temperature-chart__tooltip-outside {
+  font-weight: 600;
+  color: var(--tone-critical-fg);
+}

@@ -1,0 +1,239 @@
+<div class="ui-stack">
+  <a class="ui-link ui-back-link" routerLink="/assets/equipment">
+    <app-icon name="arrow-left" />
+    {{ 'assets.equipmentDetail.back' | translate }}
+  </a>
+
+  @switch (source.status()) {
+    @case ('loading') {
+      <h1 class="visually-hidden">{{ 'assets.equipmentDetail.title' | translate }}</h1>
+      <app-state-panel kind="loading" [heading]="'assets.equipmentDetail.loading' | translate" />
+    }
+    @case ('error') {
+      <h1 class="visually-hidden">{{ 'assets.equipmentDetail.title' | translate }}</h1>
+      <app-state-panel
+        kind="error"
+        [heading]="'assets.equipmentDetail.errorTitle' | translate"
+        [message]="'shared.states.errorMessage' | translate"
+      >
+        <button class="ui-button ui-button--primary" type="button" (click)="load()">
+          <app-icon class="ui-button__icon" name="refresh" />
+          {{ 'shared.actions.retry' | translate }}
+        </button>
+      </app-state-panel>
+    }
+    @default {
+      @if (equipment(); as item) {
+        <header class="ui-panel equipment-detail__header">
+          <div class="equipment-detail__identity">
+            <p class="ui-page-header__eyebrow">
+              {{ 'assets.equipmentType.' + item.equipment_type | translate }}
+            </p>
+            <h1 class="ui-page-header__title">{{ item.name }}</h1>
+            <div class="equipment-detail__tags">
+              <app-status-tag
+                [label]="'assets.statusEquipment.' + item.status | translate"
+                [appearance]="statusAppearance[item.status]"
+              />
+              <span class="equipment-detail__connectivity">
+                <app-icon [name]="item.online ? 'wifi' : 'wifi-off'" />
+                {{ (item.online ? 'assets.online' : 'assets.offline') | translate }}
+              </span>
+            </div>
+          </div>
+
+          <div class="equipment-detail__reading">
+            <p class="equipment-detail__reading-label">
+              {{ 'assets.equipmentDetail.lastKnownTemperature' | translate }}
+            </p>
+            @if (item.last_known_temperature !== null) {
+              <p
+                class="telemetry equipment-detail__reading-value"
+                [class.equipment-detail__reading-value--out]="
+                  item.isOutRange(item.last_known_temperature)
+                "
+              >
+                {{ item.last_known_temperature | temperature }}
+              </p>
+              @if (item.isOutRange(item.last_known_temperature)) {
+                <p class="equipment-detail__out-of-range">
+                  <app-icon name="alert-triangle" />
+                  {{ 'assets.outsideThreshold' | translate }}
+                </p>
+              }
+              <p class="equipment-detail__freshness">
+                <time [attr.datetime]="item.last_reading_at?.toISOString()">
+                  {{
+                    'assets.equipmentDetail.readingAge'
+                      | translate: { age: (item.last_reading_at | relativeTime) }
+                  }}
+                </time>
+              </p>
+            } @else {
+              <p class="equipment-detail__no-telemetry">{{ 'assets.noTelemetry' | translate }}</p>
+            }
+          </div>
+        </header>
+
+        <div class="equipment-detail__grid">
+          <section class="ui-panel" aria-labelledby="equipment-threshold-title">
+            <div class="ui-panel__header">
+              <div>
+                <h2 class="ui-panel__title" id="equipment-threshold-title">
+                  {{ 'assets.equipmentDetail.thresholdTitle' | translate }}
+                </h2>
+                <p class="ui-panel__subtitle">
+                  @let threshold = item.temperature_threshold;
+                  {{
+                    'assets.equipmentDetail.thresholdCurrent'
+                      | translate
+                        : {
+                            min: (threshold.min_celsius | temperature),
+                            max: (threshold.max_celsius | temperature),
+                          }
+                  }}
+                </p>
+              </div>
+            </div>
+            @if (thresholdSaved()) {
+              <p class="ui-alert ui-alert--success equipment-detail__saved" role="status">
+                <app-icon class="ui-alert__icon" name="circle-check" />
+                {{ 'assets.equipmentDetail.thresholdSaved' | translate }}
+              </p>
+            }
+            <app-equipment-threshold-form
+              [threshold]="item.temperature_threshold"
+              [pending]="source.pending()"
+              (saved)="saveThreshold($event)"
+            />
+          </section>
+
+          <section class="ui-panel" aria-labelledby="equipment-details-title">
+            <h2
+              class="ui-panel__title equipment-detail__section-title"
+              id="equipment-details-title"
+            >
+              {{ 'assets.equipmentDetail.detailsTitle' | translate }}
+            </h2>
+            <dl class="ui-details">
+              <div>
+                <dt>{{ 'assets.fields.site' | translate }}</dt>
+                <dd>
+                  @if (site(); as itemSite) {
+                    <a
+                      class="ui-link"
+                      routerLink="/assets/equipment"
+                      [queryParams]="{ siteId: itemSite.id }"
+                    >
+                      {{ itemSite.name }}
+                    </a>
+                  }
+                </dd>
+              </div>
+              <div>
+                <dt>{{ 'assets.fields.type' | translate }}</dt>
+                <dd>{{ 'assets.equipmentType.' + item.equipment_type | translate }}</dd>
+              </div>
+              <div>
+                <dt>{{ 'assets.fields.reminderInterval' | translate }}</dt>
+                <dd>
+                  {{
+                    'assets.equipmentDetail.days'
+                      | translate: { count: item.reminder_interval_days }
+                  }}
+                </dd>
+              </div>
+              <div>
+                <dt>{{ 'assets.fields.lastReadingAt' | translate }}</dt>
+                <dd>
+                  {{
+                    item.last_reading_at
+                      ? (item.last_reading_at | localizedDate)
+                      : ('assets.noTelemetry' | translate)
+                  }}
+                </dd>
+              </div>
+              <div class="equipment-detail__code">
+                <dt>{{ 'assets.fields.code' | translate }}</dt>
+                <dd class="telemetry">{{ item.equipment_code_uid }}</dd>
+              </div>
+            </dl>
+          </section>
+        </div>
+
+        <section aria-labelledby="equipment-related-title">
+          <h2 class="ui-panel__title equipment-detail__section-title" id="equipment-related-title">
+            {{ 'assets.equipmentDetail.relatedTitle' | translate }}
+          </h2>
+          <ul class="equipment-detail__related">
+            <li class="ui-panel equipment-detail__related-card">
+              <h3 class="equipment-detail__related-title">
+                <app-icon name="cpu" />
+                {{ 'assets.equipmentDetail.deviceTitle' | translate }}
+              </h3>
+              <p class="equipment-detail__related-text">
+                {{ 'assets.equipmentDetail.deviceText' | translate }}
+              </p>
+              <a class="ui-link" routerLink="/devices" [queryParams]="{ equipmentId: item.id }">
+                {{ 'assets.equipmentDetail.deviceLink' | translate }}
+              </a>
+            </li>
+            <li class="ui-panel equipment-detail__related-card">
+              <h3 class="equipment-detail__related-title">
+                <app-icon name="activity" />
+                {{ 'assets.equipmentDetail.monitoringTitle' | translate }}
+              </h3>
+              <p class="equipment-detail__related-text">
+                {{ 'assets.equipmentDetail.monitoringText' | translate }}
+              </p>
+              <a class="ui-link" [routerLink]="['/monitoring/equipment', item.id, 'telemetry']">
+                {{ 'assets.equipmentDetail.telemetryLink' | translate }}
+              </a>
+              <a
+                class="ui-link"
+                routerLink="/monitoring/alerts"
+                [queryParams]="{ equipmentId: item.id }"
+              >
+                {{ 'assets.equipmentDetail.alertsLink' | translate }}
+              </a>
+            </li>
+            <li class="ui-panel equipment-detail__related-card">
+              <h3 class="equipment-detail__related-title">
+                <app-icon name="tools" />
+                {{ 'assets.equipmentDetail.serviceTitle' | translate }}
+              </h3>
+              <p class="equipment-detail__related-text">
+                {{ 'assets.equipmentDetail.serviceText' | translate }}
+              </p>
+              <a
+                class="ui-link"
+                routerLink="/service-requests"
+                [queryParams]="{ equipmentId: item.id }"
+              >
+                {{ 'assets.equipmentDetail.serviceHistoryLink' | translate }}
+              </a>
+              <a
+                class="ui-link"
+                routerLink="/service-requests/new"
+                [queryParams]="{ equipmentId: item.id }"
+              >
+                {{ 'assets.equipmentDetail.requestServiceLink' | translate }}
+              </a>
+            </li>
+          </ul>
+        </section>
+      } @else {
+        <h1 class="visually-hidden">{{ 'assets.equipmentDetail.title' | translate }}</h1>
+        <app-state-panel
+          kind="empty"
+          [heading]="'assets.equipmentDetail.notFoundTitle' | translate"
+          [message]="'assets.equipmentDetail.notFoundMessage' | translate"
+        >
+          <a class="ui-button ui-button--secondary" routerLink="/assets/equipment">
+            {{ 'assets.equipmentDetail.back' | translate }}
+          </a>
+        </app-state-panel>
+      }
+    }
+  }
+</div>

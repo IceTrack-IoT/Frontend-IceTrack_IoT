@@ -1,0 +1,39 @@
+@if (pageCount() > 1) {
+  <nav class="pagination" [attr.aria-label]="'shared.pagination.label' | translate">
+    <button
+      class="ui-button ui-button--secondary ui-button--small"
+      type="button"
+      [disabled]="page() === 1"
+      (click)="select(page() - 1)"
+    >
+      <app-icon class="ui-button__icon" name="chevron-left" />
+      {{ 'shared.pagination.previous' | translate }}
+    </button>
+
+    <ul class="pagination__pages">
+      @for (item of pages(); track item) {
+        <li>
+          <button
+            class="pagination__page"
+            type="button"
+            [attr.aria-current]="item === page() ? 'page' : null"
+            [attr.aria-label]="'shared.pagination.page' | translate: { page: item }"
+            (click)="select(item)"
+          >
+            {{ item }}
+          </button>
+        </li>
+      }
+    </ul>
+
+    <button
+      class="ui-button ui-button--secondary ui-button--small"
+      type="button"
+      [disabled]="page() === pageCount()"
+      (click)="select(page() + 1)"
+    >
+      {{ 'shared.pagination.next' | translate }}
+      <app-icon class="ui-button__icon" name="chevron-right" />
+    </button>
+  </nav>
+}

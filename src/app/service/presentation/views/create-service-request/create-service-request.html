@@ -1,0 +1,214 @@
+<div class="ui-stack create-request">
+  <a class="ui-link ui-back-link" routerLink="/service-requests">
+    <app-icon name="arrow-left" />
+    {{ 'serviceRequests.form.back' | translate }}
+  </a>
+
+  @if (created(); as request) {
+    @let equipment = equipmentOf(request);
+    <section
+      class="ui-panel create-request__confirmation"
+      aria-labelledby="request-confirmation-title"
+    >
+      <span class="create-request__confirmation-icon"><app-icon name="circle-check" /></span>
+      <h1
+        #confirmationHeading
+        class="ui-page-header__title"
+        id="request-confirmation-title"
+        tabindex="-1"
+      >
+        {{ 'serviceRequests.form.createdTitle' | translate: { id: request.id } }}
+      </h1>
+      <p class="create-request__text">{{ 'serviceRequests.form.createdMessage' | translate }}</p>
+      <dl class="ui-details">
+        <div>
+          <dt>{{ 'serviceRequests.fields.request' | translate }}</dt>
+          <dd>{{ 'serviceRequests.number' | translate: { id: request.id } }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'serviceRequests.fields.equipment' | translate }}</dt>
+          <dd>{{ equipment?.name }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'serviceRequests.fields.site' | translate }}</dt>
+          <dd>{{ equipment?.siteName }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'serviceRequests.fields.type' | translate }}</dt>
+          <dd>{{ 'serviceRequests.type.' + request.type | translate }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'serviceRequests.fields.priority' | translate }}</dt>
+          <dd>
+            <app-status-tag
+              [label]="'serviceRequests.priority.' + request.priority | translate"
+              [appearance]="priorityAppearance[request.priority]"
+            />
+          </dd>
+        </div>
+        <div>
+          <dt>{{ 'serviceRequests.fields.status' | translate }}</dt>
+          <dd>
+            <app-status-tag
+              [label]="'serviceRequests.status.' + request.status | translate"
+              [appearance]="statusAppearance[request.status]"
+            />
+          </dd>
+        </div>
+      </dl>
+      <div class="ui-form__actions create-request__confirmation-actions">
+        <button class="ui-button ui-button--secondary" type="button" (click)="createAnother()">
+          {{ 'serviceRequests.form.createAnother' | translate }}
+        </button>
+        <a class="ui-button ui-button--primary" routerLink="/service-requests">
+          {{ 'serviceRequests.form.goToList' | translate }}
+        </a>
+      </div>
+    </section>
+  } @else {
+    <header class="ui-page-header">
+      <div>
+        <p class="ui-page-header__eyebrow">{{ 'serviceRequests.eyebrow' | translate }}</p>
+        <h1 class="ui-page-header__title">{{ 'serviceRequests.form.title' | translate }}</h1>
+        <p class="ui-page-header__subtitle">{{ 'serviceRequests.form.subtitle' | translate }}</p>
+      </div>
+    </header>
+
+    @if (sourceAlertId !== null) {
+      <p class="ui-alert ui-alert--info">
+        <app-icon class="ui-alert__icon" name="bell-ringing" />
+        <span>
+          {{ 'serviceRequests.form.fromAlert' | translate: { id: sourceAlertId } }}
+          <a class="ui-link" [routerLink]="['/monitoring/alerts', sourceAlertId]">
+            {{ 'serviceRequests.form.viewAlert' | translate }}
+          </a>
+        </span>
+      </p>
+    }
+
+    <form class="ui-panel ui-form" novalidate [formGroup]="form" (ngSubmit)="submit()">
+      <div class="ui-form__grid">
+        @let equipmentError = errorKey('equipmentId');
+        <div class="ui-field">
+          <label class="ui-field__label" for="request-equipment">{{
+            'serviceRequests.fields.equipment' | translate
+          }}</label>
+          <select
+            class="ui-field__control"
+            id="request-equipment"
+            formControlName="equipmentId"
+            [attr.aria-invalid]="equipmentError ? true : null"
+            [attr.aria-describedby]="equipmentError ? 'request-equipment-error' : 'request-site'"
+          >
+            <option [ngValue]="null">
+              {{ 'serviceRequests.form.selectEquipment' | translate }}
+            </option>
+            @for (item of equipmentOptions; track item.id) {
+              <option [ngValue]="item.id">{{ item.name }}</option>
+            }
+          </select>
+          <p class="ui-field__hint" id="request-site">
+            {{
+              selectedEquipment()
+                ? ('serviceRequests.form.siteOf'
+                  | translate: { site: selectedEquipment()?.siteName })
+                : ('serviceRequests.form.siteHint' | translate)
+            }}
+          </p>
+          @if (equipmentError) {
+            <p class="ui-field__error" id="request-equipment-error">
+              {{ equipmentError | translate }}
+            </p>
+          }
+        </div>
+
+        @let typeError = errorKey('type');
+        <div class="ui-field">
+          <label class="ui-field__label" for="request-type">{{
+            'serviceRequests.fields.type' | translate
+          }}</label>
+          <select
+            class="ui-field__control"
+            id="request-type"
+            formControlName="type"
+            [attr.aria-invalid]="typeError ? true : null"
+            [attr.aria-describedby]="typeError ? 'request-type-error' : null"
+          >
+            <option value="">{{ 'serviceRequests.form.selectType' | translate }}</option>
+            @for (type of types; track type) {
+              <option [value]="type">{{ 'serviceRequests.type.' + type | translate }}</option>
+            }
+          </select>
+          @if (typeError) {
+            <p class="ui-field__error" id="request-type-error">{{ typeError | translate }}</p>
+          }
+        </div>
+      </div>
+
+      @let priorityError = errorKey('priority');
+      <fieldset
+        class="ui-fieldset"
+        [attr.aria-describedby]="priorityError ? 'request-priority-error' : null"
+      >
+        <legend class="ui-fieldset__legend">
+          {{ 'serviceRequests.fields.priority' | translate }}
+        </legend>
+        <div class="create-request__priorities">
+          @for (priority of priorities; track priority) {
+            <label class="create-request__priority">
+              <input type="radio" formControlName="priority" [value]="priority" />
+              {{ 'serviceRequests.priority.' + priority | translate }}
+            </label>
+          }
+        </div>
+        @if (priorityError) {
+          <p class="ui-field__error" id="request-priority-error">{{ priorityError | translate }}</p>
+        }
+      </fieldset>
+
+      @let descriptionError = errorKey('description');
+      <div class="ui-field">
+        <label class="ui-field__label" for="request-description">{{
+          'serviceRequests.fields.description' | translate
+        }}</label>
+        <textarea
+          class="ui-field__control"
+          id="request-description"
+          rows="5"
+          formControlName="description"
+          [attr.maxlength]="descriptionMaxLength"
+          [placeholder]="'serviceRequests.form.descriptionPlaceholder' | translate"
+          [attr.aria-invalid]="descriptionError ? true : null"
+          [attr.aria-describedby]="
+            descriptionError
+              ? 'request-description-hint request-description-error'
+              : 'request-description-hint'
+          "
+        ></textarea>
+        <p class="ui-field__hint" id="request-description-hint">
+          {{
+            'serviceRequests.form.descriptionHint'
+              | translate: { count: descriptionLength(), max: descriptionMaxLength }
+          }}
+        </p>
+        @if (descriptionError) {
+          <p class="ui-field__error" id="request-description-error">
+            {{ descriptionError | translate }}
+          </p>
+        }
+      </div>
+
+      <div class="ui-form__actions">
+        <a class="ui-button ui-button--secondary" routerLink="/service-requests">
+          {{ 'shared.actions.cancel' | translate }}
+        </a>
+        <button class="ui-button ui-button--primary" type="submit" [disabled]="source.pending()">
+          {{
+            (source.pending() ? 'serviceRequests.form.submitting' : 'serviceRequests.form.submit')
+              | translate
+          }}
+        </button>
+      </div>
+    </form>
+  }
+</div>

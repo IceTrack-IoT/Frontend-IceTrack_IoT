@@ -1,0 +1,36 @@
+.notification-bell {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-control);
+  color: var(--text-primary);
+}
+
+.notification-bell:hover,
+.notification-bell--active {
+  background-color: var(--brand-100);
+  color: var(--brand-600);
+}
+
+.notification-bell__icon {
+  width: 22px;
+  height: 22px;
+}
+
+.notification-bell__badge {
+  position: absolute;
+  inset-block-start: 4px;
+  inset-inline-end: 2px;
+  min-width: 20px;
+  padding: 0 5px;
+  border: 2px solid var(--surface-card);
+  border-radius: var(--radius-pill);
+  background-color: var(--tone-critical-fg);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  color: var(--color-light);
+}

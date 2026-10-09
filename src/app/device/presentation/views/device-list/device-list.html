@@ -1,0 +1,296 @@
+<div class="ui-stack">
+  <header class="ui-page-header">
+    <div>
+      <p class="ui-page-header__eyebrow">{{ 'devices.eyebrow' | translate }}</p>
+      <h1 class="ui-page-header__title">{{ 'devices.list.title' | translate }}</h1>
+      <p class="ui-page-header__subtitle">{{ 'devices.list.subtitle' | translate }}</p>
+    </div>
+    <div class="ui-page-header__actions">
+      <a
+        class="ui-button ui-button--primary"
+        routerLink="/devices/pair"
+        [queryParams]="equipmentFilter === null ? {} : { equipmentId: equipmentFilter }"
+      >
+        <app-icon class="ui-button__icon" name="link" />
+        {{ 'devices.list.pair' | translate }}
+      </a>
+    </div>
+  </header>
+
+  @if (equipmentFilter !== null) {
+    <p class="ui-alert ui-alert--info">
+      <app-icon class="ui-alert__icon" name="info-circle" />
+      <span>
+        {{
+          'devices.list.equipmentFilter'
+            | translate: { equipment: equipmentById.get(equipmentFilter)?.name ?? equipmentFilter }
+        }}
+        <a class="ui-link" routerLink="/devices">{{ 'devices.list.showAll' | translate }}</a>
+      </span>
+    </p>
+  }
+
+  @if (announcement(); as key) {
+    <p class="ui-alert ui-alert--success" role="status">
+      <app-icon class="ui-alert__icon" name="circle-check" />
+      {{ key | translate }}
+    </p>
+  }
+
+  <section class="ui-panel" aria-labelledby="device-table-title">
+    <div class="ui-panel__header">
+      <h2 class="ui-panel__title" id="device-table-title">
+        {{ 'devices.list.tableTitle' | translate }}
+      </h2>
+      <div
+        class="ui-segmented"
+        role="group"
+        [attr.aria-label]="'devices.list.pairingFilter' | translate"
+      >
+        <button
+          class="ui-segmented__option"
+          type="button"
+          [attr.aria-pressed]="pairingFilter() === 'all'"
+          (click)="pairingFilter.set('all')"
+        >
+          {{ 'devices.list.all' | translate }}
+        </button>
+        <button
+          class="ui-segmented__option"
+          type="button"
+          [attr.aria-pressed]="pairingFilter() === 'paired'"
+          (click)="pairingFilter.set('paired')"
+        >
+          {{ 'devices.list.paired' | translate }}
+          <span class="ui-segmented__count">{{ pairedCount() }}</span>
+        </button>
+        <button
+          class="ui-segmented__option"
+          type="button"
+          [attr.aria-pressed]="pairingFilter() === 'unpaired'"
+          (click)="pairingFilter.set('unpaired')"
+        >
+          {{ 'devices.list.unpaired' | translate }}
+          <span class="ui-segmented__count">{{ unpairedCount() }}</span>
+        </button>
+      </div>
+    </div>
+
+    @switch (source.status()) {
+      @case ('loading') {
+        <app-state-panel kind="loading" [heading]="'devices.list.loading' | translate" />
+      }
+      @case ('error') {
+        <app-state-panel
+          kind="error"
+          [heading]="'devices.list.errorTitle' | translate"
+          [message]="'shared.states.errorMessage' | translate"
+        >
+          <button class="ui-button ui-button--primary" type="button" (click)="load()">
+            <app-icon class="ui-button__icon" name="refresh" />
+            {{ 'shared.actions.retry' | translate }}
+          </button>
+        </app-state-panel>
+      }
+      @default {
+        @if (filtered().length === 0) {
+          <app-state-panel
+            kind="empty"
+            [heading]="
+              (equipmentFilter === null
+                ? 'devices.list.emptyTitle'
+                : 'devices.list.noDeviceForEquipment'
+              ) | translate
+            "
+            [message]="'devices.list.emptyMessage' | translate"
+          >
+            <a
+              class="ui-button ui-button--primary"
+              routerLink="/devices/pair"
+              [queryParams]="equipmentFilter === null ? {} : { equipmentId: equipmentFilter }"
+            >
+              {{ 'devices.list.pair' | translate }}
+            </a>
+          </app-state-panel>
+        } @else {
+          <div
+            class="ui-table-scroll"
+            role="region"
+            tabindex="0"
+            [attr.aria-label]="'devices.list.tableTitle' | translate"
+          >
+            <table class="ui-table">
+              <thead>
+                <tr>
+                  <th scope="col">{{ 'devices.fields.device' | translate }}</th>
+                  <th scope="col">{{ 'devices.fields.status' | translate }}</th>
+                  <th scope="col">{{ 'devices.fields.equipment' | translate }}</th>
+                  <th scope="col">{{ 'devices.fields.credential' | translate }}</th>
+                  <th scope="col">{{ 'devices.fields.lastRead' | translate }}</th>
+                  <th scope="col" class="ui-table__actions">
+                    {{ 'shared.actions.label' | translate }}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (device of filtered(); track device.id) {
+                  @let equipment = equipmentName(device);
+                  <tr>
+                    <th scope="row" class="device-list__device">
+                      {{ 'devices.list.deviceLabel' | translate: { id: device.id } }}
+                      <span class="ui-table__secondary">
+                        {{ device.board_model }} ·
+                        {{
+                          'devices.list.firmware' | translate: { version: device.firmware_version }
+                        }}
+                      </span>
+                    </th>
+                    <td>
+                      <app-status-tag
+                        [label]="'devices.status.' + device.status | translate"
+                        [appearance]="statusAppearance[device.status]"
+                      />
+                    </td>
+                    <td>
+                      @if (equipment && device.equipment_id !== null) {
+                        <a
+                          class="ui-link"
+                          [routerLink]="['/assets/equipment', device.equipment_id]"
+                        >
+                          {{ equipment }}
+                        </a>
+                        <span class="ui-table__secondary">
+                          {{ equipmentById.get(device.equipment_id)?.siteName }}
+                        </span>
+                      } @else {
+                        <span class="ui-table__secondary">{{
+                          'devices.list.notPaired' | translate
+                        }}</span>
+                      }
+                    </td>
+                    <td>
+                      @if (device.api_key_hash; as hash) {
+                        <span class="device-list__credential">
+                          <app-icon name="key" />
+                          {{ 'devices.list.credentialActive' | translate }}
+                          <span class="telemetry">{{ maskedHash(hash) }}</span>
+                        </span>
+                      } @else {
+                        <span class="ui-table__secondary">{{
+                          'devices.list.noCredential' | translate
+                        }}</span>
+                      }
+                    </td>
+                    <td>
+                      {{
+                        device.last_read
+                          ? (device.last_read | relativeTime)
+                          : ('devices.list.never' | translate)
+                      }}
+                    </td>
+                    <td class="ui-table__actions">
+                      <span class="device-list__actions">
+                        @if (device.equipment_id === null) {
+                          <a
+                            class="ui-button ui-button--secondary ui-button--small"
+                            routerLink="/devices/pair"
+                            [queryParams]="{ deviceId: device.id }"
+                            [attr.aria-label]="
+                              'devices.list.pairDevice' | translate: { id: device.id }
+                            "
+                          >
+                            <app-icon class="ui-button__icon" name="link" />
+                            {{ 'devices.list.pairShort' | translate }}
+                          </a>
+                        } @else {
+                          <button
+                            class="ui-button ui-button--secondary ui-button--small"
+                            type="button"
+                            [attr.aria-label]="
+                              (device.api_key_hash
+                                ? 'devices.list.rotateFor'
+                                : 'devices.list.issueFor'
+                              ) | translate: { id: device.id }
+                            "
+                            (click)="openCredentialAction(device, 'rotate')"
+                          >
+                            <app-icon class="ui-button__icon" name="key" />
+                            {{
+                              (device.api_key_hash ? 'devices.list.rotate' : 'devices.list.issue')
+                                | translate
+                            }}
+                          </button>
+                          @if (device.api_key_hash) {
+                            <button
+                              class="ui-button ui-button--ghost ui-button--small"
+                              type="button"
+                              [attr.aria-label]="
+                                'devices.list.revokeFor' | translate: { id: device.id }
+                              "
+                              (click)="openCredentialAction(device, 'revoke')"
+                            >
+                              {{ 'devices.list.revoke' | translate }}
+                            </button>
+                          }
+                          <button
+                            class="ui-button ui-button--ghost ui-button--small"
+                            type="button"
+                            [attr.aria-label]="
+                              'devices.list.unpairFor' | translate: { id: device.id }
+                            "
+                            (click)="announcement.set(null); unpairTarget.set(device)"
+                          >
+                            <app-icon class="ui-button__icon" name="unlink" />
+                            {{ 'devices.list.unpair' | translate }}
+                          </button>
+                        }
+                      </span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      }
+    }
+  </section>
+</div>
+
+@if (credentialRequest(); as request) {
+  <app-credential-action-dialog
+    [action]="request.action"
+    [deviceLabel]="
+      (equipmentName(request.device)
+        ? 'devices.list.deviceOfEquipment'
+        : 'devices.list.deviceLabel'
+      ) | translate: { id: request.device.id, equipment: equipmentName(request.device) }
+    "
+    [pending]="source.pending()"
+    [result]="request.result"
+    (confirmed)="applyCredentialAction()"
+    (closed)="closeCredentialAction()"
+  />
+}
+
+@if (unpairTarget(); as device) {
+  <app-dialog
+    [heading]="'devices.unpair.title' | translate: { id: device.id }"
+    [description]="'devices.unpair.message' | translate: { equipment: equipmentName(device) }"
+    (closed)="unpairTarget.set(null)"
+  >
+    <div dialogActions class="ui-form__actions">
+      <button class="ui-button ui-button--secondary" type="button" (click)="unpairTarget.set(null)">
+        {{ 'shared.actions.cancel' | translate }}
+      </button>
+      <button
+        class="ui-button ui-button--danger"
+        type="button"
+        [disabled]="source.pending()"
+        (click)="unpair()"
+      >
+        {{ (source.pending() ? 'devices.unpair.pending' : 'devices.unpair.confirm') | translate }}
+      </button>
+    </div>
+  </app-dialog>
+}

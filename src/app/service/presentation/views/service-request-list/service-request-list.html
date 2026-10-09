@@ -1,0 +1,246 @@
+<div class="ui-stack">
+  <header class="ui-page-header">
+    <div>
+      <p class="ui-page-header__eyebrow">{{ 'serviceRequests.eyebrow' | translate }}</p>
+      <h1 class="ui-page-header__title">{{ 'serviceRequests.list.title' | translate }}</h1>
+      <p class="ui-page-header__subtitle">{{ 'serviceRequests.list.subtitle' | translate }}</p>
+    </div>
+    <div class="ui-page-header__actions">
+      <a
+        class="ui-button ui-button--primary"
+        routerLink="/service-requests/new"
+        [queryParams]="equipmentFilter === null ? {} : { equipmentId: equipmentFilter }"
+      >
+        <app-icon class="ui-button__icon" name="plus" />
+        {{ 'serviceRequests.list.create' | translate }}
+      </a>
+    </div>
+  </header>
+
+  @if (equipmentFilter !== null) {
+    <p class="ui-alert ui-alert--info">
+      <app-icon class="ui-alert__icon" name="history" />
+      <span>
+        {{
+          'serviceRequests.list.equipmentFilter'
+            | translate: { equipment: equipmentById.get(equipmentFilter)?.name ?? equipmentFilter }
+        }}
+        <a class="ui-link" routerLink="/service-requests">{{
+          'serviceRequests.list.showAll' | translate
+        }}</a>
+      </span>
+    </p>
+  }
+
+  <section class="ui-panel" aria-labelledby="service-requests-table-title">
+    <div class="ui-panel__header">
+      <h2 class="ui-panel__title" id="service-requests-table-title">
+        {{ 'serviceRequests.list.tableTitle' | translate }}
+      </h2>
+    </div>
+
+    <div class="service-request-list__filters">
+      <div
+        class="ui-segmented"
+        role="group"
+        [attr.aria-label]="'serviceRequests.list.statusFilter' | translate"
+      >
+        @for (status of statusFilters; track status) {
+          <button
+            class="ui-segmented__option"
+            type="button"
+            [attr.aria-pressed]="statusFilter() === status"
+            (click)="setStatusFilter(status)"
+          >
+            {{
+              (status === 'ALL'
+                ? 'serviceRequests.list.allStatuses'
+                : 'serviceRequests.status.' + status
+              ) | translate
+            }}
+            @if (source.status() === 'ready') {
+              <span class="ui-segmented__count">{{ statusCounts().get(status) ?? 0 }}</span>
+            }
+          </button>
+        }
+      </div>
+      <form class="ui-toolbar" [formGroup]="filters">
+        <div class="ui-field">
+          <label class="ui-field__label" for="request-priority">{{
+            'serviceRequests.fields.priority' | translate
+          }}</label>
+          <select class="ui-field__control" id="request-priority" formControlName="priority">
+            <option value="ALL">{{ 'serviceRequests.list.allPriorities' | translate }}</option>
+            @for (priority of priorities; track priority) {
+              <option [value]="priority">
+                {{ 'serviceRequests.priority.' + priority | translate }}
+              </option>
+            }
+          </select>
+        </div>
+        <div class="ui-field">
+          <label class="ui-field__label" for="request-type">{{
+            'serviceRequests.fields.type' | translate
+          }}</label>
+          <select class="ui-field__control" id="request-type" formControlName="type">
+            <option value="ALL">{{ 'serviceRequests.list.allTypes' | translate }}</option>
+            @for (type of types; track type) {
+              <option [value]="type">{{ 'serviceRequests.type.' + type | translate }}</option>
+            }
+          </select>
+        </div>
+      </form>
+    </div>
+
+    @switch (source.status()) {
+      @case ('loading') {
+        <app-state-panel kind="loading" [heading]="'serviceRequests.list.loading' | translate" />
+      }
+      @case ('error') {
+        <app-state-panel
+          kind="error"
+          [heading]="'serviceRequests.list.errorTitle' | translate"
+          [message]="'shared.states.errorMessage' | translate"
+        >
+          <button class="ui-button ui-button--primary" type="button" (click)="load()">
+            <app-icon class="ui-button__icon" name="refresh" />
+            {{ 'shared.actions.retry' | translate }}
+          </button>
+        </app-state-panel>
+      }
+      @default {
+        @if (scoped().length === 0) {
+          <app-state-panel
+            kind="empty"
+            [heading]="'serviceRequests.list.emptyTitle' | translate"
+            [message]="'serviceRequests.list.emptyMessage' | translate"
+          >
+            <a class="ui-button ui-button--primary" routerLink="/service-requests/new">
+              {{ 'serviceRequests.list.create' | translate }}
+            </a>
+          </app-state-panel>
+        } @else if (filtered().length === 0) {
+          <app-state-panel
+            kind="empty"
+            [heading]="'serviceRequests.list.noMatchesTitle' | translate"
+            [message]="'serviceRequests.list.noMatchesMessage' | translate"
+          >
+            <button class="ui-button ui-button--secondary" type="button" (click)="clearFilters()">
+              {{ 'shared.actions.clearFilters' | translate }}
+            </button>
+          </app-state-panel>
+        } @else {
+          <div
+            class="ui-table-scroll"
+            role="region"
+            tabindex="0"
+            [attr.aria-label]="'serviceRequests.list.tableTitle' | translate"
+          >
+            <table class="ui-table">
+              <thead>
+                <tr>
+                  <th scope="col">{{ 'serviceRequests.fields.request' | translate }}</th>
+                  <th scope="col">{{ 'serviceRequests.fields.equipment' | translate }}</th>
+                  <th scope="col">{{ 'serviceRequests.fields.technician' | translate }}</th>
+                  <th scope="col">{{ 'serviceRequests.fields.priority' | translate }}</th>
+                  <th scope="col">{{ 'serviceRequests.fields.status' | translate }}</th>
+                  <th scope="col" class="ui-table__actions">
+                    {{ 'shared.actions.label' | translate }}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (request of visible(); track request.id) {
+                  @let equipment = equipmentById.get(request.equipment_id);
+                  @let technician =
+                    request.technician_profile_id === null
+                      ? undefined
+                      : technicianById.get(request.technician_profile_id);
+                  <tr>
+                    <th scope="row">
+                      <a class="ui-link" [routerLink]="['/service-requests', request.id]">
+                        {{ 'serviceRequests.number' | translate: { id: request.id } }}
+                      </a>
+                      <span class="ui-table__secondary">{{
+                        'serviceRequests.type.' + request.type | translate
+                      }}</span>
+                    </th>
+                    <td>
+                      {{ equipment?.name }}
+                      <span class="ui-table__secondary">{{ equipment?.siteName }}</span>
+                    </td>
+                    <td>
+                      @if (technician) {
+                        {{ technician.fullName }}
+                      } @else {
+                        <span class="ui-table__secondary">{{
+                          'serviceRequests.unassigned' | translate
+                        }}</span>
+                      }
+                    </td>
+                    <td>
+                      <app-status-tag
+                        [label]="'serviceRequests.priority.' + request.priority | translate"
+                        [appearance]="priorityAppearance[request.priority]"
+                      />
+                    </td>
+                    <td>
+                      <app-status-tag
+                        [label]="'serviceRequests.status.' + request.status | translate"
+                        [appearance]="statusAppearance[request.status]"
+                      />
+                    </td>
+                    <td class="ui-table__actions">
+                      <span class="service-request-list__actions">
+                        @if (canAssign(request)) {
+                          <a
+                            class="ui-button ui-button--secondary ui-button--small"
+                            [routerLink]="['/service-requests', request.id]"
+                            [queryParams]="{ action: 'assign' }"
+                            [attr.aria-label]="
+                              'serviceRequests.list.assignFor' | translate: { id: request.id }
+                            "
+                          >
+                            {{ 'serviceRequests.actions.assign' | translate }}
+                          </a>
+                        }
+                        @if (canReview(request)) {
+                          <a
+                            class="ui-button ui-button--secondary ui-button--small"
+                            [routerLink]="['/service-requests', request.id]"
+                            [queryParams]="{ action: 'review' }"
+                            [attr.aria-label]="
+                              'serviceRequests.list.reviewFor' | translate: { id: request.id }
+                            "
+                          >
+                            <app-icon class="ui-button__icon" name="star" />
+                            {{ 'serviceRequests.actions.review' | translate }}
+                          </a>
+                        }
+                        <a
+                          class="ui-button ui-button--ghost ui-button--small"
+                          [routerLink]="['/service-requests', request.id]"
+                          [attr.aria-label]="
+                            'serviceRequests.list.viewFor' | translate: { id: request.id }
+                          "
+                        >
+                          {{ 'serviceRequests.actions.view' | translate }}
+                        </a>
+                      </span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <app-pagination
+            class="service-request-list__pagination"
+            [page]="page()"
+            [pageCount]="pageCount()"
+            (pageChange)="page.set($event)"
+          />
+        }
+      }
+    }
+  </section>
+</div>

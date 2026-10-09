@@ -1,1 +1,31 @@
-<p>side-bar works!</p>
+<div class="side-bar">
+  <p class="side-bar__brand">
+    <img class="side-bar__logo" src="logo.svg" width="32" height="32" alt="" />
+    {{ 'shared.appName' | translate }}
+  </p>
+
+  <nav [attr.aria-label]="'shared.navigation.label' | translate">
+    <ul class="side-bar__list">
+      @for (item of items(); track item.path) {
+        <li>
+          <a
+            class="side-bar__link"
+            [routerLink]="item.path"
+            routerLinkActive="side-bar__link--active"
+            ariaCurrentWhenActive="page"
+            [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
+            (click)="navigated.emit()"
+          >
+            <app-icon class="side-bar__icon" [name]="item.icon" />
+            <span>{{ item.labelKey | translate }}</span>
+          </a>
+        </li>
+      }
+    </ul>
+  </nav>
+
+  <div class="side-bar__footer">
+    <app-language-switcher />
+    <app-button-logout (signOut)="signOut.emit()" />
+  </div>
+</div>

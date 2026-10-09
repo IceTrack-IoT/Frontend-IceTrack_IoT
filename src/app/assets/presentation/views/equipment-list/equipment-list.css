@@ -1,0 +1,29 @@
+.equipment-list__filters {
+  margin-block-end: var(--space-2);
+}
+
+.ui-toolbar > .equipment-list__search {
+  flex-basis: 16rem;
+}
+
+.equipment-list__connectivity,
+.equipment-list__out-of-range {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.equipment-list__temperature {
+  display: block;
+}
+
+.equipment-list__temperature--out,
+.equipment-list__out-of-range {
+  color: var(--tone-critical-fg);
+}
+
+.equipment-list__pagination {
+  display: block;
+  margin-block-start: var(--space-2);
+}

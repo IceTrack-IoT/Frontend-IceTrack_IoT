@@ -1,0 +1,101 @@
+.request-detail__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-block-start: var(--space-1);
+}
+
+.request-detail__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  gap: var(--space-3);
+}
+
+.request-detail__section-title {
+  margin-block-end: var(--space-2);
+}
+
+.request-detail__subtitle {
+  margin: var(--space-2) 0 4px;
+  font-size: 0.875rem;
+}
+
+.request-detail__description,
+.request-detail__technician-name,
+.request-detail__meta,
+.request-detail__empty,
+.request-detail__average {
+  margin: 0;
+}
+
+.request-detail__description {
+  margin-block-end: var(--space-1);
+}
+
+.request-detail__technician {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.request-detail__avatar {
+  display: inline-grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-pill);
+  background-color: var(--brand-100);
+  font-size: 1.5rem;
+  color: var(--brand-600);
+}
+
+.request-detail__technician-name {
+  font-weight: 600;
+}
+
+.request-detail__meta,
+.request-detail__empty {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.request-detail__note {
+  margin-block-start: var(--space-2);
+}
+
+.request-detail__interventions {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.request-detail__intervention {
+  display: grid;
+  gap: 4px;
+  padding-inline-start: var(--space-2);
+  border-inline-start: 3px solid var(--brand-100);
+}
+
+.request-detail__average {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-block-end: var(--space-2);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.request-detail__star {
+  color: var(--tone-warning-fg);
+}
+
+.request-detail__comment {
+  margin: var(--space-2) 0 0;
+  padding: 12px var(--space-2);
+  border-inline-start: 3px solid var(--border-control);
+  background-color: var(--canvas-bg);
+  font-style: italic;
+}

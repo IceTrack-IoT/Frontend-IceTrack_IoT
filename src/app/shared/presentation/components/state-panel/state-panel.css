@@ -1,0 +1,65 @@
+.state-panel {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-1);
+  padding: var(--space-4) var(--space-2);
+  text-align: center;
+}
+
+.state-panel__badge {
+  display: inline-grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-pill);
+  background-color: var(--tone-neutral-bg);
+  color: var(--text-secondary);
+}
+
+.state-panel--error .state-panel__badge {
+  background-color: var(--tone-critical-bg);
+  color: var(--tone-critical-fg);
+}
+
+.state-panel__icon {
+  width: 24px;
+  height: 24px;
+}
+
+.state-panel__spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--brand-100);
+  border-block-start-color: var(--brand-600);
+  border-radius: var(--radius-pill);
+  animation: state-panel-spin 0.9s linear infinite;
+}
+
+.state-panel__heading {
+  margin: 0;
+  font-weight: 600;
+}
+
+.state-panel__message {
+  max-width: 36rem;
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+}
+
+.state-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-1);
+}
+
+.state-panel__actions:empty {
+  display: none;
+}
+
+@keyframes state-panel-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -1,0 +1,175 @@
+<div class="ui-stack">
+  <a class="ui-link ui-back-link" routerLink="/reports">
+    <app-icon name="arrow-left" />
+    {{ 'reporting.detail.back' | translate }}
+  </a>
+
+  @switch (source.status()) {
+    @case ('loading') {
+      <h1 class="visually-hidden">{{ 'reporting.detail.title' | translate }}</h1>
+      <app-state-panel kind="loading" [heading]="'reporting.detail.loading' | translate" />
+    }
+    @case ('error') {
+      <h1 class="visually-hidden">{{ 'reporting.detail.title' | translate }}</h1>
+      <app-state-panel
+        kind="error"
+        [heading]="'reporting.detail.errorTitle' | translate"
+        [message]="'shared.states.errorMessage' | translate"
+      >
+        <button class="ui-button ui-button--primary" type="button" (click)="load()">
+          <app-icon class="ui-button__icon" name="refresh" />
+          {{ 'shared.actions.retry' | translate }}
+        </button>
+      </app-state-panel>
+    }
+    @default {
+      @if (report(); as item) {
+        <header class="ui-page-header">
+          <div>
+            <p class="ui-page-header__eyebrow">{{ 'reporting.type.' + item.type | translate }}</p>
+            <h1 class="ui-page-header__title">{{ item.title }}</h1>
+            <div class="report-detail__tags">
+              <app-status-tag
+                [label]="'reporting.status.' + item.status | translate"
+                [appearance]="statusAppearance[item.status]"
+              />
+              <span class="ui-tag">{{ 'reporting.format.' + item.format | translate }}</span>
+            </div>
+          </div>
+          @if (completed()) {
+            <div class="ui-page-header__actions">
+              <button class="ui-button ui-button--primary" type="button" (click)="download()">
+                <app-icon class="ui-button__icon" name="download" />
+                {{
+                  'reporting.detail.downloadAs'
+                    | translate: { format: ('reporting.format.' + item.format | translate) }
+                }}
+              </button>
+            </div>
+          }
+        </header>
+
+        @if (announcement(); as key) {
+          <p class="ui-alert ui-alert--info" role="status">
+            <app-icon class="ui-alert__icon" name="info-circle" />
+            {{ key | translate }}
+          </p>
+        }
+
+        <section class="ui-panel" aria-labelledby="report-status-title">
+          <h2 class="ui-panel__title report-detail__section-title" id="report-status-title">
+            {{ 'reporting.detail.statusTitle' | translate }}
+          </h2>
+          @if (inProgress()) {
+            <div class="report-detail__status">
+              <span class="report-detail__spinner" aria-hidden="true"></span>
+              <div>
+                <p class="report-detail__status-text">
+                  {{ 'reporting.detail.generating.' + item.status | translate }}
+                </p>
+                <p class="report-detail__hint">
+                  {{ 'reporting.detail.generatingHint' | translate }}
+                </p>
+              </div>
+              <button
+                class="ui-button ui-button--secondary"
+                type="button"
+                [disabled]="source.pending()"
+                (click)="checkStatus()"
+              >
+                <app-icon class="ui-button__icon" name="refresh" />
+                {{
+                  (source.pending() ? 'reporting.detail.checking' : 'reporting.detail.checkStatus')
+                    | translate
+                }}
+              </button>
+            </div>
+          } @else if (failed()) {
+            <div class="ui-alert ui-alert--critical" role="alert">
+              <app-icon class="ui-alert__icon" name="circle-x" />
+              <div>
+                <p class="report-detail__status-text">
+                  {{ 'reporting.detail.failedTitle' | translate }}
+                </p>
+                <p>{{ 'reporting.detail.failedMessage' | translate }}</p>
+                <a
+                  class="ui-button ui-button--secondary report-detail__retry"
+                  routerLink="/reports/new"
+                  [queryParams]="{ type: item.type, format: item.format }"
+                >
+                  {{ 'reporting.detail.requestAgain' | translate }}
+                </a>
+              </div>
+            </div>
+          } @else {
+            <p class="ui-alert ui-alert--success">
+              <app-icon class="ui-alert__icon" name="circle-check" />
+              {{
+                'reporting.detail.completedMessage'
+                  | translate: { date: (item.completed_at | localizedDate) }
+              }}
+            </p>
+          }
+          <dl class="ui-details report-detail__facts">
+            <div>
+              <dt>{{ 'reporting.fields.requestedAt' | translate }}</dt>
+              <dd>{{ item.requested_at | localizedDate }}</dd>
+            </div>
+            <div>
+              <dt>{{ 'reporting.fields.completedAt' | translate }}</dt>
+              <dd>
+                {{
+                  item.completed_at
+                    ? (item.completed_at | localizedDate)
+                    : ('reporting.detail.notCompleted' | translate)
+                }}
+              </dd>
+            </div>
+            <div>
+              <dt>{{ 'reporting.fields.type' | translate }}</dt>
+              <dd>{{ 'reporting.type.' + item.type | translate }}</dd>
+            </div>
+            <div>
+              <dt>{{ 'reporting.fields.format' | translate }}</dt>
+              <dd>{{ 'reporting.format.' + item.format | translate }}</dd>
+            </div>
+          </dl>
+        </section>
+
+        @if (completed()) {
+          <section class="ui-panel" aria-labelledby="report-kpis-title">
+            <h2 class="ui-panel__title report-detail__section-title" id="report-kpis-title">
+              {{ 'reporting.detail.kpisTitle' | translate }}
+            </h2>
+            @if (kpis().length === 0) {
+              <p class="report-detail__hint">{{ 'reporting.detail.noKpis' | translate }}</p>
+            } @else {
+              <ul class="report-detail__kpis">
+                @for (kpi of kpis(); track kpi.label) {
+                  <li class="report-detail__kpi">
+                    <span class="report-detail__kpi-label">{{ kpi.label }}</span>
+                    <span class="report-detail__kpi-value">
+                      {{ kpi.value | localizedNumber: (kpi.value % 1 === 0 ? 0 : 1) }}
+                      <span class="report-detail__kpi-unit">{{ kpi.unit }}</span>
+                    </span>
+                  </li>
+                }
+              </ul>
+            }
+          </section>
+        }
+      } @else {
+        <h1 class="visually-hidden">{{ 'reporting.detail.title' | translate }}</h1>
+        <app-state-panel
+          kind="empty"
+          [heading]="'reporting.detail.notFoundTitle' | translate"
+          [message]="'reporting.detail.notFoundMessage' | translate"
+        >
+          <a class="ui-button ui-button--secondary" routerLink="/reports">{{
+            'reporting.detail.back' | translate
+          }}</a>
+        </app-state-panel>
+      }
+    }
+  }
+</div>

@@ -1,1 +1,36 @@
-<p>private-layout works!</p>
+<a class="private-layout__skip-link" href="#main-content" (click)="skipToContent($event)">
+  {{ 'shared.privateLayout.skipToContent' | translate }}
+</a>
+
+<div class="private-layout">
+  <div
+    class="private-layout__navigation"
+    id="private-layout-navigation"
+    [class.private-layout__navigation--open]="menuOpen()"
+  >
+    <app-side-bar [items]="navigation" (navigated)="menuOpen.set(false)" (signOut)="signOut()" />
+  </div>
+
+  <div class="private-layout__column">
+    <header class="private-layout__header">
+      <button
+        class="ui-button ui-button--ghost ui-button--icon private-layout__menu-toggle"
+        type="button"
+        aria-controls="private-layout-navigation"
+        [attr.aria-expanded]="menuOpen()"
+        [attr.aria-label]="'shared.privateLayout.toggleNavigation' | translate"
+        (click)="menuOpen.set(!menuOpen())"
+      >
+        <app-icon class="ui-button__icon" [name]="menuOpen() ? 'x' : 'menu-2'" />
+      </button>
+      <span class="private-layout__brand">{{ 'shared.appName' | translate }}</span>
+      <div class="private-layout__actions">
+        <router-outlet [name]="headerActionsOutlet" />
+      </div>
+    </header>
+
+    <main #main class="private-layout__main" id="main-content" tabindex="-1">
+      <router-outlet />
+    </main>
+  </div>
+</div>

@@ -1,0 +1,231 @@
+<div class="ui-stack">
+  <header class="ui-page-header">
+    <div>
+      <p class="ui-page-header__eyebrow">{{ 'notifications.center.eyebrow' | translate }}</p>
+      <h1 class="ui-page-header__title">{{ 'notifications.center.title' | translate }}</h1>
+      @if (source.status() === 'ready') {
+        <p class="ui-page-header__subtitle">
+          {{ 'notifications.center.unreadSummary' | translate: { count: unreadCount() } }}
+        </p>
+      }
+    </div>
+    <div class="ui-page-header__actions">
+      <button
+        class="ui-button ui-button--secondary"
+        type="button"
+        [disabled]="source.status() !== 'ready' || unreadCount() === 0"
+        (click)="markAllAsRead()"
+      >
+        <app-icon class="ui-button__icon" name="check" />
+        {{ 'notifications.center.markAllAsRead' | translate }}
+      </button>
+    </div>
+  </header>
+
+  <p class="visually-hidden" role="status">
+    @if (announcement(); as key) {
+      {{ key | translate }}
+    }
+  </p>
+
+  <section class="ui-panel" aria-labelledby="notification-list-title">
+    <div class="ui-panel__header">
+      <h2 class="ui-panel__title" id="notification-list-title">
+        {{ 'notifications.center.listTitle' | translate }}
+      </h2>
+      <div
+        class="ui-segmented"
+        role="group"
+        [attr.aria-label]="'notifications.center.readFilter' | translate"
+      >
+        <button
+          class="ui-segmented__option"
+          type="button"
+          [attr.aria-pressed]="readFilter() === 'all'"
+          (click)="setReadFilter('all')"
+        >
+          {{ 'notifications.center.all' | translate }}
+        </button>
+        <button
+          class="ui-segmented__option"
+          type="button"
+          [attr.aria-pressed]="readFilter() === 'unread'"
+          (click)="setReadFilter('unread')"
+        >
+          {{ 'notifications.center.unreadOnly' | translate }}
+          <span class="ui-segmented__count">{{ unreadCount() }}</span>
+        </button>
+      </div>
+    </div>
+
+    <form class="ui-toolbar notification-center__filters" [formGroup]="filters">
+      <div class="ui-field">
+        <label class="ui-field__label" for="notification-severity">
+          {{ 'notifications.center.severityFilter' | translate }}
+        </label>
+        <select class="ui-field__control" id="notification-severity" formControlName="severity">
+          <option value="ALL">{{ 'notifications.center.allSeverities' | translate }}</option>
+          @for (severity of severities; track severity) {
+            <option [value]="severity">
+              {{ 'notifications.severity.' + severity | translate }}
+            </option>
+          }
+        </select>
+      </div>
+      <div class="ui-field">
+        <label class="ui-field__label" for="notification-type">
+          {{ 'notifications.center.typeFilter' | translate }}
+        </label>
+        <select class="ui-field__control" id="notification-type" formControlName="type">
+          <option value="ALL">{{ 'notifications.center.allTypes' | translate }}</option>
+          @for (type of types; track type) {
+            <option [value]="type">{{ 'notifications.types.' + type | translate }}</option>
+          }
+        </select>
+      </div>
+    </form>
+
+    @switch (source.status()) {
+      @case ('loading') {
+        <app-state-panel kind="loading" [heading]="'notifications.center.loading' | translate" />
+      }
+      @case ('error') {
+        <app-state-panel
+          kind="error"
+          [heading]="'notifications.center.errorTitle' | translate"
+          [message]="'shared.states.errorMessage' | translate"
+        >
+          <button class="ui-button ui-button--primary" type="button" (click)="load()">
+            <app-icon class="ui-button__icon" name="refresh" />
+            {{ 'shared.actions.retry' | translate }}
+          </button>
+        </app-state-panel>
+      }
+      @default {
+        @if (active().length === 0) {
+          <app-state-panel
+            kind="empty"
+            [heading]="'notifications.center.emptyTitle' | translate"
+            [message]="'notifications.center.emptyMessage' | translate"
+          />
+        } @else if (filtered().length === 0) {
+          <app-state-panel
+            kind="empty"
+            [heading]="'notifications.center.noMatchesTitle' | translate"
+            [message]="'notifications.center.noMatchesMessage' | translate"
+          >
+            <button class="ui-button ui-button--secondary" type="button" (click)="clearFilters()">
+              {{ 'shared.actions.clearFilters' | translate }}
+            </button>
+          </app-state-panel>
+        } @else {
+          <ul class="notification-center__list">
+            @for (notification of visible(); track notification.id) {
+              <li
+                class="notification-center__item"
+                [class.notification-center__item--unread]="!notification.is_read"
+              >
+                <span class="notification-center__type-icon">
+                  <app-icon [name]="typeIcons[notification.type]" />
+                </span>
+
+                <div class="notification-center__content">
+                  <div class="notification-center__meta">
+                    <span class="notification-center__type">
+                      {{ 'notifications.types.' + notification.type | translate }}
+                    </span>
+                    <app-status-tag
+                      [label]="'notifications.severity.' + notification.severity | translate"
+                      [appearance]="severityAppearance[notification.severity]"
+                    />
+                    <span class="notification-center__read-state">
+                      @if (!notification.is_read) {
+                        <span class="notification-center__unread-dot" aria-hidden="true"></span>
+                      }
+                      {{
+                        (notification.is_read
+                          ? 'notifications.center.read'
+                          : 'notifications.center.unread'
+                        ) | translate
+                      }}
+                    </span>
+                  </div>
+
+                  <p class="notification-center__message" [id]="'notification-' + notification.id">
+                    {{ notification.message }}
+                  </p>
+
+                  <p class="notification-center__details">
+                    @if (equipmentNames[notification.equipment_id]; as equipmentName) {
+                      {{ equipmentName }}
+                    }
+                    @if (notification.read_at) {
+                      ·
+                      {{
+                        'notifications.center.readAt'
+                          | translate: { date: (notification.read_at | localizedDate) }
+                      }}
+                    }
+                  </p>
+
+                  <div class="notification-center__actions">
+                    @if (linksToAlert(notification)) {
+                      <a
+                        class="ui-link"
+                        [routerLink]="['/monitoring/alerts', notification.source_alert_id]"
+                      >
+                        {{ 'notifications.center.viewAlert' | translate }}
+                      </a>
+                    } @else if (notification.type === serviceRequestUpdate) {
+                      <a
+                        class="ui-link"
+                        routerLink="/service-requests"
+                        [queryParams]="{ equipmentId: notification.equipment_id }"
+                      >
+                        {{ 'notifications.center.viewServiceRequests' | translate }}
+                      </a>
+                    }
+                    <a
+                      class="ui-link"
+                      [routerLink]="['/assets/equipment', notification.equipment_id]"
+                    >
+                      {{ 'notifications.center.viewEquipment' | translate }}
+                    </a>
+                    <span class="notification-center__buttons">
+                      @if (!notification.is_read) {
+                        <button
+                          class="ui-button ui-button--ghost ui-button--small"
+                          type="button"
+                          [attr.aria-describedby]="'notification-' + notification.id"
+                          (click)="markAsRead(notification)"
+                        >
+                          <app-icon class="ui-button__icon" name="check" />
+                          {{ 'notifications.center.markAsRead' | translate }}
+                        </button>
+                      }
+                      <button
+                        class="ui-button ui-button--ghost ui-button--small"
+                        type="button"
+                        [attr.aria-describedby]="'notification-' + notification.id"
+                        (click)="dismiss(notification)"
+                      >
+                        <app-icon class="ui-button__icon" name="x" />
+                        {{ 'notifications.center.dismiss' | translate }}
+                      </button>
+                    </span>
+                  </div>
+                </div>
+              </li>
+            }
+          </ul>
+
+          <app-pagination
+            [page]="page()"
+            [pageCount]="pageCount()"
+            (pageChange)="page.set($event)"
+          />
+        }
+      }
+    }
+  </section>
+</div>

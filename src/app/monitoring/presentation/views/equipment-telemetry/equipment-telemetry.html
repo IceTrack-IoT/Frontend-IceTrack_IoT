@@ -1,0 +1,317 @@
+<div class="ui-stack">
+  <a class="ui-link ui-back-link" routerLink="/monitoring">
+    <app-icon name="arrow-left" />
+    {{ 'monitoring.telemetry.back' | translate }}
+  </a>
+
+  @switch (source.status()) {
+    @case ('loading') {
+      <h1 class="visually-hidden">{{ 'monitoring.telemetry.title' | translate }}</h1>
+      <app-state-panel kind="loading" [heading]="'monitoring.telemetry.loading' | translate" />
+    }
+    @case ('error') {
+      <h1 class="visually-hidden">{{ 'monitoring.telemetry.title' | translate }}</h1>
+      <app-state-panel
+        kind="error"
+        [heading]="'monitoring.telemetry.errorTitle' | translate"
+        [message]="'shared.states.errorMessage' | translate"
+      >
+        <button class="ui-button ui-button--primary" type="button" (click)="load()">
+          <app-icon class="ui-button__icon" name="refresh" />
+          {{ 'shared.actions.retry' | translate }}
+        </button>
+      </app-state-panel>
+    }
+    @default {
+      @if (equipment(); as item) {
+        <header class="ui-page-header">
+          <div>
+            <p class="ui-page-header__eyebrow">{{ 'monitoring.telemetry.eyebrow' | translate }}</p>
+            <h1 class="ui-page-header__title">{{ item.name }}</h1>
+            <p class="ui-page-header__subtitle">
+              {{ item.siteName }} ·
+              {{
+                'monitoring.telemetry.threshold'
+                  | translate
+                    : { min: (item.minCelsius | temperature), max: (item.maxCelsius | temperature) }
+              }}
+            </p>
+          </div>
+          <div class="ui-page-header__actions">
+            <a class="ui-button ui-button--secondary" [routerLink]="['/assets/equipment', item.id]">
+              {{ 'monitoring.telemetry.viewEquipment' | translate }}
+            </a>
+            <a
+              class="ui-button ui-button--secondary"
+              routerLink="/monitoring/alerts"
+              [queryParams]="{ equipmentId: item.id }"
+            >
+              <app-icon class="ui-button__icon" name="bell-ringing" />
+              {{ 'monitoring.telemetry.viewAlerts' | translate }}
+            </a>
+          </div>
+        </header>
+
+        <section class="ui-panel" aria-labelledby="telemetry-current-title">
+          <h2 class="ui-panel__title telemetry-view__section-title" id="telemetry-current-title">
+            {{ 'monitoring.telemetry.currentTitle' | translate }}
+          </h2>
+          @if (latest(); as reading) {
+            <div class="telemetry-view__current">
+              <div>
+                <p
+                  class="telemetry telemetry-view__value"
+                  [class.telemetry-view__value--out]="outside()"
+                  [class.telemetry-view__value--stale]="stale()"
+                >
+                  {{ reading.average_temperature | temperature }}
+                </p>
+                <p class="telemetry-view__state">
+                  @if (stale()) {
+                    <app-icon name="wifi-off" /> {{ 'monitoring.state.offline' | translate }}
+                  } @else if (outside()) {
+                    <app-icon name="alert-triangle" /> {{ 'monitoring.state.outside' | translate }}
+                  } @else {
+                    <app-icon name="circle-check" /> {{ 'monitoring.state.within' | translate }}
+                  }
+                </p>
+              </div>
+              <dl class="ui-details telemetry-view__current-facts">
+                <div>
+                  <dt>{{ 'monitoring.fields.recordedAt' | translate }}</dt>
+                  <dd>
+                    <time [attr.datetime]="reading.recorded_at.toISOString()">{{
+                      reading.recorded_at | localizedDate
+                    }}</time>
+                    <span class="telemetry-view__age"
+                      >({{ reading.recorded_at | relativeTime }})</span
+                    >
+                  </dd>
+                </div>
+                <div>
+                  <dt>{{ 'monitoring.fields.temperatureRange' | translate }}</dt>
+                  <dd class="telemetry">
+                    {{ reading.min_temperature | temperature }} –
+                    {{ reading.max_temperature | temperature }}
+                  </dd>
+                </div>
+                <div>
+                  <dt>{{ 'monitoring.fields.humidity' | translate }}</dt>
+                  <dd class="telemetry">{{ reading.humidity | localizedNumber }} %</dd>
+                </div>
+                <div>
+                  <dt>{{ 'monitoring.fields.device' | translate }}</dt>
+                  <dd>{{ 'monitoring.deviceLabel' | translate: { id: reading.device_id } }}</dd>
+                </div>
+              </dl>
+            </div>
+            @if (stale()) {
+              <p class="ui-alert ui-alert--warning telemetry-view__notice" role="status">
+                <app-icon class="ui-alert__icon" name="wifi-off" />
+                {{
+                  'monitoring.telemetry.staleNotice'
+                    | translate: { age: (reading.recorded_at | relativeTime) }
+                }}
+              </p>
+            }
+          } @else {
+            <app-state-panel
+              kind="empty"
+              [heading]="'monitoring.telemetry.noTelemetryTitle' | translate"
+              [message]="
+                (item.deviceId === null
+                  ? 'monitoring.telemetry.noDeviceMessage'
+                  : 'monitoring.telemetry.noTelemetryMessage'
+                ) | translate
+              "
+            >
+              @if (item.deviceId === null) {
+                <a
+                  class="ui-button ui-button--secondary"
+                  routerLink="/devices/pair"
+                  [queryParams]="{ equipmentId: item.id }"
+                >
+                  {{ 'monitoring.telemetry.pairDevice' | translate }}
+                </a>
+              }
+            </app-state-panel>
+          }
+        </section>
+
+        <section class="ui-panel" aria-labelledby="telemetry-history-title">
+          <div class="ui-panel__header">
+            <div>
+              <h2 class="ui-panel__title" id="telemetry-history-title">
+                {{ 'monitoring.telemetry.historyTitle' | translate }}
+              </h2>
+              <p class="ui-panel__subtitle">
+                {{
+                  'monitoring.telemetry.interval' | translate: { minutes: window().intervalMinutes }
+                }}
+              </p>
+            </div>
+            <div
+              class="ui-segmented"
+              role="group"
+              [attr.aria-label]="'monitoring.telemetry.rangeLabel' | translate"
+            >
+              @for (option of ranges; track option) {
+                <button
+                  class="ui-segmented__option"
+                  type="button"
+                  [attr.aria-pressed]="range() === option"
+                  (click)="range.set(option)"
+                >
+                  {{ 'monitoring.telemetry.ranges.' + option | translate }}
+                </button>
+              }
+            </div>
+          </div>
+
+          @if (stats(); as summary) {
+            <dl class="telemetry-view__stats">
+              <div>
+                <dt>{{ 'monitoring.telemetry.stats.min' | translate }}</dt>
+                <dd class="telemetry">{{ summary.min | temperature }}</dd>
+              </div>
+              <div>
+                <dt>{{ 'monitoring.telemetry.stats.max' | translate }}</dt>
+                <dd class="telemetry">{{ summary.max | temperature }}</dd>
+              </div>
+              <div>
+                <dt>{{ 'monitoring.telemetry.stats.mean' | translate }}</dt>
+                <dd class="telemetry">{{ summary.mean | temperature }}</dd>
+              </div>
+              <div>
+                <dt>{{ 'monitoring.telemetry.stats.outside' | translate }}</dt>
+                <dd class="telemetry">{{ summary.outside }} / {{ summary.count }}</dd>
+              </div>
+            </dl>
+
+            <figure class="telemetry-view__figure">
+              <app-temperature-chart
+                [readings]="history()"
+                [minCelsius]="item.minCelsius"
+                [maxCelsius]="item.maxCelsius"
+                [intervalMinutes]="window().intervalMinutes"
+                [timeDisplay]="window().timeDisplay"
+              />
+              <figcaption class="telemetry-view__caption">
+                {{
+                  'monitoring.telemetry.summary'
+                    | translate
+                      : {
+                          from: (summary.from | localizedDate),
+                          to: (summary.to | localizedDate),
+                          min: (summary.min | temperature),
+                          max: (summary.max | temperature),
+                          outside: summary.outside,
+                          count: summary.count,
+                        }
+                }}
+              </figcaption>
+            </figure>
+
+            <details class="telemetry-view__table">
+              <summary>{{ 'monitoring.telemetry.showTable' | translate }}</summary>
+              <div
+                class="ui-table-scroll"
+                role="region"
+                tabindex="0"
+                [attr.aria-label]="'monitoring.telemetry.tableLabel' | translate"
+              >
+                <table class="ui-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">{{ 'monitoring.fields.recordedAt' | translate }}</th>
+                      <th scope="col">{{ 'monitoring.fields.averageTemperature' | translate }}</th>
+                      <th scope="col">{{ 'monitoring.fields.temperatureRange' | translate }}</th>
+                      <th scope="col">{{ 'monitoring.fields.humidity' | translate }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (reading of history(); track reading.id) {
+                      <tr>
+                        <td>{{ reading.recorded_at | localizedDate }}</td>
+                        <td class="telemetry">
+                          {{ reading.average_temperature | temperature }}
+                          @if (isOutside(reading, item)) {
+                            <span class="telemetry-view__outside">{{
+                              'monitoring.state.outside' | translate
+                            }}</span>
+                          }
+                        </td>
+                        <td class="telemetry">
+                          {{ reading.min_temperature | temperature }} –
+                          {{ reading.max_temperature | temperature }}
+                        </td>
+                        <td class="telemetry">{{ reading.humidity | localizedNumber }} %</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </details>
+          } @else {
+            <app-state-panel
+              kind="empty"
+              [heading]="'monitoring.telemetry.noHistoryTitle' | translate"
+              [message]="'monitoring.telemetry.noHistoryMessage' | translate"
+            />
+          }
+        </section>
+
+        @if (policy(); as rules) {
+          <section class="ui-panel" aria-labelledby="telemetry-policy-title">
+            <h2 class="ui-panel__title telemetry-view__section-title" id="telemetry-policy-title">
+              {{ 'monitoring.telemetry.policyTitle' | translate }}
+            </h2>
+            <dl class="ui-details">
+              <div>
+                <dt>{{ 'monitoring.policy.state' | translate }}</dt>
+                <dd>
+                  {{
+                    (rules.is_active ? 'monitoring.policy.active' : 'monitoring.policy.inactive')
+                      | translate
+                  }}
+                </dd>
+              </div>
+              <div>
+                <dt>{{ 'monitoring.policy.sustainedExcursion' | translate }}</dt>
+                <dd>
+                  {{
+                    'monitoring.minutes' | translate: { value: rules.sustained_excursion_minutes }
+                  }}
+                </dd>
+              </div>
+              <div>
+                <dt>{{ 'monitoring.policy.hysteresis' | translate }}</dt>
+                <dd class="telemetry">{{ rules.hysteresis_margin_celsius | temperature }}</dd>
+              </div>
+              <div>
+                <dt>{{ 'monitoring.policy.offlineAfter' | translate }}</dt>
+                <dd>
+                  {{
+                    'monitoring.policy.missedWindows'
+                      | translate: { count: rules.missed_sync_windows_for_offline }
+                  }}
+                </dd>
+              </div>
+            </dl>
+          </section>
+        }
+      } @else {
+        <h1 class="visually-hidden">{{ 'monitoring.telemetry.title' | translate }}</h1>
+        <app-state-panel
+          kind="empty"
+          [heading]="'monitoring.telemetry.notFoundTitle' | translate"
+          [message]="'monitoring.telemetry.notFoundMessage' | translate"
+        >
+          <a class="ui-button ui-button--secondary" routerLink="/monitoring">{{
+            'monitoring.telemetry.back' | translate
+          }}</a>
+        </app-state-panel>
+      }
+    }
+  }
+</div>

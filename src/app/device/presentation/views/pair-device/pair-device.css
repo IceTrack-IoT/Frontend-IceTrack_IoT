@@ -1,0 +1,28 @@
+.pair-device {
+  max-width: 44rem;
+}
+
+.pair-device__success {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.pair-device__success-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-pill);
+  background-color: var(--tone-success-bg);
+  font-size: 1.75rem;
+  color: var(--tone-success-fg);
+}
+
+.pair-device__text {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.pair-device__actions {
+  justify-content: flex-start;
+}

@@ -1,0 +1,57 @@
+<app-dialog
+  [heading]="'serviceRequests.cancel.title' | translate"
+  [description]="requestLabel()"
+  (closed)="closed.emit()"
+>
+  <p class="ui-alert ui-alert--warning">{{ 'serviceRequests.cancel.warning' | translate }}</p>
+
+  @let error = errorKey();
+  <form
+    class="ui-form"
+    id="cancel-request-form"
+    novalidate
+    [formGroup]="form"
+    (ngSubmit)="confirm()"
+  >
+    <div class="ui-field">
+      <label class="ui-field__label" for="cancel-reason">{{
+        'serviceRequests.cancel.reason' | translate
+      }}</label>
+      <textarea
+        class="ui-field__control"
+        id="cancel-reason"
+        rows="4"
+        formControlName="reason"
+        [attr.maxlength]="reasonMaxLength"
+        [placeholder]="'serviceRequests.cancel.reasonPlaceholder' | translate"
+        [attr.aria-invalid]="error ? true : null"
+        [attr.aria-describedby]="
+          error ? 'cancel-reason-hint cancel-reason-error' : 'cancel-reason-hint'
+        "
+      ></textarea>
+      <p class="ui-field__hint" id="cancel-reason-hint">
+        {{ 'serviceRequests.cancel.reasonHint' | translate }}
+      </p>
+      @if (error) {
+        <p class="ui-field__error" id="cancel-reason-error">{{ error | translate }}</p>
+      }
+    </div>
+  </form>
+
+  <div dialogActions class="ui-form__actions">
+    <button class="ui-button ui-button--secondary" type="button" (click)="closed.emit()">
+      {{ 'serviceRequests.cancel.keep' | translate }}
+    </button>
+    <button
+      class="ui-button ui-button--danger"
+      type="submit"
+      form="cancel-request-form"
+      [disabled]="pending()"
+    >
+      {{
+        (pending() ? 'serviceRequests.cancel.pending' : 'serviceRequests.cancel.confirm')
+          | translate
+      }}
+    </button>
+  </div>
+</app-dialog>

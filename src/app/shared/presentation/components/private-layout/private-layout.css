@@ -1,0 +1,116 @@
+:host {
+  display: block;
+  min-height: 100dvh;
+}
+
+.private-layout {
+  display: grid;
+  grid-template-columns: 16rem minmax(0, 1fr);
+  min-height: 100dvh;
+}
+
+.private-layout__navigation {
+  position: sticky;
+  inset-block-start: 0;
+  height: 100dvh;
+  overflow-y: auto;
+}
+
+.private-layout__column {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.private-layout__header {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 64px;
+  padding: var(--space-1) var(--space-3);
+  border-block-end: 1px solid var(--border-subtle);
+  background-color: var(--surface-card);
+}
+
+.private-layout__menu-toggle,
+.private-layout__brand {
+  display: none;
+}
+
+.private-layout__brand {
+  font-weight: 700;
+  color: var(--brand-900);
+}
+
+.private-layout__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-inline-start: auto;
+}
+
+.private-layout__main {
+  flex: 1;
+  width: 100%;
+  max-width: var(--layout-max-width);
+  margin-inline: auto;
+  padding: var(--space-4) var(--layout-gutter) var(--space-6);
+}
+
+.private-layout__main:focus {
+  outline: none;
+}
+
+.private-layout__skip-link {
+  position: absolute;
+  inset-block-start: var(--space-1);
+  inset-inline-start: var(--space-1);
+  z-index: 100;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-control);
+  background-color: var(--brand-600);
+  font-weight: 600;
+  color: var(--color-light);
+  transform: translateY(-200%);
+}
+
+.private-layout__skip-link:focus {
+  transform: none;
+}
+
+@media (max-width: 960px) {
+  .private-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .private-layout__navigation {
+    display: none;
+    position: fixed;
+    inset: 64px 0 0;
+    z-index: 20;
+    height: auto;
+  }
+
+  .private-layout__navigation--open {
+    display: block;
+  }
+
+  .private-layout__menu-toggle {
+    display: inline-flex;
+  }
+
+  .private-layout__brand {
+    display: inline;
+  }
+
+  .private-layout__header {
+    padding-inline: var(--space-2);
+  }
+
+  .private-layout__main {
+    padding: var(--space-3) var(--space-2) var(--space-6);
+  }
+}

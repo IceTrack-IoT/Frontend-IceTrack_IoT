@@ -1,0 +1,65 @@
+<form class="ui-form" novalidate [formGroup]="form" (ngSubmit)="submit()">
+  <p class="ui-field__hint" id="threshold-hint">{{ 'assets.thresholdForm.hint' | translate }}</p>
+
+  <div class="ui-form__grid">
+    @let minError = fieldErrorKey('minCelsius');
+    <div class="ui-field">
+      <label class="ui-field__label" for="threshold-minCelsius">
+        {{ 'assets.thresholdForm.min' | translate }}
+      </label>
+      <input
+        class="ui-field__control telemetry"
+        id="threshold-minCelsius"
+        type="number"
+        step="0.1"
+        inputmode="decimal"
+        formControlName="minCelsius"
+        [attr.aria-invalid]="minError || rangeInvalid() ? true : null"
+        [attr.aria-describedby]="describedBy('minCelsius')"
+      />
+      @if (minError) {
+        <p class="ui-field__error" id="threshold-minCelsius-error">{{ minError | translate }}</p>
+      }
+    </div>
+
+    @let maxError = fieldErrorKey('maxCelsius');
+    <div class="ui-field">
+      <label class="ui-field__label" for="threshold-maxCelsius">
+        {{ 'assets.thresholdForm.max' | translate }}
+      </label>
+      <input
+        class="ui-field__control telemetry"
+        id="threshold-maxCelsius"
+        type="number"
+        step="0.1"
+        inputmode="decimal"
+        formControlName="maxCelsius"
+        [attr.aria-invalid]="maxError || rangeInvalid() ? true : null"
+        [attr.aria-describedby]="describedBy('maxCelsius')"
+      />
+      @if (maxError) {
+        <p class="ui-field__error" id="threshold-maxCelsius-error">{{ maxError | translate }}</p>
+      }
+    </div>
+  </div>
+
+  @if (rangeInvalid()) {
+    <p class="ui-field__error" id="threshold-range-error">
+      {{ 'assets.thresholdForm.minBelowMax' | translate }}
+    </p>
+  }
+
+  <div class="ui-form__actions">
+    <button
+      class="ui-button ui-button--secondary"
+      type="button"
+      [disabled]="pending() || form.pristine"
+      (click)="discard()"
+    >
+      {{ 'assets.thresholdForm.discard' | translate }}
+    </button>
+    <button class="ui-button ui-button--primary" type="submit" [disabled]="pending()">
+      {{ (pending() ? 'shared.actions.saving' : 'assets.thresholdForm.save') | translate }}
+    </button>
+  </div>
+</form>

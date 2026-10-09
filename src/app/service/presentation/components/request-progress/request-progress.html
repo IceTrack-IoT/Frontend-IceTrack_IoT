@@ -1,0 +1,41 @@
+@if (offPath()) {
+  <p class="ui-alert" [class.ui-alert--warning]="rejected()" role="note">
+    <app-icon class="ui-alert__icon" [name]="rejected() ? 'circle-x' : 'x'" />
+    <span>
+      {{ 'serviceRequests.progress.offPath.' + status() | translate }}
+      @if (canceledAt(); as canceled) {
+        {{
+          'serviceRequests.progress.canceledAt' | translate: { date: (canceled | localizedDate) }
+        }}
+      }
+    </span>
+  </p>
+} @else {
+  <ol class="request-progress">
+    @for (item of steps(); track item.step) {
+      <li
+        class="request-progress__step"
+        [class.request-progress__step--done]="item.state === 'done'"
+        [class.request-progress__step--current]="item.state === 'current'"
+        [attr.aria-current]="item.state === 'current' ? 'step' : null"
+      >
+        <span class="request-progress__marker" aria-hidden="true">
+          @if (item.state === 'done') {
+            <app-icon name="check" />
+          } @else {
+            {{ item.number }}
+          }
+        </span>
+        <span class="request-progress__label">
+          {{ 'serviceRequests.status.' + item.step | translate }}
+          <span class="visually-hidden"
+            >({{ 'serviceRequests.progress.' + item.state | translate }})</span
+          >
+        </span>
+        @if (item.time) {
+          <span class="request-progress__time">{{ item.time | localizedDate }}</span>
+        }
+      </li>
+    }
+  </ol>
+}

@@ -1,0 +1,55 @@
+.request-progress {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.request-progress__step {
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  column-gap: 12px;
+  align-items: center;
+}
+
+.request-progress__marker {
+  display: inline-grid;
+  grid-row: span 2;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--border-control);
+  border-radius: var(--radius-pill);
+  background-color: var(--surface-card);
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.request-progress__step--done .request-progress__marker {
+  border-color: var(--tone-success-fg);
+  background-color: var(--tone-success-fg);
+  color: var(--color-light);
+}
+
+.request-progress__step--current .request-progress__marker {
+  border-color: var(--brand-600);
+  color: var(--brand-600);
+  box-shadow: 0 0 0 4px var(--brand-100);
+}
+
+.request-progress__label {
+  font-weight: 600;
+}
+
+.request-progress__step:not(.request-progress__step--done, .request-progress__step--current)
+  .request-progress__label {
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.request-progress__time {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}

@@ -1,0 +1,130 @@
+<div class="ui-stack">
+  <header class="ui-page-header">
+    <div>
+      <p class="ui-page-header__eyebrow">{{ 'assets.eyebrow' | translate }}</p>
+      <h1 class="ui-page-header__title">{{ 'assets.siteList.title' | translate }}</h1>
+      @if (source.status() === 'ready') {
+        <p class="ui-page-header__subtitle">
+          {{
+            'assets.siteList.summary'
+              | translate: { sites: sites().length, equipment: equipmentTotal() }
+          }}
+        </p>
+      }
+    </div>
+    <div class="ui-page-header__actions">
+      <a class="ui-button ui-button--secondary" routerLink="/assets/equipment">
+        <app-icon class="ui-button__icon" name="fridge" />
+        {{ 'assets.siteList.viewAllEquipment' | translate }}
+      </a>
+      <button
+        class="ui-button ui-button--primary"
+        type="button"
+        [disabled]="source.status() !== 'ready'"
+        (click)="openForm(null)"
+      >
+        <app-icon class="ui-button__icon" name="plus" />
+        {{ 'assets.siteList.register' | translate }}
+      </button>
+    </div>
+  </header>
+
+  @if (announcement(); as key) {
+    <p class="ui-alert ui-alert--success" role="status">
+      <app-icon class="ui-alert__icon" name="circle-check" />
+      {{ key | translate }}
+    </p>
+  }
+
+  @switch (source.status()) {
+    @case ('loading') {
+      <app-state-panel kind="loading" [heading]="'assets.siteList.loading' | translate" />
+    }
+    @case ('error') {
+      <app-state-panel
+        kind="error"
+        [heading]="'assets.siteList.errorTitle' | translate"
+        [message]="'shared.states.errorMessage' | translate"
+      >
+        <button class="ui-button ui-button--primary" type="button" (click)="load()">
+          <app-icon class="ui-button__icon" name="refresh" />
+          {{ 'shared.actions.retry' | translate }}
+        </button>
+      </app-state-panel>
+    }
+    @default {
+      @if (sites().length === 0) {
+        <app-state-panel
+          kind="empty"
+          [heading]="'assets.siteList.emptyTitle' | translate"
+          [message]="'assets.siteList.emptyMessage' | translate"
+        >
+          <button class="ui-button ui-button--primary" type="button" (click)="openForm(null)">
+            <app-icon class="ui-button__icon" name="plus" />
+            {{ 'assets.siteList.register' | translate }}
+          </button>
+        </app-state-panel>
+      } @else {
+        <ul class="site-list">
+          @for (site of sites(); track site.id) {
+            <li class="ui-panel site-list__card">
+              <h2 class="ui-panel__title">{{ site.name }}</h2>
+              <dl class="site-list__facts">
+                <div class="site-list__fact">
+                  <dt><app-icon [label]="'assets.fields.address' | translate" name="map-pin" /></dt>
+                  <dd>{{ site.address }}</dd>
+                </div>
+                <div class="site-list__fact">
+                  <dt>
+                    <app-icon [label]="'assets.fields.contactName' | translate" name="user" />
+                  </dt>
+                  <dd>{{ site.contact_name }}</dd>
+                </div>
+                <div class="site-list__fact">
+                  <dt><app-icon [label]="'assets.fields.phone' | translate" name="phone" /></dt>
+                  <dd class="telemetry">{{ site.phone.value }}</dd>
+                </div>
+              </dl>
+              <p class="site-list__count">
+                <app-icon name="fridge" />
+                {{ 'assets.siteList.equipmentCount' | translate: { count: site.equipment_count } }}
+              </p>
+              <div class="site-list__actions">
+                <a
+                  class="ui-button ui-button--secondary ui-button--small"
+                  routerLink="/assets/equipment"
+                  [queryParams]="{ siteId: site.id }"
+                  [attr.aria-label]="
+                    'assets.siteList.viewEquipmentOf' | translate: { site: site.name }
+                  "
+                >
+                  {{ 'assets.siteList.viewEquipment' | translate }}
+                </a>
+                <button
+                  class="ui-button ui-button--ghost ui-button--small"
+                  type="button"
+                  [attr.aria-label]="
+                    'assets.siteList.editContactOf' | translate: { site: site.name }
+                  "
+                  (click)="openForm(site)"
+                >
+                  <app-icon class="ui-button__icon" name="pencil" />
+                  {{ 'assets.siteList.editContact' | translate }}
+                </button>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    }
+  }
+</div>
+
+@if (formTarget(); as target) {
+  <app-site-form-dialog
+    [site]="target.site"
+    [pending]="source.pending()"
+    (saved)="save($event)"
+    (closed)="formTarget.set(null)"
+  />
+}

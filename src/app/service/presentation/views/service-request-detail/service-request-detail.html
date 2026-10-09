@@ -1,0 +1,360 @@
+<div class="ui-stack">
+  <a class="ui-link ui-back-link" routerLink="/service-requests">
+    <app-icon name="arrow-left" />
+    {{ 'serviceRequests.detail.back' | translate }}
+  </a>
+
+  @switch (source.status()) {
+    @case ('loading') {
+      <h1 class="visually-hidden">{{ 'serviceRequests.detail.title' | translate }}</h1>
+      <app-state-panel kind="loading" [heading]="'serviceRequests.detail.loading' | translate" />
+    }
+    @case ('error') {
+      <h1 class="visually-hidden">{{ 'serviceRequests.detail.title' | translate }}</h1>
+      <app-state-panel
+        kind="error"
+        [heading]="'serviceRequests.detail.errorTitle' | translate"
+        [message]="'shared.states.errorMessage' | translate"
+      >
+        <button class="ui-button ui-button--primary" type="button" (click)="load()">
+          <app-icon class="ui-button__icon" name="refresh" />
+          {{ 'shared.actions.retry' | translate }}
+        </button>
+      </app-state-panel>
+    }
+    @default {
+      @if (request(); as item) {
+        <header class="ui-page-header">
+          <div>
+            <p class="ui-page-header__eyebrow">{{ 'serviceRequests.eyebrow' | translate }}</p>
+            <h1 class="ui-page-header__title">
+              {{ 'serviceRequests.number' | translate: { id: item.id } }} ·
+              {{ 'serviceRequests.type.' + item.type | translate }}
+            </h1>
+            <div class="request-detail__tags">
+              <app-status-tag
+                [label]="'serviceRequests.status.' + item.status | translate"
+                [appearance]="statusAppearance[item.status]"
+              />
+              <app-status-tag
+                [label]="'serviceRequests.priority.' + item.priority | translate"
+                [appearance]="priorityAppearance[item.priority]"
+              />
+            </div>
+          </div>
+          @if (canCancel()) {
+            <div class="ui-page-header__actions">
+              <button
+                class="ui-button ui-button--secondary"
+                type="button"
+                (click)="openDialog('cancel')"
+              >
+                <app-icon class="ui-button__icon" name="x" />
+                {{ 'serviceRequests.actions.cancel' | translate }}
+              </button>
+            </div>
+          }
+        </header>
+
+        @if (announcement(); as key) {
+          <p class="ui-alert ui-alert--success" role="status">
+            <app-icon class="ui-alert__icon" name="circle-check" />
+            {{ key | translate }}
+          </p>
+        }
+
+        <div class="request-detail__grid">
+          <section class="ui-panel" aria-labelledby="request-summary-title">
+            <h2 class="ui-panel__title request-detail__section-title" id="request-summary-title">
+              {{ 'serviceRequests.detail.summaryTitle' | translate }}
+            </h2>
+            <dl class="ui-details">
+              <div>
+                <dt>{{ 'serviceRequests.fields.equipment' | translate }}</dt>
+                <dd>
+                  @if (equipment(); as itemEquipment) {
+                    <a class="ui-link" [routerLink]="['/assets/equipment', itemEquipment.id]">{{
+                      itemEquipment.name
+                    }}</a>
+                  }
+                </dd>
+              </div>
+              <div>
+                <dt>{{ 'serviceRequests.fields.site' | translate }}</dt>
+                <dd>{{ equipment()?.siteName }}</dd>
+              </div>
+              <div>
+                <dt>{{ 'serviceRequests.fields.type' | translate }}</dt>
+                <dd>{{ 'serviceRequests.type.' + item.type | translate }}</dd>
+              </div>
+              <div>
+                <dt>{{ 'serviceRequests.fields.priority' | translate }}</dt>
+                <dd>{{ 'serviceRequests.priority.' + item.priority | translate }}</dd>
+              </div>
+              @if (item.completed_at) {
+                <div>
+                  <dt>{{ 'serviceRequests.fields.completedAt' | translate }}</dt>
+                  <dd>{{ item.completed_at | localizedDate }}</dd>
+                </div>
+              }
+              @if (item.canceled_at) {
+                <div>
+                  <dt>{{ 'serviceRequests.fields.canceledAt' | translate }}</dt>
+                  <dd>{{ item.canceled_at | localizedDate }}</dd>
+                </div>
+              }
+            </dl>
+            <h3 class="request-detail__subtitle">
+              {{ 'serviceRequests.fields.description' | translate }}
+            </h3>
+            <p class="request-detail__description">{{ item.description }}</p>
+            <a
+              class="ui-link"
+              routerLink="/service-requests"
+              [queryParams]="{ equipmentId: item.equipment_id }"
+            >
+              {{ 'serviceRequests.detail.equipmentHistory' | translate }}
+            </a>
+          </section>
+
+          <section class="ui-panel" aria-labelledby="request-progress-title">
+            <h2 class="ui-panel__title request-detail__section-title" id="request-progress-title">
+              {{ 'serviceRequests.detail.progressTitle' | translate }}
+            </h2>
+            <app-request-progress
+              [status]="item.status"
+              [startedAt]="startedAt()"
+              [completedAt]="item.completed_at"
+              [canceledAt]="item.canceled_at"
+            />
+          </section>
+        </div>
+
+        <section class="ui-panel" aria-labelledby="request-technician-title">
+          <div class="ui-panel__header">
+            <h2 class="ui-panel__title" id="request-technician-title">
+              {{ 'serviceRequests.detail.technicianTitle' | translate }}
+            </h2>
+            @if (canAssign()) {
+              <button
+                class="ui-button ui-button--primary"
+                type="button"
+                (click)="openDialog('assign')"
+              >
+                <app-icon class="ui-button__icon" name="user" />
+                {{
+                  (technician()
+                    ? 'serviceRequests.actions.reassign'
+                    : 'serviceRequests.actions.assign'
+                  ) | translate
+                }}
+              </button>
+            }
+          </div>
+          @if (technician(); as assignee) {
+            <div class="request-detail__technician">
+              <span class="request-detail__avatar"><app-icon name="user" /></span>
+              <div>
+                <p class="request-detail__technician-name">{{ assignee.fullName }}</p>
+                <p class="request-detail__meta">
+                  {{ 'serviceRequests.specialty.' + assignee.specialty | translate }} ·
+                  {{
+                    'serviceRequests.assign.certification'
+                      | translate: { number: assignee.certificationNumber }
+                  }}
+                </p>
+                <p class="request-detail__meta">
+                  @if (assignee.averageRating !== null) {
+                    {{
+                      'serviceRequests.assign.rating'
+                        | translate: { rating: (assignee.averageRating | localizedNumber: 1) }
+                    }}
+                  } @else {
+                    {{ 'serviceRequests.assign.noRatings' | translate }}
+                  }
+                </p>
+              </div>
+            </div>
+            @if (awaitingAcceptance()) {
+              <p class="ui-alert ui-alert--info request-detail__note">
+                <app-icon class="ui-alert__icon" name="clock" />
+                {{ 'serviceRequests.detail.awaitingAcceptance' | translate }}
+              </p>
+            }
+          } @else {
+            <p class="request-detail__empty">
+              {{ 'serviceRequests.detail.noTechnician' | translate }}
+            </p>
+          }
+        </section>
+
+        <section class="ui-panel" aria-labelledby="request-interventions-title">
+          <h2
+            class="ui-panel__title request-detail__section-title"
+            id="request-interventions-title"
+          >
+            {{ 'serviceRequests.detail.interventionsTitle' | translate }}
+          </h2>
+          @if (interventions().length === 0) {
+            <p class="request-detail__empty">
+              {{ 'serviceRequests.detail.noInterventions' | translate }}
+            </p>
+          } @else {
+            <ul class="request-detail__interventions">
+              @for (intervention of interventions(); track intervention.id) {
+                <li class="request-detail__intervention">
+                  <p class="request-detail__technician-name">
+                    {{ intervention.id }} ·
+                    {{
+                      'serviceRequests.interventionStatus.' + intervention.intervention_status
+                        | translate
+                    }}
+                  </p>
+                  <p class="request-detail__meta">
+                    @if (intervention.start_time) {
+                      {{
+                        'serviceRequests.detail.startedAt'
+                          | translate: { date: (intervention.start_time | localizedDate) }
+                      }}
+                    }
+                    @if (intervention.end_time) {
+                      ·
+                      {{
+                        'serviceRequests.detail.endedAt'
+                          | translate: { date: (intervention.end_time | localizedDate) }
+                      }}
+                    }
+                  </p>
+                  <p class="request-detail__description">
+                    {{
+                      intervention.intervention_status === completedIntervention
+                        ? intervention.summary
+                        : ('serviceRequests.detail.interventionOngoing' | translate)
+                    }}
+                  </p>
+                </li>
+              }
+            </ul>
+          }
+        </section>
+
+        <section class="ui-panel" aria-labelledby="request-review-title">
+          <div class="ui-panel__header">
+            <h2 class="ui-panel__title" id="request-review-title">
+              {{ 'serviceRequests.detail.reviewTitle' | translate }}
+            </h2>
+            @if (canReview()) {
+              <button
+                class="ui-button ui-button--primary"
+                type="button"
+                (click)="openDialog('review')"
+              >
+                <app-icon class="ui-button__icon" name="star" />
+                {{ 'serviceRequests.actions.review' | translate }}
+              </button>
+            }
+          </div>
+          @if (review(); as itemReview) {
+            <p class="request-detail__average">
+              <app-icon class="request-detail__star" name="star-filled" />
+              {{
+                'serviceRequests.review.average'
+                  | translate: { average: (itemReview.calculateAverage() | localizedNumber: 1) }
+              }}
+            </p>
+            <dl class="ui-details">
+              <div>
+                <dt>{{ 'serviceRequests.review.criteria.communication' | translate }}</dt>
+                <dd>
+                  {{
+                    'serviceRequests.review.scoreOf'
+                      | translate: { score: itemReview.rating.communication }
+                  }}
+                </dd>
+              </div>
+              <div>
+                <dt>{{ 'serviceRequests.review.criteria.efficacy' | translate }}</dt>
+                <dd>
+                  {{
+                    'serviceRequests.review.scoreOf'
+                      | translate: { score: itemReview.rating.efficacy }
+                  }}
+                </dd>
+              </div>
+              <div>
+                <dt>{{ 'serviceRequests.review.criteria.performance' | translate }}</dt>
+                <dd>
+                  {{
+                    'serviceRequests.review.scoreOf'
+                      | translate: { score: itemReview.rating.performance }
+                  }}
+                </dd>
+              </div>
+            </dl>
+            @if (itemReview.comment) {
+              <blockquote class="request-detail__comment">{{ itemReview.comment }}</blockquote>
+            }
+          } @else {
+            <p class="request-detail__empty">
+              {{
+                (completed()
+                  ? 'serviceRequests.detail.notReviewed'
+                  : 'serviceRequests.detail.reviewAfterCompletion'
+                ) | translate
+              }}
+            </p>
+          }
+        </section>
+
+        @switch (dialog()) {
+          @case ('assign') {
+            <app-assign-technician-dialog
+              [requestLabel]="
+                'serviceRequests.detail.dialogLabel'
+                  | translate: { id: item.id, equipment: equipment()?.name }
+              "
+              [candidates]="candidates"
+              [currentTechnicianId]="item.technician_profile_id"
+              [pending]="source.pending()"
+              (assigned)="assign($event)"
+              (closed)="dialog.set(null)"
+            />
+          }
+          @case ('cancel') {
+            <app-cancel-request-dialog
+              [requestLabel]="
+                'serviceRequests.detail.dialogLabel'
+                  | translate: { id: item.id, equipment: equipment()?.name }
+              "
+              [pending]="source.pending()"
+              (canceled)="cancel($event)"
+              (closed)="dialog.set(null)"
+            />
+          }
+          @case ('review') {
+            <app-review-dialog
+              [requestLabel]="
+                'serviceRequests.detail.reviewDialogLabel'
+                  | translate: { id: item.id, technician: technician()?.fullName }
+              "
+              [pending]="source.pending()"
+              (submitted)="submitReview($event)"
+              (closed)="dialog.set(null)"
+            />
+          }
+        }
+      } @else {
+        <h1 class="visually-hidden">{{ 'serviceRequests.detail.title' | translate }}</h1>
+        <app-state-panel
+          kind="empty"
+          [heading]="'serviceRequests.detail.notFoundTitle' | translate"
+          [message]="'serviceRequests.detail.notFoundMessage' | translate"
+        >
+          <a class="ui-button ui-button--secondary" routerLink="/service-requests">
+            {{ 'serviceRequests.detail.back' | translate }}
+          </a>
+        </app-state-panel>
+      }
+    }
+  }
+</div>

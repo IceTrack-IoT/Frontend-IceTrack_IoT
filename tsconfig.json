@@ -18,7 +18,7 @@
       "@shared/*": ["./src/app/shared/*"],
       "@iam/*": ["./src/app/iam/*"],
       "@profiles/*": ["./src/app/profiles/*"],
-      "@assets/*": ["./src/assets/*"],
+      "@assets/*": ["./src/app/assets/*"],
       "@device/*": ["./src/app/device/*"],
       "@monitoring/*": ["./src/app/monitoring/*"],
       "@notifications/*": ["./src/app/notifications/*"],

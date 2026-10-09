@@ -1,0 +1,108 @@
+<app-dialog
+  [heading]="(site() ? 'assets.siteForm.editTitle' : 'assets.siteForm.createTitle') | translate"
+  [description]="
+    (site() ? 'assets.siteForm.editDescription' : 'assets.siteForm.createDescription') | translate
+  "
+  (closed)="closed.emit()"
+>
+  <form class="ui-form" id="site-form" novalidate [formGroup]="form" (ngSubmit)="submit()">
+    @let nameError = errorKey('name');
+    <div class="ui-field">
+      <label class="ui-field__label" for="site-name">{{
+        'assets.fields.siteName' | translate
+      }}</label>
+      <input
+        class="ui-field__control"
+        id="site-name"
+        formControlName="name"
+        autocomplete="organization"
+        [placeholder]="'assets.placeholders.siteName' | translate"
+        [attr.aria-invalid]="nameError ? true : null"
+        [attr.aria-describedby]="nameError ? 'site-name-error' : null"
+      />
+      @if (nameError) {
+        <p class="ui-field__error" id="site-name-error">{{ nameError | translate }}</p>
+      }
+    </div>
+
+    @let addressError = errorKey('address');
+    <div class="ui-field">
+      <label class="ui-field__label" for="site-address">{{
+        'assets.fields.address' | translate
+      }}</label>
+      <input
+        class="ui-field__control"
+        id="site-address"
+        formControlName="address"
+        autocomplete="street-address"
+        [placeholder]="'assets.placeholders.address' | translate"
+        [attr.aria-invalid]="addressError ? true : null"
+        [attr.aria-describedby]="addressError ? 'site-address-error' : null"
+      />
+      @if (addressError) {
+        <p class="ui-field__error" id="site-address-error">{{ addressError | translate }}</p>
+      }
+    </div>
+
+    <div class="ui-form__grid">
+      @let contactNameError = errorKey('contactName');
+      <div class="ui-field">
+        <label class="ui-field__label" for="site-contact-name">
+          {{ 'assets.fields.contactName' | translate }}
+        </label>
+        <input
+          class="ui-field__control"
+          id="site-contact-name"
+          formControlName="contactName"
+          autocomplete="name"
+          [placeholder]="'assets.placeholders.contactName' | translate"
+          [attr.aria-invalid]="contactNameError ? true : null"
+          [attr.aria-describedby]="contactNameError ? 'site-contact-name-error' : null"
+        />
+        @if (contactNameError) {
+          <p class="ui-field__error" id="site-contact-name-error">
+            {{ contactNameError | translate }}
+          </p>
+        }
+      </div>
+
+      @let phoneError = errorKey('phone');
+      <div class="ui-field">
+        <label class="ui-field__label" for="site-phone">{{
+          'assets.fields.phone' | translate
+        }}</label>
+        <input
+          class="ui-field__control"
+          id="site-phone"
+          type="tel"
+          formControlName="phone"
+          autocomplete="tel"
+          [placeholder]="'assets.placeholders.phone' | translate"
+          [attr.aria-invalid]="phoneError ? true : null"
+          [attr.aria-describedby]="phoneError ? 'site-phone-error' : null"
+        />
+        @if (phoneError) {
+          <p class="ui-field__error" id="site-phone-error">{{ phoneError | translate }}</p>
+        }
+      </div>
+    </div>
+  </form>
+
+  <button
+    dialogActions
+    class="ui-button ui-button--secondary"
+    type="button"
+    (click)="closed.emit()"
+  >
+    {{ 'shared.actions.cancel' | translate }}
+  </button>
+  <button
+    dialogActions
+    class="ui-button ui-button--primary"
+    type="submit"
+    form="site-form"
+    [disabled]="pending()"
+  >
+    {{ (pending() ? 'shared.actions.saving' : 'assets.siteForm.submit') | translate }}
+  </button>
+</app-dialog>

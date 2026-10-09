@@ -1,0 +1,35 @@
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-1);
+}
+
+.pagination__pages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pagination__page {
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0 8px;
+  border: 1px solid var(--border-subtle);
+  background-color: var(--surface-card);
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.pagination__page[aria-current='page'] {
+  border-color: var(--brand-600);
+  background-color: var(--brand-600);
+  color: var(--color-light);
+}

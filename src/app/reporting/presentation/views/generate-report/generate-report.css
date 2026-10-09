@@ -1,0 +1,60 @@
+.generate-report {
+  max-width: 48rem;
+}
+
+.generate-report__formats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-block-start: 6px;
+}
+
+.generate-report__format {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 44px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border-control);
+  border-radius: var(--radius-control);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.generate-report__format:has(input:checked) {
+  border-color: var(--brand-600);
+  background-color: var(--brand-100);
+  color: var(--brand-900);
+}
+
+.generate-report__format input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--brand-600);
+}
+
+.generate-report__confirmation {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.generate-report__confirmation-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-pill);
+  background-color: var(--brand-100);
+  font-size: 1.75rem;
+  color: var(--brand-600);
+}
+
+.generate-report__text {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.generate-report__confirmation-actions {
+  justify-content: flex-start;
+}

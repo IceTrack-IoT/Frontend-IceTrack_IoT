@@ -18,6 +18,12 @@ export const environment = {
   /** Profile endpoints */
   iceTrackProviderOwnerProfilesEndpointPath: '/profiles/owners',
   iceTrackProviderTechnicianProfilesEndpointPath: '/profiles/technicians',
+  iceTrackProviderCreateDashboardConfigEndpointPath: '/profiles/dashboard-configs',
+  iceTrackProviderResetDashboardLayoutEndpointPath: '/profiles/dashboard-configs/user/{userId}/reset-defaults',
+  iceTrackProviderGetDashboardConfigByUserIdEndpointPath: '/profiles/dashboard-configs/user/{userId}',
+  iceTrackProviderToggleDashboardCardVisibilityEndpointPath: '/profiles/dashboard-configs/user/{userId}/cards/{cardId}/toggle-visibility',
+  iceTrackProviderUpdateDashboardDefaultsEndpointPath: '/profiles/dashboard-configs/user/{userId}/defaults',
+  iceTrackProviderUpdateDashboardLayoutEndpointPath: '/profiles/dashboard-configs/user/{userId}/layout',
 
   /** Notification endpoints */
   iceTrackProviderNotificationsEndpointPath: '/notifications',

@@ -1,0 +1,10 @@
+<span
+  class="ui-tag"
+  [class.ui-tag--success]="appearance().tone === 'success'"
+  [class.ui-tag--warning]="appearance().tone === 'warning'"
+  [class.ui-tag--critical]="appearance().tone === 'critical'"
+  [class.ui-tag--info]="appearance().tone === 'info'"
+>
+  <app-icon class="ui-tag__icon" [name]="appearance().icon" />
+  {{ label() }}
+</span>

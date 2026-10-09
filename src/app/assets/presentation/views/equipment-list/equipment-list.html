@@ -1,0 +1,199 @@
+<div class="ui-stack">
+  <header class="ui-page-header">
+    <div>
+      <p class="ui-page-header__eyebrow">{{ 'assets.eyebrow' | translate }}</p>
+      <h1 class="ui-page-header__title">{{ 'assets.equipmentList.title' | translate }}</h1>
+      <p class="ui-page-header__subtitle">{{ 'assets.equipmentList.subtitle' | translate }}</p>
+    </div>
+    <div class="ui-page-header__actions">
+      <a class="ui-button ui-button--secondary" routerLink="/assets/sites">
+        <app-icon class="ui-button__icon" name="building-store" />
+        {{ 'assets.equipmentList.viewSites' | translate }}
+      </a>
+    </div>
+  </header>
+
+  <section class="ui-panel" aria-labelledby="equipment-inventory-title">
+    <div class="ui-panel__header">
+      <div>
+        <h2 class="ui-panel__title" id="equipment-inventory-title">
+          {{ 'assets.equipmentList.inventory' | translate }}
+        </h2>
+        @if (source.status() === 'ready') {
+          <p class="ui-panel__subtitle" role="status">
+            {{
+              'assets.equipmentList.showing'
+                | translate: { shown: filtered().length, total: total() }
+            }}
+          </p>
+        }
+      </div>
+    </div>
+
+    <form class="ui-toolbar equipment-list__filters" role="search" [formGroup]="filters">
+      <div class="ui-field equipment-list__search">
+        <label class="ui-field__label" for="equipment-search">
+          {{ 'assets.equipmentList.search' | translate }}
+        </label>
+        <input
+          class="ui-field__control"
+          id="equipment-search"
+          type="search"
+          formControlName="search"
+          [placeholder]="'assets.equipmentList.searchPlaceholder' | translate"
+        />
+      </div>
+      <div class="ui-field">
+        <label class="ui-field__label" for="equipment-site">{{
+          'assets.fields.site' | translate
+        }}</label>
+        <select class="ui-field__control" id="equipment-site" formControlName="siteId">
+          <option [ngValue]="'ALL'">{{ 'assets.equipmentList.allSites' | translate }}</option>
+          @for (site of sites(); track site.id) {
+            <option [ngValue]="site.id">{{ site.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="ui-field">
+        <label class="ui-field__label" for="equipment-type">{{
+          'assets.fields.type' | translate
+        }}</label>
+        <select class="ui-field__control" id="equipment-type" formControlName="type">
+          <option [ngValue]="'ALL'">{{ 'assets.equipmentList.allTypes' | translate }}</option>
+          @for (type of types; track type) {
+            <option [ngValue]="type">{{ 'assets.equipmentType.' + type | translate }}</option>
+          }
+        </select>
+      </div>
+      <div class="ui-field">
+        <label class="ui-field__label" for="equipment-status">
+          {{ 'assets.fields.status' | translate }}
+        </label>
+        <select class="ui-field__control" id="equipment-status" formControlName="status">
+          <option [ngValue]="'ALL'">{{ 'assets.equipmentList.allStatuses' | translate }}</option>
+          @for (status of statuses; track status) {
+            <option [ngValue]="status">{{ 'assets.statusEquipment.' + status | translate }}</option>
+          }
+        </select>
+      </div>
+      <button class="ui-button ui-button--ghost" type="button" (click)="clearFilters()">
+        {{ 'shared.actions.clearFilters' | translate }}
+      </button>
+    </form>
+
+    @switch (source.status()) {
+      @case ('loading') {
+        <app-state-panel kind="loading" [heading]="'assets.equipmentList.loading' | translate" />
+      }
+      @case ('error') {
+        <app-state-panel
+          kind="error"
+          [heading]="'assets.equipmentList.errorTitle' | translate"
+          [message]="'shared.states.errorMessage' | translate"
+        >
+          <button class="ui-button ui-button--primary" type="button" (click)="load()">
+            <app-icon class="ui-button__icon" name="refresh" />
+            {{ 'shared.actions.retry' | translate }}
+          </button>
+        </app-state-panel>
+      }
+      @default {
+        @if (total() === 0) {
+          <app-state-panel
+            kind="empty"
+            [heading]="'assets.equipmentList.emptyTitle' | translate"
+            [message]="'assets.equipmentList.emptyMessage' | translate"
+          />
+        } @else if (filtered().length === 0) {
+          <app-state-panel
+            kind="empty"
+            [heading]="'assets.equipmentList.noMatchesTitle' | translate"
+            [message]="'assets.equipmentList.noMatchesMessage' | translate"
+          >
+            <button class="ui-button ui-button--secondary" type="button" (click)="clearFilters()">
+              {{ 'shared.actions.clearFilters' | translate }}
+            </button>
+          </app-state-panel>
+        } @else {
+          <div
+            class="ui-table-scroll"
+            role="region"
+            tabindex="0"
+            [attr.aria-label]="'assets.equipmentList.inventory' | translate"
+          >
+            <table class="ui-table">
+              <thead>
+                <tr>
+                  <th scope="col">{{ 'assets.fields.equipment' | translate }}</th>
+                  <th scope="col">{{ 'assets.fields.type' | translate }}</th>
+                  <th scope="col">{{ 'assets.fields.site' | translate }}</th>
+                  <th scope="col">{{ 'assets.fields.status' | translate }}</th>
+                  <th scope="col">{{ 'assets.fields.connectivity' | translate }}</th>
+                  <th scope="col">{{ 'assets.fields.lastKnownTemperature' | translate }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of visible(); track item.id) {
+                  <tr>
+                    <td>
+                      <a class="ui-link" [routerLink]="['/assets/equipment', item.id]">{{
+                        item.name
+                      }}</a>
+                      <span class="ui-table__secondary telemetry">{{ shortCode(item) }}</span>
+                    </td>
+                    <td>{{ 'assets.equipmentType.' + item.equipment_type | translate }}</td>
+                    <td>{{ siteNames().get(item.site_id) }}</td>
+                    <td>
+                      <app-status-tag
+                        [label]="'assets.statusEquipment.' + item.status | translate"
+                        [appearance]="statusAppearance[item.status]"
+                      />
+                    </td>
+                    <td>
+                      <span class="equipment-list__connectivity">
+                        <app-icon [name]="item.online ? 'wifi' : 'wifi-off'" />
+                        {{ (item.online ? 'assets.online' : 'assets.offline') | translate }}
+                      </span>
+                    </td>
+                    <td>
+                      @if (item.last_known_temperature !== null) {
+                        <span
+                          class="telemetry equipment-list__temperature"
+                          [class.equipment-list__temperature--out]="
+                            item.isOutRange(item.last_known_temperature)
+                          "
+                        >
+                          {{ item.last_known_temperature | temperature }}
+                        </span>
+                        @if (item.isOutRange(item.last_known_temperature)) {
+                          <span class="ui-table__secondary equipment-list__out-of-range">
+                            <app-icon name="alert-triangle" />
+                            {{ 'assets.outsideThreshold' | translate }}
+                          </span>
+                        }
+                        <span class="ui-table__secondary">{{
+                          item.last_reading_at | relativeTime
+                        }}</span>
+                      } @else {
+                        <span class="ui-table__secondary">{{
+                          'assets.noTelemetry' | translate
+                        }}</span>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <app-pagination
+            class="equipment-list__pagination"
+            [page]="page()"
+            [pageCount]="pageCount()"
+            (pageChange)="page.set($event)"
+          />
+        }
+      }
+    }
+  </section>
+</div>

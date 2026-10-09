@@ -1,0 +1,23 @@
+.ui-alert .ui-link {
+  margin-inline-start: var(--space-1);
+}
+
+.device-list__device {
+  font-weight: 600;
+  text-align: start;
+  white-space: nowrap;
+}
+
+.device-list__credential {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.device-list__actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+}

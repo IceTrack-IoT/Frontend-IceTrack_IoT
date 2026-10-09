@@ -1,0 +1,95 @@
+<app-dialog
+  [heading]="'serviceRequests.review.title' | translate"
+  [description]="requestLabel()"
+  (closed)="closed.emit()"
+>
+  <form class="ui-form" id="review-form" novalidate [formGroup]="form" (ngSubmit)="submit()">
+    @for (criterion of criteria; track criterion) {
+      <fieldset
+        class="ui-fieldset review-dialog__criterion"
+        [attr.aria-describedby]="
+          'review-' +
+          criterion +
+          '-hint' +
+          (showError(criterion) ? ' review-' + criterion + '-error' : '')
+        "
+      >
+        <legend class="ui-fieldset__legend">
+          {{ 'serviceRequests.review.criteria.' + criterion | translate }}
+        </legend>
+        <p class="ui-field__hint" [id]="'review-' + criterion + '-hint'">
+          {{ 'serviceRequests.review.hints.' + criterion | translate }}
+        </p>
+        <div class="review-dialog__stars">
+          @for (value of scores; track value) {
+            <label
+              class="review-dialog__star"
+              [class.review-dialog__star--on]="value <= score(criterion)"
+            >
+              <input
+                class="visually-hidden"
+                type="radio"
+                [formControlName]="criterion"
+                [value]="value"
+              />
+              <app-icon [name]="value <= score(criterion) ? 'star-filled' : 'star'" />
+              <span class="visually-hidden">
+                {{ 'serviceRequests.review.scoreOption' | translate: { score: value } }}
+              </span>
+            </label>
+          }
+          <span class="review-dialog__word" aria-hidden="true">
+            {{ 'serviceRequests.review.words.' + score(criterion) | translate }}
+          </span>
+        </div>
+        @if (showError(criterion)) {
+          <p class="ui-field__error" [id]="'review-' + criterion + '-error'">
+            {{ 'serviceRequests.review.scoreRequired' | translate }}
+          </p>
+        }
+      </fieldset>
+    }
+
+    <p class="review-dialog__average" role="status">
+      @if (average(); as value) {
+        {{
+          'serviceRequests.review.average' | translate: { average: (value | localizedNumber: 1) }
+        }}
+      }
+    </p>
+
+    <div class="ui-field">
+      <label class="ui-field__label" for="review-comment">{{
+        'serviceRequests.review.comment' | translate
+      }}</label>
+      <textarea
+        class="ui-field__control"
+        id="review-comment"
+        rows="4"
+        formControlName="comment"
+        [attr.maxlength]="commentMaxLength"
+        [placeholder]="'serviceRequests.review.commentPlaceholder' | translate"
+        aria-describedby="review-comment-hint"
+      ></textarea>
+      <p class="ui-field__hint" id="review-comment-hint">
+        {{ 'shared.validation.optionalMax' | translate: { max: commentMaxLength } }}
+      </p>
+    </div>
+  </form>
+
+  <div dialogActions class="ui-form__actions">
+    <button class="ui-button ui-button--secondary" type="button" (click)="closed.emit()">
+      {{ 'serviceRequests.review.later' | translate }}
+    </button>
+    <button
+      class="ui-button ui-button--primary"
+      type="submit"
+      form="review-form"
+      [disabled]="pending()"
+    >
+      {{
+        (pending() ? 'serviceRequests.review.pending' : 'serviceRequests.review.submit') | translate
+      }}
+    </button>
+  </div>
+</app-dialog>

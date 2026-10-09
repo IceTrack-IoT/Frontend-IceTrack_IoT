@@ -3,6 +3,51 @@
     "appName": "IceTrack",
     "publicLayout": {
       "tagline": "Plataforma de Monitoreo Térmico"
+    },
+    "navigation": {
+      "label": "Navegación principal",
+      "dashboard": "Panel",
+      "monitoring": "Monitoreo",
+      "alerts": "Alertas",
+      "sites": "Sedes",
+      "equipment": "Equipos",
+      "devices": "Dispositivos",
+      "serviceRequests": "Solicitudes de servicio",
+      "reports": "Reportes"
+    },
+    "privateLayout": {
+      "skipToContent": "Saltar al contenido principal",
+      "toggleNavigation": "Mostrar u ocultar el menú de navegación"
+    },
+    "actions": {
+      "label": "Acciones",
+      "cancel": "Cancelar",
+      "close": "Cerrar",
+      "retry": "Intentar de nuevo",
+      "clearFilters": "Limpiar filtros",
+      "saving": "Guardando…",
+      "signOut": "Cerrar sesión"
+    },
+    "states": {
+      "errorMessage": "Revisa tu conexión e inténtalo de nuevo. Si el problema continúa, contacta a soporte."
+    },
+    "validation": {
+      "required": "Este campo es obligatorio.",
+      "tooLong": "Este texto es demasiado largo.",
+      "optionalMax": "Opcional. Hasta {{max}} caracteres."
+    },
+    "pagination": {
+      "label": "Paginación",
+      "previous": "Anterior",
+      "next": "Siguiente",
+      "page": "Página {{page}}"
+    },
+    "languageSwitcher": {
+      "label": "Idioma de la interfaz",
+      "languages": {
+        "en": "English",
+        "es": "Español"
+      }
     }
   },
   "iam": {
@@ -113,6 +158,780 @@
       "checkingSession": "Verificando tu sesión…",
       "goToDashboard": "Ir al panel",
       "goToTechnicianArea": "Ir al área de técnicos"
+    }
+  },
+  "assets": {
+    "eyebrow": "Gestión de activos",
+    "online": "En línea",
+    "offline": "Sin conexión",
+    "noTelemetry": "Aún sin telemetría",
+    "outsideThreshold": "Fuera del umbral",
+    "equipmentType": {
+      "FREEZER": "Congelador",
+      "COLD_ROOM": "Cámara frigorífica",
+      "REFRIGERATOR": "Refrigerador"
+    },
+    "statusEquipment": {
+      "ACTIVE": "Activo",
+      "DESACTIVATE": "Desactivado",
+      "MAINTENANCE": "En mantenimiento",
+      "REPAIR": "En reparación"
+    },
+    "fields": {
+      "siteName": "Nombre de la sede",
+      "address": "Dirección",
+      "contactName": "Nombre del contacto",
+      "phone": "Teléfono de contacto",
+      "site": "Sede",
+      "type": "Tipo",
+      "status": "Estado",
+      "equipment": "Equipo",
+      "connectivity": "Conectividad",
+      "lastKnownTemperature": "Última temperatura conocida",
+      "lastReadingAt": "Última lectura",
+      "reminderInterval": "Recordatorio de mantenimiento",
+      "code": "Código del equipo"
+    },
+    "placeholders": {
+      "siteName": "Ej. Depósito San Miguel",
+      "address": "Ej. Av. La Marina 2355, San Miguel, Lima",
+      "contactName": "Ej. Rosa Quispe",
+      "phone": "Ej. +51 987 654 321"
+    },
+    "validation": {
+      "phone": "Ingresa un teléfono válido: dígitos, espacios, guiones o paréntesis, con un + inicial opcional."
+    },
+    "siteList": {
+      "title": "Sedes",
+      "summary": "{{sites}} sedes registradas · {{equipment}} equipos",
+      "register": "Registrar sede",
+      "viewAllEquipment": "Ver todos los equipos",
+      "loading": "Cargando sedes…",
+      "errorTitle": "No pudimos cargar tus sedes.",
+      "emptyTitle": "Aún no hay sedes registradas",
+      "emptyMessage": "Registra tu primera sede para empezar a agregarle equipos de refrigeración.",
+      "equipmentCount": "Equipos: {{count}}",
+      "viewEquipment": "Ver equipos",
+      "viewEquipmentOf": "Ver equipos de {{site}}",
+      "editContact": "Editar contacto",
+      "editContactOf": "Editar contacto de {{site}}",
+      "registered": "La sede fue registrada.",
+      "updated": "El contacto de la sede fue actualizado."
+    },
+    "siteForm": {
+      "createTitle": "Registrar sede",
+      "createDescription": "Agrega una instalación donde operan tus equipos de refrigeración.",
+      "editTitle": "Editar contacto de la sede",
+      "editDescription": "El nombre y la dirección de una sede no se pueden cambiar una vez registrada.",
+      "submit": "Guardar sede"
+    },
+    "equipmentList": {
+      "title": "Equipos de refrigeración",
+      "subtitle": "Encuentra tus equipos por sede, tipo o estado operativo.",
+      "viewSites": "Ver sedes",
+      "inventory": "Inventario de equipos",
+      "showing": "Mostrando {{shown}} de {{total}} equipos",
+      "search": "Buscar",
+      "searchPlaceholder": "Nombre o código",
+      "allSites": "Todas las sedes",
+      "allTypes": "Todos los tipos",
+      "allStatuses": "Todos los estados",
+      "loading": "Cargando equipos…",
+      "errorTitle": "No pudimos cargar tus equipos.",
+      "emptyTitle": "Aún no hay equipos registrados",
+      "emptyMessage": "Los equipos de refrigeración de tus sedes aparecerán aquí una vez registrados.",
+      "noMatchesTitle": "Ningún equipo coincide con los filtros",
+      "noMatchesMessage": "Prueba otra búsqueda o amplía los filtros de sede, tipo o estado."
+    },
+    "equipmentDetail": {
+      "title": "Detalle del equipo",
+      "back": "Volver a equipos",
+      "loading": "Cargando equipo…",
+      "errorTitle": "No pudimos cargar este equipo.",
+      "notFoundTitle": "Equipo no encontrado",
+      "notFoundMessage": "Este equipo no existe o no está registrado en tu cuenta.",
+      "lastKnownTemperature": "Última temperatura conocida",
+      "readingAge": "Reportada {{age}}",
+      "thresholdTitle": "Umbral de temperatura",
+      "thresholdCurrent": "Rango seguro actual: {{min}} a {{max}}",
+      "thresholdSaved": "El umbral de temperatura fue guardado.",
+      "detailsTitle": "Información del equipo",
+      "days": "Cada {{count}} días",
+      "relatedTitle": "Información relacionada",
+      "deviceTitle": "Dispositivo de monitoreo",
+      "deviceText": "Vinculación y credenciales del dispositivo que reporta este equipo.",
+      "deviceLink": "Gestionar el dispositivo",
+      "monitoringTitle": "Telemetría y alertas",
+      "monitoringText": "Temperaturas actuales e históricas, y las alertas generadas para este equipo.",
+      "telemetryLink": "Ver telemetría",
+      "alertsLink": "Ver alertas",
+      "serviceTitle": "Historial de servicio",
+      "serviceText": "Solicitudes de servicio e intervenciones de este equipo.",
+      "serviceHistoryLink": "Ver historial de servicio",
+      "requestServiceLink": "Solicitar un servicio"
+    },
+    "thresholdForm": {
+      "hint": "Valores en grados Celsius (°C). El mínimo debe ser menor que el máximo.",
+      "min": "Temperatura mínima (°C)",
+      "max": "Temperatura máxima (°C)",
+      "minBelowMax": "La temperatura mínima debe ser menor que la temperatura máxima.",
+      "discard": "Descartar cambios",
+      "save": "Guardar umbral"
+    }
+  },
+  "devices": {
+    "eyebrow": "Gestión de dispositivos",
+    "status": {
+      "UNPAIRED": "Sin vincular",
+      "PAIRED": "Vinculado",
+      "ONLINE": "En línea",
+      "OFFLINE": "Sin conexión"
+    },
+    "fields": {
+      "device": "Dispositivo",
+      "status": "Estado",
+      "equipment": "Equipo",
+      "site": "Sede",
+      "credential": "Credencial",
+      "lastRead": "Última lectura"
+    },
+    "list": {
+      "title": "Dispositivos de monitoreo",
+      "subtitle": "Vincula dispositivos con tus equipos y gestiona sus credenciales.",
+      "pair": "Vincular un dispositivo",
+      "tableTitle": "Dispositivos",
+      "pairingFilter": "Filtrar por vinculación",
+      "all": "Todos",
+      "paired": "Vinculados",
+      "unpaired": "El dispositivo fue desvinculado.",
+      "equipmentFilter": "Mostrando el dispositivo de {{equipment}}.",
+      "showAll": "Mostrar todos los dispositivos",
+      "loading": "Cargando dispositivos…",
+      "errorTitle": "No pudimos cargar tus dispositivos.",
+      "emptyTitle": "No hay dispositivos para mostrar",
+      "noDeviceForEquipment": "Ningún dispositivo está vinculado a este equipo",
+      "emptyMessage": "Vincula un dispositivo de monitoreo para que su equipo empiece a reportar telemetría.",
+      "deviceLabel": "Dispositivo #{{id}}",
+      "deviceOfEquipment": "Dispositivo #{{id}} · {{equipment}}",
+      "firmware": "Firmware {{version}}",
+      "notPaired": "Sin vincular",
+      "credentialActive": "Activa",
+      "noCredential": "Sin credencial activa",
+      "never": "Nunca",
+      "pairShort": "Vincular",
+      "pairDevice": "Vincular el dispositivo #{{id}}",
+      "rotate": "Rotar clave",
+      "rotateFor": "Rotar la clave del dispositivo #{{id}}",
+      "issue": "Emitir clave",
+      "issueFor": "Emitir una clave para el dispositivo #{{id}}",
+      "revoke": "Revocar clave",
+      "revokeFor": "Revocar la clave del dispositivo #{{id}}",
+      "unpair": "Desvincular",
+      "unpairFor": "Desvincular el dispositivo #{{id}}",
+      "rotated": "La clave del dispositivo fue reemplazada.",
+      "revoked": "La clave del dispositivo fue revocada."
+    },
+    "credential": {
+      "rotate": {
+        "title": "Rotar la clave del dispositivo",
+        "warning": "Se emitirá una clave nueva y la clave actual dejará de funcionar. Actualiza el dispositivo con la clave nueva para que siga enviando telemetría.",
+        "confirm": "Rotar clave",
+        "pending": "Rotando…"
+      },
+      "revoke": {
+        "title": "Revocar la clave del dispositivo",
+        "warning": "El dispositivo dejará de enviar telemetría hasta que emitas una clave nueva. Mientras tanto, su equipo aparecerá sin conexión.",
+        "acknowledgement": "Entiendo que el dispositivo dejará de enviar telemetría.",
+        "acknowledgementRequired": "Confirma que entiendes la consecuencia antes de revocar la clave.",
+        "confirm": "Revocar clave",
+        "pending": "Revocando…",
+        "done": "La clave fue revocada. El dispositivo ya no puede enviar telemetría."
+      },
+      "storeNow": "Guarda esta clave ahora. No se volverá a mostrar.",
+      "hashOnly": "IceTrack solo conserva una huella de la clave. Si la pierdes, vuelve a rotarla.",
+      "newKey": "Nueva clave del dispositivo",
+      "copy": "Copiar",
+      "copied": "Copiada",
+      "copyFailed": "No pudimos copiar la clave. Selecciónala y cópiala manualmente.",
+      "storedConfirmation": "Guardé esta clave en un lugar seguro",
+      "done": "Listo"
+    },
+    "unpair": {
+      "title": "¿Desvincular el dispositivo #{{id}}?",
+      "message": "{{equipment}} dejará de reportar telemetría hasta que se le vincule otro dispositivo.",
+      "confirm": "Desvincular dispositivo",
+      "pending": "Desvinculando…"
+    },
+    "pairing": {
+      "title": "Vincular un dispositivo",
+      "subtitle": "Asocia un dispositivo de monitoreo sin vincular con un equipo que no tenga dispositivo.",
+      "back": "Volver a dispositivos",
+      "loading": "Cargando dispositivos y equipos…",
+      "errorTitle": "No pudimos cargar los dispositivos disponibles para vincular.",
+      "noDevicesTitle": "No hay dispositivos sin vincular",
+      "noDevicesMessage": "Todos tus dispositivos ya están vinculados. Desvincula uno para asociarlo con otro equipo.",
+      "noEquipmentTitle": "Todos tus equipos ya tienen un dispositivo",
+      "noEquipmentMessage": "Desvincula un dispositivo de su equipo, o registra un equipo nuevo, para vincular otro dispositivo.",
+      "device": "Dispositivo",
+      "deviceHint": "Solo se muestran los dispositivos sin vincular.",
+      "selectDevice": "Selecciona un dispositivo",
+      "deviceRequired": "Selecciona el dispositivo a vincular.",
+      "equipment": "Equipo",
+      "equipmentHint": "Solo se muestran los equipos sin dispositivo.",
+      "selectEquipment": "Selecciona un equipo",
+      "equipmentRequired": "Selecciona el equipo al que vincular el dispositivo.",
+      "confirm": "Vincular dispositivo",
+      "pending": "Vinculando…",
+      "successTitle": "Dispositivo vinculado",
+      "successMessage": "El dispositivo #{{id}} ahora está vinculado a {{equipment}}.",
+      "credentialNext": "Emite una clave para el dispositivo desde la lista de dispositivos para que empiece a enviar telemetría.",
+      "pairAnother": "Vincular otro dispositivo",
+      "viewEquipment": "Ver equipo",
+      "goToDevices": "Ir a dispositivos"
+    }
+  },
+  "monitoring": {
+    "eyebrow": "Monitoreo y alertas",
+    "minutes": "{{value}} min",
+    "deviceLabel": "Dispositivo #{{id}}",
+    "severity": {
+      "INFO": "Informativa",
+      "WARNING": "Advertencia",
+      "CRITICAL": "Crítica"
+    },
+    "alertStatus": {
+      "OPEN": "Abierta",
+      "RESOLVED": "Resuelta",
+      "DISMISSED": "Descartada"
+    },
+    "alertType": {
+      "TEMPERATURE_EXCURSION": "Excursión de temperatura",
+      "DEVICE_OFFLINE": "Dispositivo sin conexión"
+    },
+    "state": {
+      "outside": "Fuera del umbral",
+      "offline": "Sin lecturas recientes",
+      "within": "Dentro del umbral",
+      "none": "Aún sin telemetría"
+    },
+    "fields": {
+      "equipment": "Equipo",
+      "site": "Sede",
+      "severity": "Severidad",
+      "type": "Tipo",
+      "openedAt": "Abierta",
+      "closedAt": "Cerrada",
+      "peakTemperature": "Temperatura máxima alcanzada",
+      "excursionDuration": "Duración de la excursión",
+      "threshold": "Umbral",
+      "recordedAt": "Registrada",
+      "averageTemperature": "Temperatura promedio",
+      "temperatureRange": "Mín. – máx.",
+      "humidity": "Humedad",
+      "device": "Dispositivo"
+    },
+    "dashboard": {
+      "title": "Resumen de monitoreo",
+      "subtitle": "Estado actual de la cadena de frío de tus sedes y equipos.",
+      "refresh": "Actualizar",
+      "refreshing": "Actualizando…",
+      "updatedAt": "Actualizado a las {{time}}",
+      "loading": "Cargando el resumen de monitoreo…",
+      "errorTitle": "No pudimos cargar el resumen de monitoreo.",
+      "emptyTitle": "Aún no hay equipos para monitorear",
+      "emptyMessage": "Registra equipos y vincula un dispositivo de monitoreo para ver sus temperaturas aquí.",
+      "goToEquipment": "Ir a equipos",
+      "summaryTitle": "Resumen",
+      "sites": "Sedes",
+      "monitoredEquipment": "Equipos monitoreados",
+      "ofEquipment": "de {{total}} equipos",
+      "openAlerts": "Alertas abiertas",
+      "criticalAlerts": "Críticas: {{count}}",
+      "activeServiceRequests": "Solicitudes de servicio activas",
+      "currentTitle": "Temperaturas actuales",
+      "currentSubtitle": "Última lectura de cada equipo. Abre uno para ver su historial.",
+      "thresholdShort": "Rango seguro {{min}} a {{max}}",
+      "readingAge": "Reportada {{age}}",
+      "alertsTitle": "Alertas abiertas",
+      "viewAllAlerts": "Ver todas las alertas",
+      "noOpenAlerts": "No hay alertas abiertas"
+    },
+    "alerts": {
+      "title": "Alertas",
+      "subtitle": "Excursiones de temperatura y dispositivos sin conexión en tus equipos.",
+      "backToOverview": "Resumen de monitoreo",
+      "filters": "Filtros de alertas",
+      "statusFilter": "Filtrar por estado",
+      "allStatuses": "Todas",
+      "allSeverities": "Todas las severidades",
+      "allTypes": "Todos los tipos",
+      "equipmentFilter": "Mostrando las alertas de {{equipment}}.",
+      "showAll": "Mostrar todas las alertas",
+      "loading": "Cargando alertas…",
+      "errorTitle": "No pudimos cargar tus alertas.",
+      "noOpenTitle": "No hay alertas abiertas",
+      "noMatchesTitle": "Ninguna alerta coincide con los filtros",
+      "noMatchesMessage": "Prueba otro estado, severidad o tipo.",
+      "unknownEquipment": "Equipo desconocido",
+      "openedAt": "Abierta {{date}}",
+      "closedAt": "cerrada {{date}}",
+      "viewDetails": "Ver detalle",
+      "acknowledge": "Reconocer",
+      "acknowledged": "Reconocida",
+      "acknowledgedMessage": "Reconociste la alerta. Seguirá abierta hasta que la condición se resuelva.",
+      "dismiss": "Descartar",
+      "dismissedMessage": "La alerta fue descartada.",
+      "requestService": "Solicitar servicio",
+      "alertLabel": "{{type}} · {{equipment}}"
+    },
+    "alertDetail": {
+      "title": "Detalle de la alerta",
+      "back": "Volver a alertas",
+      "eyebrow": "Alerta #{{id}}",
+      "loading": "Cargando la alerta…",
+      "errorTitle": "No pudimos cargar esta alerta.",
+      "notFoundTitle": "Alerta no encontrada",
+      "notFoundMessage": "Esta alerta no existe o no pertenece a tus equipos.",
+      "factsTitle": "Qué pasó",
+      "stillOpen": "Sigue abierta",
+      "explanation": {
+        "TEMPERATURE_EXCURSION": "La temperatura del equipo permaneció fuera de su umbral más tiempo del que permite su política de alertas.",
+        "DEVICE_OFFLINE": "El dispositivo de monitoreo del equipo dejó de enviar lecturas."
+      },
+      "actionsTitle": "Acciones",
+      "acknowledgedNote": "Reconociste esta alerta a las {{date}}. Seguirá abierta hasta que la condición se resuelva.",
+      "requestServiceHint": "El formulario de solicitud se abre con este equipo ya completado. Lo confirmas antes de enviarlo.",
+      "closedNote": "Esta alerta está cerrada. No hay más acciones disponibles.",
+      "viewTelemetry": "Ver la telemetría del equipo",
+      "triggerTitle": "Lectura que generó la alerta"
+    },
+    "dismiss": {
+      "title": "Descartar alerta",
+      "explanation": "Las alertas descartadas quedan en el historial con el motivo que indiques.",
+      "reason": "Motivo",
+      "selectReason": "Selecciona un motivo",
+      "reasonRequired": "Selecciona por qué descartas la alerta.",
+      "reasons": {
+        "DEFROST_CYCLE": "Ciclo de descongelamiento",
+        "LOADING_DOOR_OPEN": "Puerta de carga abierta",
+        "SENSOR_RELOCATION": "Reubicación del sensor",
+        "OTHER": "Otro"
+      },
+      "notes": "Notas",
+      "notesPlaceholder": "Agrega detalles para el historial",
+      "keepOpen": "Mantener abierta",
+      "confirm": "Descartar alerta",
+      "pending": "Descartando…"
+    },
+    "telemetry": {
+      "title": "Telemetría del equipo",
+      "eyebrow": "Telemetría",
+      "back": "Volver a monitoreo",
+      "loading": "Cargando telemetría…",
+      "errorTitle": "No pudimos cargar la telemetría de este equipo.",
+      "notFoundTitle": "Equipo no encontrado",
+      "notFoundMessage": "Este equipo no existe o no está registrado en tu cuenta.",
+      "threshold": "Rango seguro {{min}} a {{max}}",
+      "viewEquipment": "Detalle del equipo",
+      "viewAlerts": "Alertas",
+      "currentTitle": "Lectura actual",
+      "staleNotice": "Sin lecturas desde {{age}}. El valor mostrado es la última lectura conocida.",
+      "noTelemetryTitle": "Aún sin telemetría",
+      "noTelemetryMessage": "Este equipo todavía no ha reportado ninguna lectura.",
+      "noDeviceMessage": "Vincula un dispositivo de monitoreo con este equipo para recibir sus lecturas.",
+      "pairDevice": "Vincular un dispositivo",
+      "historyTitle": "Historial de temperatura",
+      "interval": "Lecturas agregadas cada {{minutes}} minutos",
+      "rangeLabel": "Periodo",
+      "ranges": {
+        "2H": "2 horas",
+        "6H": "6 horas",
+        "24H": "24 horas",
+        "7D": "7 días"
+      },
+      "stats": {
+        "min": "Mínima",
+        "max": "Máxima",
+        "mean": "Promedio",
+        "outside": "Lecturas fuera del umbral"
+      },
+      "summary": "Del {{from}} al {{to}}, la temperatura varió entre {{min}} y {{max}}; {{outside}} de {{count}} lecturas estuvieron fuera del umbral.",
+      "showTable": "Mostrar las lecturas como tabla",
+      "tableLabel": "Lecturas de temperatura",
+      "noHistoryTitle": "No hay lecturas en este periodo",
+      "noHistoryMessage": "Elige un periodo más largo o verifica que el dispositivo esté reportando.",
+      "policyTitle": "Política de alertas"
+    },
+    "policy": {
+      "state": "Estado",
+      "active": "Activa",
+      "inactive": "Inactiva",
+      "sustainedExcursion": "Tiempo de excursión antes de alertar",
+      "hysteresis": "Margen de histéresis",
+      "offlineAfter": "Sin conexión después de",
+      "missedWindows": "{{count}} ventanas de reporte perdidas"
+    },
+    "chart": {
+      "average": "Temperatura promedio",
+      "range": "Rango mín. – máx.",
+      "threshold": "Umbral",
+      "outside": "Fuera del umbral",
+      "maxLabel": "Máx. {{value}}",
+      "minLabel": "Mín. {{value}}",
+      "sliderLabel": "Historial de temperatura. Usa las flechas del teclado para moverte entre lecturas.",
+      "sliderHint": "Usa las flechas del teclado para leer cada lectura.",
+      "valueText": "{{time}}: {{temperature}}",
+      "rangeValue": "Mín. {{min}} · máx. {{max}}",
+      "humidity": "Humedad {{value}} %"
+    }
+  },
+  "serviceRequests": {
+    "eyebrow": "Solicitudes de servicio",
+    "number": "Solicitud #{{id}}",
+    "unassigned": "Sin asignar",
+    "status": {
+      "PENDING": "Pendiente",
+      "ACCEPTED": "Aceptada",
+      "REJECTED": "Rechazada",
+      "IN_PROGRESS": "En curso",
+      "CANCELED": "Cancelada",
+      "COMPLETED": "Completada"
+    },
+    "priority": {
+      "LOW": "Baja",
+      "MEDIUM": "Media",
+      "HIGH": "Alta",
+      "URGENT": "Urgente"
+    },
+    "type": {
+      "REPAIR": "Reparación",
+      "PREVENTIVE_MAINTENANCE": "Mantenimiento preventivo",
+      "INSTALLATION": "Instalación",
+      "INSPECTION": "Inspección",
+      "OTHER": "Otro"
+    },
+    "interventionStatus": {
+      "PENDING": "En curso",
+      "COMPLETED": "Completada"
+    },
+    "specialty": {
+      "REFRIGERATION": "Refrigeración",
+      "ELECTRICAL": "Electricidad",
+      "GENERAL": "General"
+    },
+    "fields": {
+      "request": "Solicitud",
+      "equipment": "Equipo",
+      "site": "Sede",
+      "technician": "Técnico",
+      "priority": "Prioridad",
+      "status": "Estado",
+      "type": "Tipo de servicio",
+      "description": "Descripción",
+      "completedAt": "Completada",
+      "canceledAt": "Cancelada"
+    },
+    "actions": {
+      "view": "Ver",
+      "assign": "Asignar técnico",
+      "reassign": "Asignar otro técnico",
+      "review": "Calificar servicio",
+      "cancel": "Cancelar solicitud"
+    },
+    "list": {
+      "title": "Solicitudes de servicio",
+      "subtitle": "Servicios correctivos y preventivos para tus equipos.",
+      "create": "Nueva solicitud de servicio",
+      "tableTitle": "Solicitudes",
+      "statusFilter": "Filtrar por estado",
+      "allStatuses": "Todas",
+      "allPriorities": "Todas las prioridades",
+      "allTypes": "Todos los tipos",
+      "equipmentFilter": "Mostrando el historial de servicio de {{equipment}}.",
+      "showAll": "Mostrar todas las solicitudes",
+      "loading": "Cargando solicitudes de servicio…",
+      "errorTitle": "No pudimos cargar tus solicitudes de servicio.",
+      "emptyTitle": "Aún no hay solicitudes de servicio",
+      "emptyMessage": "Solicita una reparación o un mantenimiento preventivo para cualquiera de tus equipos.",
+      "noMatchesTitle": "Ninguna solicitud coincide con los filtros",
+      "noMatchesMessage": "Prueba otro estado, prioridad o tipo de servicio.",
+      "assignFor": "Asignar un técnico a la solicitud #{{id}}",
+      "reviewFor": "Calificar el servicio de la solicitud #{{id}}",
+      "viewFor": "Ver la solicitud #{{id}}"
+    },
+    "form": {
+      "title": "Nueva solicitud de servicio",
+      "subtitle": "Describe el servicio que necesita tu equipo. Podrás asignar un técnico una vez creada.",
+      "back": "Volver a solicitudes de servicio",
+      "fromAlert": "Este borrador proviene de la alerta #{{id}}. Revisa los datos y confirma para enviarlo.",
+      "viewAlert": "Ver alerta",
+      "selectEquipment": "Selecciona un equipo",
+      "siteHint": "La sede se toma del equipo seleccionado.",
+      "siteOf": "Sede: {{site}}",
+      "selectType": "Selecciona un tipo de servicio",
+      "selectRequired": "Selecciona una opción.",
+      "descriptionPlaceholder": "¿Qué está pasando y desde cuándo?",
+      "descriptionHint": "{{count}} de {{max}} caracteres. Escribe al menos 10.",
+      "descriptionTooShort": "Describe el problema en al menos 10 caracteres.",
+      "submit": "Crear solicitud",
+      "submitting": "Creando solicitud…",
+      "createdTitle": "Solicitud #{{id}} creada",
+      "createdMessage": "La solicitud está pendiente. Asigna un técnico desde la lista de solicitudes de servicio.",
+      "createAnother": "Crear otra solicitud",
+      "goToList": "Ir a solicitudes de servicio"
+    },
+    "detail": {
+      "title": "Detalle de la solicitud de servicio",
+      "back": "Volver a solicitudes de servicio",
+      "loading": "Cargando la solicitud de servicio…",
+      "errorTitle": "No pudimos cargar esta solicitud de servicio.",
+      "notFoundTitle": "Solicitud de servicio no encontrada",
+      "notFoundMessage": "Esta solicitud no existe o no pertenece a tu cuenta.",
+      "summaryTitle": "Datos de la solicitud",
+      "equipmentHistory": "Ver el historial de servicio de este equipo",
+      "progressTitle": "Progreso",
+      "technicianTitle": "Técnico asignado",
+      "noTechnician": "Aún no hay un técnico asignado.",
+      "awaitingAcceptance": "Esperando que el técnico acepte la solicitud.",
+      "interventionsTitle": "Intervenciones",
+      "noInterventions": "Aún no ha comenzado ninguna intervención.",
+      "interventionOngoing": "El técnico está trabajando en esta intervención.",
+      "startedAt": "Iniciada {{date}}",
+      "endedAt": "finalizada {{date}}",
+      "reviewTitle": "Calificación del servicio",
+      "notReviewed": "Aún no calificaste este servicio.",
+      "reviewAfterCompletion": "Podrás calificar el servicio una vez completado.",
+      "dialogLabel": "Solicitud #{{id}} · {{equipment}}",
+      "reviewDialogLabel": "Solicitud #{{id}} · {{technician}}",
+      "assigned": "El técnico fue asignado y será notificado.",
+      "canceled": "La solicitud fue cancelada.",
+      "reviewed": "Gracias. Tu calificación fue guardada."
+    },
+    "progress": {
+      "done": "completado",
+      "current": "paso actual",
+      "upcoming": "pendiente",
+      "offPath": {
+        "CANCELED": "Esta solicitud fue cancelada.",
+        "REJECTED": "El técnico asignado rechazó esta solicitud. Asigna otro técnico."
+      },
+      "canceledAt": "Cancelada {{date}}."
+    },
+    "assign": {
+      "title": "Asignar técnico",
+      "legend": "Técnicos",
+      "specialtyFilter": "Filtrar por especialidad",
+      "allSpecialties": "Todas las especialidades",
+      "certification": "Certificación {{number}}",
+      "rating": "Calificación {{rating}} / 5",
+      "noRatings": "Aún sin calificaciones",
+      "completedServices": "Servicios completados: {{count}}",
+      "current": "Asignado actualmente",
+      "noCandidates": "Ningún técnico tiene esta especialidad.",
+      "required": "Selecciona un técnico para asignar.",
+      "confirm": "Asignar técnico",
+      "pending": "Asignando…"
+    },
+    "cancel": {
+      "title": "Cancelar solicitud de servicio",
+      "warning": "La cancelación no se puede deshacer. El técnico asignado será notificado.",
+      "reason": "Motivo de la cancelación",
+      "reasonPlaceholder": "¿Por qué ya no se necesita este servicio?",
+      "reasonHint": "Escribe al menos 10 caracteres.",
+      "reasonRequired": "Indica un motivo para cancelar la solicitud.",
+      "reasonTooShort": "El motivo debe tener al menos 10 caracteres.",
+      "keep": "Mantener solicitud",
+      "confirm": "Cancelar solicitud",
+      "pending": "Cancelando…"
+    },
+    "review": {
+      "title": "Calificar servicio",
+      "criteria": {
+        "communication": "Comunicación",
+        "efficacy": "Eficacia técnica",
+        "performance": "Servicio en general"
+      },
+      "hints": {
+        "communication": "Avisos, puntualidad y claridad.",
+        "efficacy": "Diagnóstico y calidad de la reparación.",
+        "performance": "¿Volverías a contratar a este técnico?"
+      },
+      "scoreOption": "{{score}} de 5",
+      "scoreOf": "{{score}} / 5",
+      "words": {
+        "0": "Sin calificar",
+        "1": "Malo",
+        "2": "Regular",
+        "3": "Bueno",
+        "4": "Muy bueno",
+        "5": "Excelente"
+      },
+      "scoreRequired": "Elige una puntuación del 1 al 5.",
+      "average": "Puntuación promedio {{average}} / 5",
+      "comment": "Comentarios",
+      "commentPlaceholder": "Cuéntanos más sobre el servicio",
+      "later": "Más tarde",
+      "submit": "Enviar calificación",
+      "pending": "Enviando…"
+    }
+  },
+  "notifications": {
+    "severity": {
+      "INFO": "Informativa",
+      "WARNING": "Advertencia",
+      "CRITICAL": "Crítica"
+    },
+    "types": {
+      "MAINTENANCE_REMINDER": "Recordatorio de mantenimiento",
+      "DEVICE_OFFLINE": "Dispositivo sin conexión",
+      "LOW_BATTERY": "Batería baja",
+      "SENSOR_FAILURE": "Falla del sensor",
+      "SERVICE_REQUEST_UPDATE": "Actualización de solicitud de servicio",
+      "OUT_OF_RANGER_TEMPERATURE": "Temperatura fuera de rango"
+    },
+    "bell": {
+      "label": "Notificaciones",
+      "labelWithUnread": "Notificaciones, {{count}} sin leer"
+    },
+    "center": {
+      "eyebrow": "Centro de notificaciones",
+      "title": "Notificaciones",
+      "unreadSummary": "Notificaciones sin leer: {{count}}",
+      "markAllAsRead": "Marcar todas como leídas",
+      "listTitle": "Notificaciones activas",
+      "readFilter": "Filtrar por estado de lectura",
+      "all": "Todas",
+      "unreadOnly": "Sin leer",
+      "severityFilter": "Severidad",
+      "allSeverities": "Todas las severidades",
+      "typeFilter": "Tipo",
+      "allTypes": "Todos los tipos",
+      "loading": "Cargando notificaciones…",
+      "errorTitle": "No pudimos cargar tus notificaciones.",
+      "emptyTitle": "Estás al día",
+      "emptyMessage": "Las nuevas alertas y actualizaciones de servicio aparecerán aquí.",
+      "noMatchesTitle": "Ninguna notificación coincide con los filtros",
+      "noMatchesMessage": "Prueba otro estado de lectura, severidad o tipo.",
+      "read": "Leída",
+      "unread": "Sin leer",
+      "readAt": "leída {{date}}",
+      "viewAlert": "Ver alerta",
+      "viewEquipment": "Ver equipo",
+      "viewServiceRequests": "Ver solicitudes de servicio",
+      "markAsRead": "Marcar como leída",
+      "dismiss": "Descartar",
+      "markedAsRead": "La notificación fue marcada como leída.",
+      "allMarkedAsRead": "Todas las notificaciones fueron marcadas como leídas.",
+      "dismissed": "La notificación fue descartada."
+    }
+  },
+  "reporting": {
+    "eyebrow": "Reportes y analítica",
+    "type": {
+      "MAINTENANCE_COMPLIANCE": "Cumplimiento de mantenimiento",
+      "EQUIPMENT_UPTIME": "Disponibilidad de equipos",
+      "TECHNICIAN_PERFORMANCE": "Desempeño de técnicos",
+      "TEMPERATURE_EXCURSION": "Excursiones de temperatura"
+    },
+    "status": {
+      "PENDING": "Pendiente",
+      "GENERATING": "Generando",
+      "COMPLETED": "Completado",
+      "FAILED": "Fallido"
+    },
+    "format": {
+      "PDF": "PDF",
+      "EXCEL": "Excel",
+      "CSV": "CSV"
+    },
+    "fields": {
+      "report": "Reporte",
+      "title": "Título del reporte",
+      "type": "Tipo de reporte",
+      "status": "Estado",
+      "format": "Formato",
+      "site": "Sede",
+      "equipment": "Equipo",
+      "dateRange": "Periodo",
+      "requestedAt": "Solicitado",
+      "completedAt": "Completado"
+    },
+    "actions": {
+      "view": "Ver",
+      "download": "Descargar"
+    },
+    "validation": {
+      "invalidRange": "La fecha de inicio debe ser igual o anterior a la fecha de fin."
+    },
+    "download": {
+      "simulated": "La descarga comenzará cuando el servicio de reportes esté conectado."
+    },
+    "list": {
+      "title": "Reportes",
+      "subtitle": "Reportes de cumplimiento, disponibilidad y desempeño de tu operación.",
+      "generate": "Generar reporte",
+      "archiveTitle": "Archivo de reportes",
+      "showing": "Mostrando {{shown}} de {{total}} reportes",
+      "search": "Buscar",
+      "searchPlaceholder": "Título del reporte",
+      "allTypes": "Todos los tipos",
+      "allStatuses": "Todos los estados",
+      "requestedFrom": "Solicitado desde",
+      "requestedTo": "Solicitado hasta",
+      "loading": "Cargando reportes…",
+      "errorTitle": "No pudimos cargar tus reportes.",
+      "emptyTitle": "Aún no hay reportes",
+      "emptyMessage": "Genera tu primer reporte para analizar tu cadena de frío.",
+      "noMatchesTitle": "Ningún reporte coincide con los filtros",
+      "noMatchesMessage": "Prueba otra búsqueda, tipo, estado o periodo.",
+      "downloadFor": "Descargar {{title}}",
+      "viewFor": "Ver {{title}}"
+    },
+    "form": {
+      "title": "Generar reporte",
+      "subtitle": "Elige qué analizar y el periodo a cubrir.",
+      "back": "Volver a reportes",
+      "titlePlaceholder": "Ej. Cumplimiento de cadena de frío · octubre 2026",
+      "selectType": "Selecciona un tipo de reporte",
+      "typeHint": "Cada tipo calcula indicadores distintos.",
+      "typeRequired": "Selecciona el tipo de reporte.",
+      "allSites": "Todas las sedes",
+      "allEquipment": "Todos los equipos",
+      "from": "Desde",
+      "to": "Hasta",
+      "asyncNotice": "Los reportes se generan en segundo plano. Puedes seguir su estado en el archivo de reportes.",
+      "submit": "Generar reporte",
+      "submitting": "Solicitando…",
+      "requestedTitle": "Reporte solicitado",
+      "requestedMessage": "El reporte se está preparando. Podrás descargarlo cuando esté completado.",
+      "requestAnother": "Solicitar otro reporte",
+      "goToReports": "Ir a reportes"
+    },
+    "detail": {
+      "title": "Detalle del reporte",
+      "back": "Volver a reportes",
+      "loading": "Cargando el reporte…",
+      "errorTitle": "No pudimos cargar este reporte.",
+      "notFoundTitle": "Reporte no encontrado",
+      "notFoundMessage": "Este reporte no existe o no pertenece a tu cuenta.",
+      "downloadAs": "Descargar {{format}}",
+      "statusTitle": "Estado de la generación",
+      "generating": {
+        "PENDING": "El reporte está en espera de generarse.",
+        "GENERATING": "El reporte se está generando."
+      },
+      "generatingHint": "La generación se ejecuta en segundo plano. Vuelve a consultar el estado en unos momentos.",
+      "checkStatus": "Consultar estado",
+      "checking": "Consultando…",
+      "stillGenerating": "El reporte todavía se está generando.",
+      "nowCompleted": "El reporte está listo para descargar.",
+      "failedTitle": "No se pudo generar el reporte.",
+      "failedMessage": "Vuelve a solicitarlo. Si el problema continúa, prueba con un periodo más corto.",
+      "requestAgain": "Solicitar de nuevo",
+      "completedMessage": "Generado el {{date}}.",
+      "notCompleted": "Aún no completado",
+      "kpisTitle": "Indicadores clave",
+      "noKpis": "Este reporte no tiene indicadores para mostrar."
     }
   }
 }

@@ -1,0 +1,69 @@
+<app-dialog
+  [heading]="'monitoring.dismiss.title' | translate"
+  [description]="alertLabel()"
+  (closed)="closed.emit()"
+>
+  <p class="ui-field__hint">{{ 'monitoring.dismiss.explanation' | translate }}</p>
+
+  <form class="ui-form" id="dismiss-alert-form" novalidate [formGroup]="form" (ngSubmit)="submit()">
+    <div class="ui-field">
+      <label class="ui-field__label" for="dismiss-reason">{{
+        'monitoring.dismiss.reason' | translate
+      }}</label>
+      <select
+        class="ui-field__control"
+        id="dismiss-reason"
+        formControlName="reason"
+        [attr.aria-invalid]="showError('reason') || null"
+        [attr.aria-describedby]="showError('reason') ? 'dismiss-reason-error' : null"
+      >
+        <option value="">{{ 'monitoring.dismiss.selectReason' | translate }}</option>
+        @for (reason of reasons; track reason) {
+          <option [value]="reason">{{ 'monitoring.dismiss.reasons.' + reason | translate }}</option>
+        }
+      </select>
+      @if (showError('reason')) {
+        <p class="ui-field__error" id="dismiss-reason-error">
+          {{ 'monitoring.dismiss.reasonRequired' | translate }}
+        </p>
+      }
+    </div>
+
+    <div class="ui-field">
+      <label class="ui-field__label" for="dismiss-notes">{{
+        'monitoring.dismiss.notes' | translate
+      }}</label>
+      <textarea
+        class="ui-field__control"
+        id="dismiss-notes"
+        formControlName="notes"
+        [attr.maxlength]="notesMaxLength"
+        [placeholder]="'monitoring.dismiss.notesPlaceholder' | translate"
+        [attr.aria-invalid]="showError('notes') || null"
+        [attr.aria-describedby]="showError('notes') ? 'dismiss-notes-error' : 'dismiss-notes-hint'"
+      ></textarea>
+      <p class="ui-field__hint" id="dismiss-notes-hint">
+        {{ 'shared.validation.optionalMax' | translate: { max: notesMaxLength } }}
+      </p>
+      @if (showError('notes')) {
+        <p class="ui-field__error" id="dismiss-notes-error">
+          {{ 'shared.validation.tooLong' | translate }}
+        </p>
+      }
+    </div>
+  </form>
+
+  <div dialogActions class="ui-form__actions">
+    <button class="ui-button ui-button--secondary" type="button" (click)="closed.emit()">
+      {{ 'monitoring.dismiss.keepOpen' | translate }}
+    </button>
+    <button
+      class="ui-button ui-button--primary"
+      type="submit"
+      form="dismiss-alert-form"
+      [disabled]="pending()"
+    >
+      {{ (pending() ? 'monitoring.dismiss.pending' : 'monitoring.dismiss.confirm') | translate }}
+    </button>
+  </div>
+</app-dialog>

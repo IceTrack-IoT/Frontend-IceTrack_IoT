@@ -69,6 +69,69 @@ describe('app routes', () => {
     expect(await navigate('/iam/technician-redirect')).toBe('/dashboard');
   });
 
+  it('renders owner routes inside the owner shell with the notification bell in its header', async () => {
+    signInAs(Role.OWNER_ROLE);
+
+    expect(await navigate('/notifications')).toBe('/notifications');
+
+    const element = harness?.fixture.nativeElement as HTMLElement;
+    expect(element.querySelector('app-private-layout nav')).not.toBeNull();
+    expect(element.querySelector('app-notification-bell a[href="/notifications"]')).not.toBeNull();
+    expect(element.querySelector('main app-notification-center')).not.toBeNull();
+  });
+
+  it('signs owners out from the shell sidebar and returns them to sign-in', async () => {
+    signInAs(Role.OWNER_ROLE);
+    store.signOut.mockImplementation(() => store.currentUser.set(null));
+    await navigate('/notifications');
+
+    const element = harness?.fixture.nativeElement as HTMLElement;
+    expect(element.querySelector('app-side-bar app-language-switcher')).not.toBeNull();
+    element.querySelector<HTMLButtonElement>('app-side-bar app-button-logout button')?.click();
+    await harness?.fixture.whenStable();
+
+    expect(store.signOut).toHaveBeenCalledTimes(1);
+    expect(TestBed.inject(Router).url).toBe('/iam/login');
+  });
+
+  describe('owner context routes', () => {
+    const ownerUrls = [
+      '/monitoring',
+      '/monitoring/alerts',
+      '/assets/sites',
+      '/assets/equipment/1',
+      '/devices',
+      '/devices/pair',
+      '/service-requests',
+      '/service-requests/new',
+      '/notifications',
+      '/reports',
+      '/reports/1',
+    ];
+
+    it('send anonymous users to sign-in', async () => {
+      for (const url of ownerUrls) {
+        expect(await navigate(url)).toBe('/iam/login');
+      }
+    });
+
+    it('send technicians to the technician redirect', async () => {
+      signInAs(Role.TECHNICIAN_ROLE);
+
+      for (const url of ownerUrls) {
+        expect(await navigate(url)).toBe('/iam/technician-redirect');
+      }
+    });
+
+    it('are reachable by owners', async () => {
+      signInAs(Role.OWNER_ROLE);
+
+      for (const url of ownerUrls) {
+        expect(await navigate(url)).toBe(url);
+      }
+    });
+  });
+
   it('keeps technicians out of owner routes and public IAM views', async () => {
     signInAs(Role.TECHNICIAN_ROLE);
 

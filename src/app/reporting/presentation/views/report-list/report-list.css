@@ -1,0 +1,23 @@
+.report-list__filters {
+  margin-block-end: var(--space-2);
+}
+
+.ui-toolbar > .report-list__search {
+  flex-basis: 16rem;
+}
+
+.report-list__range-error {
+  margin-block: calc(-1 * var(--space-1)) var(--space-2);
+}
+
+.report-list__actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.report-list__pagination {
+  display: block;
+  margin-block-start: var(--space-2);
+}

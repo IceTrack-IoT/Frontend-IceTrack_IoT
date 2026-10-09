@@ -1,0 +1,113 @@
+@let item = alert();
+<article
+  class="alert-card"
+  [class.alert-card--critical]="critical() && open()"
+  [attr.aria-labelledby]="titleId()"
+>
+  <span class="alert-card__icon"><app-icon [name]="typeIcons[item.type]" /></span>
+
+  <div class="alert-card__body">
+    <div class="alert-card__tags">
+      <app-status-tag
+        [label]="'monitoring.severity.' + item.severity | translate"
+        [appearance]="severityAppearance[item.severity]"
+      />
+      <app-status-tag
+        [label]="'monitoring.alertStatus.' + item.status | translate"
+        [appearance]="statusAppearance[item.status]"
+      />
+      @if (acknowledgedAt() && open()) {
+        <app-status-tag
+          [label]="'monitoring.alerts.acknowledged' | translate"
+          [appearance]="acknowledgedAppearance"
+        />
+      }
+    </div>
+
+    <h2 class="alert-card__title" [id]="titleId()">
+      {{ 'monitoring.alertType.' + item.type | translate }} ·
+      {{ equipment()?.name ?? ('monitoring.alerts.unknownEquipment' | translate) }}
+    </h2>
+
+    <p class="alert-card__meta">
+      @if (equipment(); as monitored) {
+        {{ monitored.siteName }} ·
+      }
+      {{ 'monitoring.alerts.openedAt' | translate: { date: (item.opened_at | localizedDate) } }}
+      ({{ item.opened_at | relativeTime }})
+      @if (item.resolved_at) {
+        ·
+        {{ 'monitoring.alerts.closedAt' | translate: { date: (item.resolved_at | localizedDate) } }}
+      }
+    </p>
+
+    @if (item.peak_temperature !== null) {
+      <dl class="alert-card__facts">
+        <div>
+          <dt>{{ 'monitoring.fields.peakTemperature' | translate }}</dt>
+          <dd class="telemetry">{{ item.peak_temperature | temperature }}</dd>
+        </div>
+        @if (item.excursion_duration !== null) {
+          <div>
+            <dt>{{ 'monitoring.fields.excursionDuration' | translate }}</dt>
+            <dd class="telemetry">
+              {{
+                'monitoring.minutes'
+                  | translate: { value: (item.excursion_duration | localizedNumber) }
+              }}
+            </dd>
+          </div>
+        }
+        @if (equipment(); as monitored) {
+          <div>
+            <dt>{{ 'monitoring.fields.threshold' | translate }}</dt>
+            <dd class="telemetry">
+              {{ monitored.minCelsius | temperature }} – {{ monitored.maxCelsius | temperature }}
+            </dd>
+          </div>
+        }
+      </dl>
+    }
+
+    <div class="alert-card__actions">
+      <a class="ui-link" [routerLink]="['/monitoring/alerts', item.id]">
+        {{ 'monitoring.alerts.viewDetails' | translate }}
+      </a>
+      @if (open()) {
+        <span class="alert-card__buttons">
+          @if (!acknowledgedAt()) {
+            <button
+              class="ui-button ui-button--secondary ui-button--small"
+              type="button"
+              [attr.aria-describedby]="titleId()"
+              (click)="acknowledged.emit(item)"
+            >
+              <app-icon class="ui-button__icon" name="check" />
+              {{ 'monitoring.alerts.acknowledge' | translate }}
+            </button>
+          }
+          <button
+            class="ui-button ui-button--ghost ui-button--small"
+            type="button"
+            [attr.aria-describedby]="titleId()"
+            (click)="dismissRequested.emit(item)"
+          >
+            <app-icon class="ui-button__icon" name="bell-off" />
+            {{ 'monitoring.alerts.dismiss' | translate }}
+          </button>
+          @if (critical()) {
+            <a
+              class="ui-button ui-button--primary ui-button--small"
+              routerLink="/service-requests/new"
+              [queryParams]="{ equipmentId: item.equipment_id, type: 'REPAIR', alertId: item.id }"
+              [attr.aria-describedby]="titleId()"
+            >
+              <app-icon class="ui-button__icon" name="tools" />
+              {{ 'monitoring.alerts.requestService' | translate }}
+            </a>
+          }
+        </span>
+      }
+    </div>
+  </div>
+</article>

@@ -1,0 +1,162 @@
+<div class="ui-stack">
+  <header class="ui-page-header">
+    <div>
+      <p class="ui-page-header__eyebrow">{{ 'monitoring.eyebrow' | translate }}</p>
+      <h1 class="ui-page-header__title">{{ 'monitoring.alerts.title' | translate }}</h1>
+      <p class="ui-page-header__subtitle">{{ 'monitoring.alerts.subtitle' | translate }}</p>
+    </div>
+    <div class="ui-page-header__actions">
+      <a class="ui-button ui-button--secondary" routerLink="/monitoring">
+        <app-icon class="ui-button__icon" name="activity" />
+        {{ 'monitoring.alerts.backToOverview' | translate }}
+      </a>
+    </div>
+  </header>
+
+  @if (equipmentFilter !== null) {
+    <p class="ui-alert ui-alert--info">
+      <app-icon class="ui-alert__icon" name="info-circle" />
+      <span>
+        {{
+          'monitoring.alerts.equipmentFilter'
+            | translate: { equipment: equipmentById.get(equipmentFilter)?.name ?? equipmentFilter }
+        }}
+        <a class="ui-link" routerLink="/monitoring/alerts">{{
+          'monitoring.alerts.showAll' | translate
+        }}</a>
+      </span>
+    </p>
+  }
+
+  <p class="visually-hidden" role="status">
+    @if (announcement(); as key) {
+      {{ key | translate }}
+    }
+  </p>
+
+  <section class="ui-panel" aria-labelledby="alert-filters-title">
+    <h2 class="visually-hidden" id="alert-filters-title">
+      {{ 'monitoring.alerts.filters' | translate }}
+    </h2>
+    <div class="alert-list__filters">
+      <div
+        class="ui-segmented"
+        role="group"
+        [attr.aria-label]="'monitoring.alerts.statusFilter' | translate"
+      >
+        @for (status of statusFilters; track status) {
+          <button
+            class="ui-segmented__option"
+            type="button"
+            [attr.aria-pressed]="statusFilter() === status"
+            (click)="setStatusFilter(status)"
+          >
+            {{
+              (status === 'ALL'
+                ? 'monitoring.alerts.allStatuses'
+                : 'monitoring.alertStatus.' + status
+              ) | translate
+            }}
+            @if (source.status() === 'ready') {
+              <span class="ui-segmented__count">{{ statusCounts().get(status) ?? 0 }}</span>
+            }
+          </button>
+        }
+      </div>
+
+      <form class="ui-toolbar alert-list__selects" [formGroup]="filters">
+        <div class="ui-field">
+          <label class="ui-field__label" for="alert-severity">{{
+            'monitoring.fields.severity' | translate
+          }}</label>
+          <select class="ui-field__control" id="alert-severity" formControlName="severity">
+            <option value="ALL">{{ 'monitoring.alerts.allSeverities' | translate }}</option>
+            @for (severity of severities; track severity) {
+              <option [value]="severity">
+                {{ 'monitoring.severity.' + severity | translate }}
+              </option>
+            }
+          </select>
+        </div>
+        <div class="ui-field">
+          <label class="ui-field__label" for="alert-type">{{
+            'monitoring.fields.type' | translate
+          }}</label>
+          <select class="ui-field__control" id="alert-type" formControlName="type">
+            <option value="ALL">{{ 'monitoring.alerts.allTypes' | translate }}</option>
+            @for (type of types; track type) {
+              <option [value]="type">{{ 'monitoring.alertType.' + type | translate }}</option>
+            }
+          </select>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  @switch (source.status()) {
+    @case ('loading') {
+      <app-state-panel kind="loading" [heading]="'monitoring.alerts.loading' | translate" />
+    }
+    @case ('error') {
+      <app-state-panel
+        kind="error"
+        [heading]="'monitoring.alerts.errorTitle' | translate"
+        [message]="'shared.states.errorMessage' | translate"
+      >
+        <button class="ui-button ui-button--primary" type="button" (click)="load()">
+          <app-icon class="ui-button__icon" name="refresh" />
+          {{ 'shared.actions.retry' | translate }}
+        </button>
+      </app-state-panel>
+    }
+    @default {
+      @if (filtered().length === 0) {
+        <app-state-panel
+          kind="empty"
+          [heading]="
+            (statusFilter() === openStatus
+              ? 'monitoring.alerts.noOpenTitle'
+              : 'monitoring.alerts.noMatchesTitle'
+            ) | translate
+          "
+          [message]="'monitoring.alerts.noMatchesMessage' | translate"
+        >
+          <button class="ui-button ui-button--secondary" type="button" (click)="clearFilters()">
+            {{ 'shared.actions.clearFilters' | translate }}
+          </button>
+        </app-state-panel>
+      } @else {
+        <ul class="alert-list">
+          @for (alert of visible(); track alert.id) {
+            <li>
+              <app-alert-card
+                [alert]="alert"
+                [equipment]="equipmentById.get(alert.equipment_id) ?? null"
+                [acknowledgedAt]="acknowledgements().get(alert.id) ?? null"
+                (acknowledged)="acknowledge($event)"
+                (dismissRequested)="openDismiss($event)"
+              />
+            </li>
+          }
+        </ul>
+        <app-pagination [page]="page()" [pageCount]="pageCount()" (pageChange)="page.set($event)" />
+      }
+    }
+  }
+</div>
+
+@if (dismissTarget(); as alert) {
+  <app-dismiss-alert-dialog
+    [alertLabel]="
+      'monitoring.alerts.alertLabel'
+        | translate
+          : {
+              type: ('monitoring.alertType.' + alert.type | translate),
+              equipment: equipmentById.get(alert.equipment_id)?.name ?? alert.equipment_id,
+            }
+    "
+    [pending]="source.pending()"
+    (dismissed)="dismiss($event)"
+    (closed)="dismissTarget.set(null)"
+  />
+}
