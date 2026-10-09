@@ -1,23 +1,21 @@
 const fs = require('fs');
 const path = require('path');
 
+const filePath = path.resolve(__dirname, './src/environments/environment.prod.ts');
 const targetPath = path.resolve(__dirname, './src/environments/environment.ts');
-const targetProdPath = path.resolve(__dirname, './src/environments/environment.prod.ts');
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID || process.env.googleClientId || '';
 
-const envConfigFile = `export const environment = {
-  production: true,
-  googleClientId: '${googleClientId}'
-};
-`;
+// Lee el archivo original con todas sus variables intactas
+let content = fs.readFileSync(filePath, 'utf8');
 
-fs.writeFileSync(targetPath, envConfigFile, { encoding: 'utf8' });
-if (fs.existsSync(path.dirname(targetProdPath))) {
-  fs.writeFileSync(targetProdPath, envConfigFile, { encoding: 'utf8' });
-}
-
-console.log(
-  'File with generated environment with googleClientId:',
-  googleClientId ? 'Correctly Loaded' : 'EMPTY VALUE',
+// Reemplaza el valor de googleClientId por el que viene de las variables de entorno de Vercel
+content = content.replace(
+  /googleClientId:\s*['"`].*?['"`]/g,
+  `googleClientId: '${googleClientId}'`,
 );
+
+fs.writeFileSync(filePath, content, 'utf8');
+fs.writeFileSync(targetPath, content, 'utf8');
+
+console.log('googleClientId injected');
