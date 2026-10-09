@@ -3,7 +3,7 @@
  *
  * Only `code` is machine-readable; the remaining fields are human-readable and intentionally not modeled.
  */
-export interface AuthErrorResource {
+export interface AuthErrorResponse {
   code: string;
 }
 
@@ -12,7 +12,7 @@ export interface AuthErrorResource {
  * @param body - The parsed error body.
  * @returns True when the body has a string `code`.
  */
-export function isAuthErrorResource(body: unknown): body is AuthErrorResource {
+export function isAuthErrorResponse(body: unknown): body is AuthErrorResponse {
   return (
     typeof body === 'object' && body !== null && 'code' in body && typeof body.code === 'string'
   );

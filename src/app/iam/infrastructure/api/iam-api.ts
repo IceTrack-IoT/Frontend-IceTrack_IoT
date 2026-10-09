@@ -15,9 +15,9 @@ import {
 } from '@iam/application/contracts/authentication-error';
 import { AuthenticatedUserAssembler } from '@iam/infrastructure/api/authenticated-user-assembler';
 import { UserAssembler } from '@iam/infrastructure/api/user-assembler';
-import { isAuthErrorResource } from '@iam/infrastructure/api/auth-error.response';
+import { isAuthErrorResponse } from '@iam/infrastructure/api/auth-error.response';
 import type { SignInWithGoogleRequest } from '@iam/infrastructure/api/sign-in-with-google.request';
-import type { RefreshTokenResource } from '@iam/infrastructure/api/refresh-token.request';
+import type { RefreshTokenRequest } from '@iam/infrastructure/api/refresh-token.request';
 import { AuthenticationApiEndpoint } from '@iam/infrastructure/api/authentication-api-endpoint';
 import { LocalCredential } from '@iam/application/contracts/local-credential';
 import { SignInWithLocalRequest } from '@iam/infrastructure/api/sign-in-with-local.request';
@@ -115,7 +115,7 @@ export class IamApi extends BaseApi implements AuthenticationPort {
     };
     return this.authenticationEndpoint.signInLocally(request).pipe(
       map((resource) =>
-        this.authenticatedUserAssembler.toAuthenticationResultFromResource(resource),
+        this.authenticatedUserAssembler.toAuthenticationResultFromResponse(resource),
       ),
       catchError((error: unknown) => throwError(() => this.toLocalSignInError(error))),
     );
@@ -145,7 +145,7 @@ export class IamApi extends BaseApi implements AuthenticationPort {
     const request: SignInWithGoogleRequest = { id_token: credential.idToken };
     return this.authenticationEndpoint.signInWithGoogle(request).pipe(
       map((resource) =>
-        this.authenticatedUserAssembler.toAuthenticationResultFromResource(resource),
+        this.authenticatedUserAssembler.toAuthenticationResultFromResponse(resource),
       ),
       catchError((error: unknown) => throwError(() => this.toAuthenticationError(error))),
     );
@@ -168,7 +168,7 @@ export class IamApi extends BaseApi implements AuthenticationPort {
     };
     return this.authenticationEndpoint.completeGoogleOwnerRegistration(request).pipe(
       map((resource) =>
-        this.authenticatedUserAssembler.toAuthenticationResultFromResource(resource),
+        this.authenticatedUserAssembler.toAuthenticationResultFromResponse(resource),
       ),
       catchError((error: unknown) => throwError(() => this.toRegistrationError(error))),
     );
@@ -181,10 +181,10 @@ export class IamApi extends BaseApi implements AuthenticationPort {
    * @returns An Observable of the AuthenticationResult with the new token pair.
    */
   refreshSession(refreshToken: string): Observable<AuthenticationResult> {
-    const request: RefreshTokenResource = { refresh_token: refreshToken };
+    const request: RefreshTokenRequest = { refresh_token: refreshToken };
     return this.authenticationEndpoint.refreshToken(request).pipe(
       map((resource) =>
-        this.authenticatedUserAssembler.toAuthenticationResultFromResource(resource),
+        this.authenticatedUserAssembler.toAuthenticationResultFromResponse(resource),
       ),
       catchError((error: unknown) => throwError(() => this.toAuthenticationError(error))),
     );
@@ -196,7 +196,7 @@ export class IamApi extends BaseApi implements AuthenticationPort {
    * @param refreshToken The current refresh token, or null when none is known.
    */
   logout(refreshToken: string | null): Observable<void> {
-    const request: RefreshTokenResource | null =
+    const request: RefreshTokenRequest | null =
       refreshToken === null ? null : { refresh_token: refreshToken };
     return this.authenticationEndpoint.logout(request).pipe(map(() => undefined));
   }
@@ -209,7 +209,7 @@ export class IamApi extends BaseApi implements AuthenticationPort {
   getCurrentUser(): Observable<User> {
     return this.authenticationEndpoint
       .getCurrentUser()
-      .pipe(map((resource) => this.userAssembler.toEntityFromCurrentUserResource(resource)));
+      .pipe(map((resource) => this.userAssembler.toEntityFromCurrentUserResponse(resource)));
   }
 
   /**
@@ -299,7 +299,7 @@ export class IamApi extends BaseApi implements AuthenticationPort {
       return error;
     }
     if (error.status === 401) {
-      const code = isAuthErrorResource(error.error) ? error.error.code : null;
+      const code = isAuthErrorResponse(error.error) ? error.error.code : null;
       return new AuthenticationError(
         isAuthenticationErrorCode(code) ? code : null,
         'The backend rejected the authentication request.',

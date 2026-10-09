@@ -1,7 +1,7 @@
 /**
- * AuthenticatedUserResource is returned by Google verification and refresh-token requests.
+ * AuthenticatedUserResponse is returned by Google verification and refresh-token requests.
  */
-export interface AuthenticatedUserResource {
+export interface AuthenticatedUserResponse {
   id: number;
   username: string;
   role: string;

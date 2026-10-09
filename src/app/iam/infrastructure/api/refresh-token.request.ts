@@ -1,6 +1,6 @@
 /**
- * RefreshTokenResource is the request body of refresh-token and logout requests.
+ * RefreshTokenRequest is the request body of refresh-token and logout requests.
  */
-export interface RefreshTokenResource {
+export interface RefreshTokenRequest {
   refresh_token: string;
 }

@@ -2,10 +2,10 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '@env/environment';
 import type { SignInWithGoogleRequest } from '@iam/infrastructure/api/sign-in-with-google.request';
 import { Observable } from 'rxjs';
-import type { AuthenticatedUserResource } from '@iam/infrastructure/api/authenticated-user.response';
+import type { AuthenticatedUserResponse } from '@iam/infrastructure/api/authenticated-user.response';
 import { publicAuthenticationContext } from '@iam/infrastructure/http/authentication-http-context';
-import { RefreshTokenResource } from '@iam/infrastructure/api/refresh-token.request';
-import { CurrentUserResource } from '@iam/infrastructure/api/current-user.response';
+import { RefreshTokenRequest } from '@iam/infrastructure/api/refresh-token.request';
+import { CurrentUserResponse } from '@iam/infrastructure/api/current-user.response';
 import { catchError } from 'rxjs/operators';
 import { handleError } from '@shared/infrastructure/http/handle-error-http';
 import { SignInWithLocalRequest } from '@iam/infrastructure/api/sign-in-with-local.request';
@@ -28,10 +28,10 @@ export class AuthenticationApiEndpoint {
   /**
    * Sends a local sign-in request to `POST /authentication/sign-in/local`.
    * @param request The SignInWithLocalRequest containing the username and password.
-   * @returns An Observable of the AuthenticatedUserResource.
+   * @returns An Observable of the AuthenticatedUserResponse.
    */
-  signInLocally(request: SignInWithLocalRequest): Observable<AuthenticatedUserResource> {
-    return this.http.post<AuthenticatedUserResource>(this.signInLocallyEndpointUrl, request, {
+  signInLocally(request: SignInWithLocalRequest): Observable<AuthenticatedUserResponse> {
+    return this.http.post<AuthenticatedUserResponse>(this.signInLocallyEndpointUrl, request, {
       context: publicAuthenticationContext(),
     });
   }
@@ -50,10 +50,10 @@ export class AuthenticationApiEndpoint {
   /**
    * Sends a Google ID token to `POST /authentication/google/verify`.
    * @param request The SignInWithGoogleRequest containing the Google ID token.
-   * @returns An Observable of the AuthenticatedUserResource.
+   * @returns An Observable of the AuthenticatedUserResponse.
    */
-  signInWithGoogle(request: SignInWithGoogleRequest): Observable<AuthenticatedUserResource> {
-    return this.http.post<AuthenticatedUserResource>(this.googleVerifyEndpointUrl, request, {
+  signInWithGoogle(request: SignInWithGoogleRequest): Observable<AuthenticatedUserResponse> {
+    return this.http.post<AuthenticatedUserResponse>(this.googleVerifyEndpointUrl, request, {
       context: publicAuthenticationContext(),
     });
   }
@@ -62,12 +62,12 @@ export class AuthenticationApiEndpoint {
    * Completes a Google owner registration through
    * `POST /authentication/google/complete-registration/owner`, which answers 201.
    * @param request The CompleteGoogleOwnerRegistrationRequest.
-   * @returns An Observable of the AuthenticatedUserResource of the new account.
+   * @returns An Observable of the AuthenticatedUserResponse of the new account.
    */
   completeGoogleOwnerRegistration(
     request: CompleteGoogleOwnerRegistrationRequest,
-  ): Observable<AuthenticatedUserResource> {
-    return this.http.post<AuthenticatedUserResource>(
+  ): Observable<AuthenticatedUserResponse> {
+    return this.http.post<AuthenticatedUserResponse>(
       this.completeGoogleOwnerRegistrationEndpointUrl,
       request,
       { context: publicAuthenticationContext() },
@@ -76,21 +76,21 @@ export class AuthenticationApiEndpoint {
 
   /**
    * Rotates the token pair through `POST /authentication/refresh-token`.
-   * @param request The RefreshTokenResource containing the current refresh token.
-   * @returns An Observable of the AuthenticatedUserResource with the new token pair.
+   * @param request The RefreshTokenRequest containing the current refresh token.
+   * @returns An Observable of the AuthenticatedUserResponse with the new token pair.
    */
-  refreshToken(request: RefreshTokenResource): Observable<AuthenticatedUserResource> {
-    return this.http.post<AuthenticatedUserResource>(this.refreshTokenEndpointUrl, request, {
+  refreshToken(request: RefreshTokenRequest): Observable<AuthenticatedUserResponse> {
+    return this.http.post<AuthenticatedUserResponse>(this.refreshTokenEndpointUrl, request, {
       context: publicAuthenticationContext(),
     });
   }
 
   /**
    * Revokes the refresh token through `POST /authentication/logout`, which answers 204.
-   * @param request The optional RefreshTokenResource.
+   * @param request The optional RefreshTokenRequest.
    * @returns An Observable that completes when the backend has answered.
    */
-  logout(request: RefreshTokenResource | null): Observable<void> {
+  logout(request: RefreshTokenRequest | null): Observable<void> {
     return this.http.post<void>(this.logoutEndpointUrl, request, {
       context: publicAuthenticationContext(),
     });
@@ -98,11 +98,11 @@ export class AuthenticationApiEndpoint {
 
   /**
    * Retrieves the authenticated user through the protected `GET /authentication/me`.
-   * @returns An Observable of the CurrentUserResource.
+   * @returns An Observable of the CurrentUserResponse.
    */
-  getCurrentUser(): Observable<CurrentUserResource> {
+  getCurrentUser(): Observable<CurrentUserResponse> {
     return this.http
-      .get<CurrentUserResource>(this.currentUserEndpointUrl)
+      .get<CurrentUserResponse>(this.currentUserEndpointUrl)
       .pipe(catchError(handleError('Failed to fetch the current user')));
   }
 }
