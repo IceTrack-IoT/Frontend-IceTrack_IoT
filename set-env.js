@@ -1,21 +1,24 @@
 const fs = require('fs');
 const path = require('path');
 
-const filePath = path.resolve(__dirname, './src/environments/environment.prod.ts');
 const targetPath = path.resolve(__dirname, './src/environments/environment.ts');
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID || process.env.googleClientId || '';
 
-// Lee el archivo original con todas sus variables intactas
-let content = fs.readFileSync(filePath, 'utf8');
+if (!fs.existsSync(targetPath)) {
+  console.error(`Not found the file: ${targetPath}`);
+  process.exit(1);
+}
 
-// Reemplaza el valor de googleClientId por el que viene de las variables de entorno de Vercel
+let content = fs.readFileSync(targetPath, 'utf8');
+
 content = content.replace(
   /googleClientId:\s*['"`].*?['"`]/g,
   `googleClientId: '${googleClientId}'`,
 );
 
-fs.writeFileSync(filePath, content, 'utf8');
 fs.writeFileSync(targetPath, content, 'utf8');
 
-console.log('googleClientId injected');
+console.log(
+  'googleClientId injected successfully in environment.ts without altering the other variables.',
+);
