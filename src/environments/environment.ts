@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  iceTrackProviderApiBaseUrl: 'http://localhost:8080/api/v1',
+  iceTrackProviderApiBaseUrl: 'https://platform-icetrackiot-production.up.railway.app/api/v1',
 
   /** User endpoint */
   iceTrackProviderUsersEndpointPath: '/users',
