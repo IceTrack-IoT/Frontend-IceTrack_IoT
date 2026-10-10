@@ -69,3 +69,53 @@
   border-block-start: 1px solid rgb(255 255 255 / 0.16);
   color: #cbd5e1;
 }
+
+.side-bar__account {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 6px 12px;
+  border-inline-start: 3px solid transparent;
+  border-radius: var(--radius-control);
+  text-decoration: none;
+  color: inherit;
+}
+
+.side-bar__account:hover {
+  background-color: rgb(255 255 255 / 0.08);
+}
+
+.side-bar__account--active {
+  border-inline-start-color: var(--brand-accent-500);
+  background-color: rgb(255 255 255 / 0.12);
+}
+
+.side-bar__avatar {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--brand-100);
+  color: var(--brand-900-deep);
+  font-weight: 700;
+}
+
+.side-bar__account-text {
+  display: grid;
+  min-width: 0;
+}
+
+.side-bar__username {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-light);
+}
+
+.side-bar__account-hint {
+  font-size: 0.8125rem;
+}

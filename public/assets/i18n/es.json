@@ -13,7 +13,8 @@
       "equipment": "Equipos",
       "devices": "Dispositivos",
       "serviceRequests": "Solicitudes de servicio",
-      "reports": "Reportes"
+      "reports": "Reportes",
+      "settings": "Configuración de la cuenta"
     },
     "privateLayout": {
       "skipToContent": "Saltar al contenido principal",
@@ -48,6 +49,10 @@
         "en": "English",
         "es": "Español"
       }
+    },
+    "settings": {
+      "title": "Configuración",
+      "subtitle": "Revisa tu perfil de propietario."
     }
   },
   "iam": {
@@ -1028,6 +1033,17 @@
         "minBelowMax": "La temperatura mínima debe ser menor que la temperatura máxima.",
         "save": "Guardar panel"
       }
+    },
+    "ownerProfile": {
+      "title": "Perfil de propietario",
+      "fullName": "Nombre completo",
+      "email": "Correo electrónico",
+      "phone": "Teléfono",
+      "address": "Dirección",
+      "ruc": "RUC",
+      "loading": "Cargando tu perfil…",
+      "errorTitle": "No se pudo cargar tu perfil",
+      "unavailable": "La información del perfil no está disponible."
     }
   }
 }

@@ -1,1 +1,12 @@
-<p>settings works!</p>
+<div class="ui-stack">
+  <header class="ui-page-header">
+    <div>
+      <h1 class="ui-page-header__title">{{ 'shared.settings.title' | translate }}</h1>
+      <p class="ui-page-header__subtitle">{{ 'shared.settings.subtitle' | translate }}</p>
+    </div>
+  </header>
+
+  <div class="settings__sections">
+    <router-outlet />
+  </div>
+</div>

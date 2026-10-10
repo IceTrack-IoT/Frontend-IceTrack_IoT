@@ -8,7 +8,12 @@
     id="private-layout-navigation"
     [class.private-layout__navigation--open]="menuOpen()"
   >
-    <app-side-bar [items]="navigation" (navigated)="menuOpen.set(false)" (signOut)="signOut()" />
+    <app-side-bar
+      [items]="navigation"
+      [account]="account()"
+      (navigated)="menuOpen.set(false)"
+      (signOut)="signOut()"
+    />
   </div>
 
   <div class="private-layout__column">

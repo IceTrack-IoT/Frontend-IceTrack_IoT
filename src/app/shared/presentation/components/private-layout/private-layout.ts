@@ -1,4 +1,4 @@
-import { Component, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { Component, computed, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -6,7 +6,12 @@ import { filter, skip } from 'rxjs';
 import { Icon } from '@shared/presentation/components/icon/icon';
 import { HEADER_ACTIONS_OUTLET } from '@shared/presentation/components/private-layout/header-actions-outlet';
 import { SIGN_OUT_ACTION } from '@shared/presentation/components/private-layout/sign-out-action';
-import { type NavigationItem, SideBar } from '@shared/presentation/components/side-bar/side-bar';
+import { SIGNED_IN_ACCOUNT } from '@shared/presentation/components/private-layout/signed-in-account';
+import {
+  type NavigationItem,
+  SideBar,
+  type SideBarAccount,
+} from '@shared/presentation/components/side-bar/side-bar';
 
 /** The primary navigation of the owner platform. */
 const OWNER_NAVIGATION: readonly NavigationItem[] = [
@@ -23,9 +28,9 @@ const OWNER_NAVIGATION: readonly NavigationItem[] = [
 /**
  * Shell of the owner platform: primary navigation, header and main content. The routes of the owner area
  * render inside its primary outlet; a context can render header actions, such as the notification bell,
- * through the `header-actions` outlet without the shell depending on it. Signing out runs the
- * `SIGN_OUT_ACTION` provided by the authentication context. Below 960px the navigation collapses behind a
- * menu button.
+ * through the `header-actions` outlet without the shell depending on it. The authentication context
+ * provides the `SIGNED_IN_ACCOUNT` the sidebar shows and the `SIGN_OUT_ACTION` signing out runs. Below
+ * 960px the navigation collapses behind a menu button.
  */
 @Component({
   imports: [RouterOutlet, TranslatePipe, Icon, SideBar],
@@ -40,6 +45,11 @@ export class PrivateLayout {
 
   private readonly main = viewChild.required<ElementRef<HTMLElement>>('main');
   private readonly signOutAction = inject(SIGN_OUT_ACTION);
+  private readonly signedInAccount = inject(SIGNED_IN_ACCOUNT);
+  protected readonly account = computed<SideBarAccount | null>(() => {
+    const account = this.signedInAccount();
+    return account === null ? null : { username: account.username, settingsPath: '/settings' };
+  });
 
   constructor() {
     // After an in-app navigation the focus moves to the new page, so keyboard and screen reader users

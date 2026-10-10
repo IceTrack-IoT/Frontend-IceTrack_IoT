@@ -25,6 +25,21 @@
   </nav>
 
   <div class="side-bar__footer">
+    @if (account(); as current) {
+      <a
+        class="side-bar__account"
+        [routerLink]="current.settingsPath"
+        routerLinkActive="side-bar__account--active"
+        ariaCurrentWhenActive="page"
+        (click)="navigated.emit()"
+      >
+        <span class="side-bar__avatar" aria-hidden="true">{{ initial() }}</span>
+        <span class="side-bar__account-text">
+          <span class="side-bar__username">{{ current.username }}</span>
+          <span class="side-bar__account-hint">{{ 'shared.navigation.settings' | translate }}</span>
+        </span>
+      </a>
+    }
     <app-language-switcher />
     <app-button-logout (signOut)="signOut.emit()" />
   </div>

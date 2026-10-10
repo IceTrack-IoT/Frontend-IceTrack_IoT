@@ -6,15 +6,17 @@ import { Observable } from 'rxjs';
 import { OwnerProfile } from '@profiles/domain/model/owner-profile.entity';
 import { TechnicianProfileApiEndpoint } from '@profiles/infrastructure/api/technician-profile-api-endpoint';
 import { TechnicianProfile } from '@profiles/domain/model/technician-profile.entity';
+import type { ProfilesPort } from '@profiles/application/ports/profiles.port';
 
 
 /**
  * ProfilesApi is a service that provides methods for interacting with the API endpoints.
+ * It implements the Profiles ProfilesPort.
  */
 @Injectable({
   providedIn: 'root',
 })
-export class ProfilesApi extends BaseApi {
+export class ProfilesApi extends BaseApi implements ProfilesPort {
   private readonly ownerProfilesEndpoint: OwnerProfileApiEndpoint;
   private readonly technicianProfilesEndpoint: TechnicianProfileApiEndpoint;
 
@@ -34,6 +36,15 @@ export class ProfilesApi extends BaseApi {
    */
   getOwnerProfiles(): Observable<OwnerProfile[]> {
     return this.ownerProfilesEndpoint.getAll();
+  }
+
+  /**
+   * Fetches the owner profile bound to a platform account from the API.
+   * @param userId - The ID of the platform account.
+   * @returns An Observable that emits the OwnerProfile entity of the account.
+   */
+  getOwnerProfileByUserId(userId: number): Observable<OwnerProfile> {
+    return this.ownerProfilesEndpoint.getByUserId(userId);
   }
 
   /**

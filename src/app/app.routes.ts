@@ -2,8 +2,10 @@ import { Routes } from '@angular/router';
 import { authenticatedLandingRedirect } from '@iam/presentation/guards/authenticated-landing.redirect';
 import { ownerOnlyGuard } from '@iam/presentation/guards/owner-only.guard';
 import { createSignOutAction } from '@iam/presentation/sign-out-action';
+import { createSignedInAccount } from '@iam/presentation/signed-in-account';
 import { HEADER_ACTIONS_OUTLET } from '@shared/presentation/components/private-layout/header-actions-outlet';
 import { SIGN_OUT_ACTION } from '@shared/presentation/components/private-layout/sign-out-action';
+import { SIGNED_IN_ACCOUNT } from '@shared/presentation/components/private-layout/signed-in-account';
 
 const iamRoutes = () => import('@iam/presentation/iam.routes').then((m) => m.IamRoutes);
 const privateLayout = () =>
@@ -13,6 +15,10 @@ const privateLayout = () =>
 const notificationBell = () =>
   import('@notifications/presentation/components/notification-bell/notification-bell').then(
     (m) => m.NotificationBell,
+  );
+const ownerProfileSettings = () =>
+  import('@profiles/presentation/views/owner-profile-settings/owner-profile-settings').then(
+    (m) => m.OwnerProfileSettings,
   );
 const monitoringRoutes = () =>
   import('@monitoring/presentation/monitoring.routes').then((m) => m.MonitoringRoutes);
@@ -36,7 +42,10 @@ export const routes: Routes = [
     path: '',
     canMatch: [ownerOnlyGuard],
     loadComponent: privateLayout,
-    providers: [{ provide: SIGN_OUT_ACTION, useFactory: createSignOutAction }],
+    providers: [
+      { provide: SIGN_OUT_ACTION, useFactory: createSignOutAction },
+      { provide: SIGNED_IN_ACCOUNT, useFactory: createSignedInAccount },
+    ],
     children: [
       { path: '', outlet: HEADER_ACTIONS_OUTLET, loadComponent: notificationBell },
       {
@@ -55,6 +64,12 @@ export const routes: Routes = [
       { path: 'service-requests', loadChildren: serviceRequestsRoutes },
       { path: 'notifications', loadChildren: notificationsRoutes },
       { path: 'reports', loadChildren: reportingRoutes },
+      {
+        path: 'settings',
+        loadComponent: () =>
+          import('@shared/presentation/views/settings/settings').then((m) => m.Settings),
+        children: [{ path: '', loadComponent: ownerProfileSettings }],
+      },
     ],
   },
   {

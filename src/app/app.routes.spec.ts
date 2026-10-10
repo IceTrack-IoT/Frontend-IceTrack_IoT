@@ -9,6 +9,8 @@ import { User } from '@iam/domain/model/user.entity';
 import { AuthProvider } from '@iam/domain/value-objects/auth-provider';
 import { Role } from '@iam/domain/value-objects/role';
 import { GoogleIdentityServices } from '@iam/infrastructure/google/google-identity-services';
+import { ProfilesPort } from '@profiles/application/ports/profiles.port';
+import { OwnerProfile } from '@profiles/domain/model/owner-profile.entity';
 import { routes } from './app.routes';
 
 class FakeIamStore {
@@ -52,6 +54,23 @@ describe('app routes', () => {
           provide: GoogleIdentityServices,
           useValue: { credentials: NEVER, renderButton: () => Promise.resolve() },
         },
+        {
+          provide: ProfilesPort,
+          useValue: {
+            getOwnerProfileByUserId: (userId: number) =>
+              of(
+                new OwnerProfile({
+                  id: 1,
+                  user_id: userId,
+                  full_name: 'John Doe',
+                  email: 'john.doe@example.com',
+                  phone: '+51 987654321',
+                  address: 'Av. Primavera 123, Lima, 15023, Peru',
+                  ruc: 20123456789,
+                }),
+              ),
+          },
+        },
       ],
     });
   });
@@ -94,6 +113,20 @@ describe('app routes', () => {
     expect(TestBed.inject(Router).url).toBe('/iam/login');
   });
 
+  it('shows the signed-in username in the shell sidebar, linking to the owner profile settings', async () => {
+    signInAs(Role.OWNER_ROLE);
+    await navigate('/notifications');
+
+    const element = harness?.fixture.nativeElement as HTMLElement;
+    const account = element.querySelector<HTMLAnchorElement>('app-side-bar a[href="/settings"]');
+    expect(account?.textContent).toContain('user');
+    account?.click();
+    await harness?.fixture.whenStable();
+
+    expect(TestBed.inject(Router).url).toBe('/settings');
+    expect(element.querySelector('main app-settings dd')?.textContent).toContain('John Doe');
+  });
+
   describe('owner context routes', () => {
     const ownerUrls = [
       '/monitoring',
@@ -107,6 +140,7 @@ describe('app routes', () => {
       '/notifications',
       '/reports',
       '/reports/1',
+      '/settings',
     ];
 
     it('send anonymous users to sign-in', async () => {

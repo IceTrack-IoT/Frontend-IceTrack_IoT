@@ -1,0 +1,16 @@
+:host {
+  display: block;
+}
+
+.owner-profile__title {
+  margin-block-end: var(--space-2);
+}
+
+.owner-profile__wide {
+  grid-column: 1 / -1;
+}
+
+.owner-profile__unavailable {
+  margin: 0;
+  color: var(--text-secondary);
+}

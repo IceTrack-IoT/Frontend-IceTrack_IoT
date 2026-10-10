@@ -17,6 +17,7 @@ export const environment = {
 
   /** Profile endpoints */
   iceTrackProviderOwnerProfilesEndpointPath: '/profiles/owners',
+  iceTrackProviderGetOwnerProfileByUserIdEndpointPath: '/profiles/owners/user/{userId}',
   iceTrackProviderTechnicianProfilesEndpointPath: '/profiles/technicians',
   iceTrackProviderCreateDashboardConfigEndpointPath: '/profiles/dashboard-configs',
   iceTrackProviderResetDashboardLayoutEndpointPath: '/profiles/dashboard-configs/user/{userId}/reset-defaults',

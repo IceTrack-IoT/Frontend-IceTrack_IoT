@@ -13,7 +13,8 @@
       "equipment": "Equipment",
       "devices": "Devices",
       "serviceRequests": "Service requests",
-      "reports": "Reports"
+      "reports": "Reports",
+      "settings": "Account settings"
     },
     "privateLayout": {
       "skipToContent": "Skip to main content",
@@ -48,6 +49,10 @@
         "en": "English",
         "es": "Español"
       }
+    },
+    "settings": {
+      "title": "Settings",
+      "subtitle": "Review your owner profile."
     }
   },
   "iam": {
@@ -1028,6 +1033,17 @@
         "minBelowMax": "The minimum temperature must be lower than the maximum temperature.",
         "save": "Save layout"
       }
+    },
+    "ownerProfile": {
+      "title": "Owner profile",
+      "fullName": "Full name",
+      "email": "Email",
+      "phone": "Phone",
+      "address": "Address",
+      "ruc": "RUC",
+      "loading": "Loading your profile…",
+      "errorTitle": "Your profile could not be loaded",
+      "unavailable": "Profile information is not available."
     }
   }
 }

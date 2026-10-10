@@ -1,0 +1,53 @@
+<section class="ui-panel" aria-labelledby="owner-profile-title">
+  <h2 class="ui-panel__title owner-profile__title" id="owner-profile-title">
+    {{ 'profiles.ownerProfile.title' | translate }}
+  </h2>
+
+  @if (profile(); as current) {
+    <dl class="ui-details">
+      <div>
+        <dt>{{ 'profiles.ownerProfile.fullName' | translate }}</dt>
+        <dd>{{ current.full_name }}</dd>
+      </div>
+      <div>
+        <dt>{{ 'profiles.ownerProfile.email' | translate }}</dt>
+        <dd>{{ current.email }}</dd>
+      </div>
+      <div>
+        <dt>{{ 'profiles.ownerProfile.phone' | translate }}</dt>
+        <dd>{{ current.phone }}</dd>
+      </div>
+      <div>
+        <dt>{{ 'profiles.ownerProfile.ruc' | translate }}</dt>
+        <dd class="telemetry">{{ current.ruc }}</dd>
+      </div>
+      <div class="owner-profile__wide">
+        <dt>{{ 'profiles.ownerProfile.address' | translate }}</dt>
+        <dd>{{ current.address }}</dd>
+      </div>
+    </dl>
+  } @else {
+    @switch (status()) {
+      @case ('loading') {
+        <app-state-panel kind="loading" [heading]="'profiles.ownerProfile.loading' | translate" />
+      }
+      @case ('error') {
+        <app-state-panel
+          kind="error"
+          [heading]="'profiles.ownerProfile.errorTitle' | translate"
+          [message]="'shared.states.errorMessage' | translate"
+        >
+          <button class="ui-button ui-button--primary" type="button" (click)="load()">
+            <app-icon class="ui-button__icon" name="refresh" />
+            {{ 'shared.actions.retry' | translate }}
+          </button>
+        </app-state-panel>
+      }
+      @case ('unavailable') {
+        <p class="owner-profile__unavailable">
+          {{ 'profiles.ownerProfile.unavailable' | translate }}
+        </p>
+      }
+    }
+  }
+</section>
