@@ -933,5 +933,101 @@
       "kpisTitle": "Indicadores clave",
       "noKpis": "Este reporte no tiene indicadores para mostrar."
     }
+  },
+  "profiles": {
+    "cardType": {
+      "MONITORED_EQUIPMENT": "Equipos monitoreados",
+      "OPEN_ALERTS": "Alertas abiertas",
+      "ACTIVE_ORDERS": "Órdenes activas",
+      "EQUIPMENT_STATUS": "Estado de los equipos"
+    },
+    "cardTypeDescription": {
+      "MONITORED_EQUIPMENT": "Cuántos equipos están dentro de su umbral, fuera de él o sin lecturas.",
+      "OPEN_ALERTS": "Alertas sin resolver y cuántas son críticas.",
+      "ACTIVE_ORDERS": "Solicitudes de servicio pendientes, aceptadas o en curso.",
+      "EQUIPMENT_STATUS": "La temperatura actual de cada equipo."
+    },
+    "dashboard": {
+      "title": "Resumen ejecutivo",
+      "subtitleSite": "Estado de la cadena de frío de {{site}}.",
+      "subtitleAll": "Estado de la cadena de frío de todas tus sedes.",
+      "customizeLayout": "Personalizar panel",
+      "generateReport": "Generar reporte",
+      "loading": "Cargando tu panel…",
+      "errorTitle": "No pudimos cargar tu panel.",
+      "scope": "Sede",
+      "allSites": "Todas las sedes",
+      "defaultMark": "predeterminada",
+      "referenceRange": "Rango de referencia:",
+      "referenceRangeNamed": "Rango de referencia ({{label}}):",
+      "noCardsTitle": "Todas las tarjetas están ocultas",
+      "noCardsMessage": "Personaliza el panel para elegir qué tarjetas muestra.",
+      "saved": "La configuración de tu panel fue guardada.",
+      "state": {
+        "outside": "Fuera del umbral",
+        "offline": "Sin lecturas recientes",
+        "within": "Dentro del umbral",
+        "none": "Aún sin telemetría"
+      },
+      "severity": {
+        "INFO": "Informativa",
+        "WARNING": "Advertencia",
+        "CRITICAL": "Crítica"
+      },
+      "alertType": {
+        "TEMPERATURE_EXCURSION": "Excursión de temperatura",
+        "DEVICE_OFFLINE": "Dispositivo sin conexión"
+      },
+      "orderStatus": {
+        "PENDING": "Pendiente",
+        "ACCEPTED": "Aceptada",
+        "IN_PROGRESS": "En curso"
+      },
+      "monitored": {
+        "unit": "equipos",
+        "empty": "Aún no hay equipos monitoreados en esta sede.",
+        "link": "Ver equipos"
+      },
+      "alerts": {
+        "critical": "Críticas: {{count}}",
+        "empty": "No hay alertas abiertas en esta sede.",
+        "link": "Ver todas las alertas"
+      },
+      "orders": {
+        "unit": "sin terminar",
+        "number": "Solicitud #{{id}}",
+        "unassigned": "Sin técnico asignado",
+        "empty": "No hay solicitudes de servicio activas en esta sede.",
+        "link": "Ver solicitudes de servicio"
+      },
+      "status": {
+        "subtitle": "Última lectura de cada equipo, primero los más urgentes.",
+        "threshold": "Rango seguro {{min}} a {{max}}",
+        "readingAge": "Reportada {{age}}",
+        "empty": "Aún no hay equipos en esta sede.",
+        "link": "Abrir monitoreo"
+      },
+      "customize": {
+        "title": "Personalizar panel",
+        "description": "Elige qué tarjetas muestra tu panel, en qué orden y sus valores predeterminados.",
+        "cardsTitle": "Tarjetas",
+        "visibleCount": "{{visible}} de {{total}} visibles",
+        "cardsHint": "Usa las flechas para cambiar el orden. Las tarjetas ocultas conservan sus datos.",
+        "moveUp": "Subir {{card}}",
+        "moveDown": "Bajar {{card}}",
+        "moved": "Movida a la posición {{position}} de {{total}}.",
+        "restore": "Restaurar diseño predeterminado",
+        "restored": "Todas las tarjetas vuelven a estar visibles, en el orden predeterminado.",
+        "defaultsTitle": "Valores predeterminados",
+        "defaultSite": "Sede con la que abre el panel",
+        "rangeLegend": "Rango de temperatura de referencia",
+        "min": "Mínima (°C)",
+        "max": "Máxima (°C)",
+        "rangeLabel": "Nombre del rango",
+        "rangeLabelPlaceholder": "Ej. Congelados",
+        "minBelowMax": "La temperatura mínima debe ser menor que la temperatura máxima.",
+        "save": "Guardar panel"
+      }
+    }
   }
 }

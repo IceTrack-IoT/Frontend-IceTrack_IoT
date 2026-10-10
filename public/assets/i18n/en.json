@@ -933,5 +933,101 @@
       "kpisTitle": "Key indicators",
       "noKpis": "This report has no indicators to show."
     }
+  },
+  "profiles": {
+    "cardType": {
+      "MONITORED_EQUIPMENT": "Monitored equipment",
+      "OPEN_ALERTS": "Open alerts",
+      "ACTIVE_ORDERS": "Active orders",
+      "EQUIPMENT_STATUS": "Equipment status"
+    },
+    "cardTypeDescription": {
+      "MONITORED_EQUIPMENT": "How many items are within their threshold, outside it or without readings.",
+      "OPEN_ALERTS": "Unresolved alerts and how many are critical.",
+      "ACTIVE_ORDERS": "Service requests that are pending, accepted or in progress.",
+      "EQUIPMENT_STATUS": "The current temperature of each equipment item."
+    },
+    "dashboard": {
+      "title": "Executive overview",
+      "subtitleSite": "Cold-chain status of {{site}}.",
+      "subtitleAll": "Cold-chain status of all your sites.",
+      "customizeLayout": "Customize layout",
+      "generateReport": "Generate report",
+      "loading": "Loading your dashboard…",
+      "errorTitle": "We couldn't load your dashboard.",
+      "scope": "Site",
+      "allSites": "All sites",
+      "defaultMark": "default",
+      "referenceRange": "Reference range:",
+      "referenceRangeNamed": "Reference range ({{label}}):",
+      "noCardsTitle": "All cards are hidden",
+      "noCardsMessage": "Customize the layout to choose which cards your dashboard shows.",
+      "saved": "Your dashboard layout was saved.",
+      "state": {
+        "outside": "Outside threshold",
+        "offline": "No recent readings",
+        "within": "Within threshold",
+        "none": "No telemetry yet"
+      },
+      "severity": {
+        "INFO": "Info",
+        "WARNING": "Warning",
+        "CRITICAL": "Critical"
+      },
+      "alertType": {
+        "TEMPERATURE_EXCURSION": "Temperature excursion",
+        "DEVICE_OFFLINE": "Device offline"
+      },
+      "orderStatus": {
+        "PENDING": "Pending",
+        "ACCEPTED": "Accepted",
+        "IN_PROGRESS": "In progress"
+      },
+      "monitored": {
+        "unit": "equipment items",
+        "empty": "No equipment is monitored at this site yet.",
+        "link": "View equipment"
+      },
+      "alerts": {
+        "critical": "Critical: {{count}}",
+        "empty": "No open alerts at this site.",
+        "link": "View all alerts"
+      },
+      "orders": {
+        "unit": "not finished yet",
+        "number": "Request #{{id}}",
+        "unassigned": "No technician assigned",
+        "empty": "No active service requests at this site.",
+        "link": "View service requests"
+      },
+      "status": {
+        "subtitle": "Last reading of each item, the most urgent first.",
+        "threshold": "Safe range {{min}} to {{max}}",
+        "readingAge": "Reported {{age}}",
+        "empty": "No equipment at this site yet.",
+        "link": "Open monitoring"
+      },
+      "customize": {
+        "title": "Customize dashboard",
+        "description": "Choose which cards your dashboard shows, in what order, and its defaults.",
+        "cardsTitle": "Cards",
+        "visibleCount": "{{visible}} of {{total}} visible",
+        "cardsHint": "Use the arrows to change the order. Hidden cards keep their data.",
+        "moveUp": "Move {{card}} up",
+        "moveDown": "Move {{card}} down",
+        "moved": "Moved to position {{position}} of {{total}}.",
+        "restore": "Restore default layout",
+        "restored": "Every card is visible again, in the default order.",
+        "defaultsTitle": "Defaults",
+        "defaultSite": "Site the dashboard opens on",
+        "rangeLegend": "Reference temperature range",
+        "min": "Minimum (°C)",
+        "max": "Maximum (°C)",
+        "rangeLabel": "Range name",
+        "rangeLabelPlaceholder": "e.g. Frozen goods",
+        "minBelowMax": "The minimum temperature must be lower than the maximum temperature.",
+        "save": "Save layout"
+      }
+    }
   }
 }

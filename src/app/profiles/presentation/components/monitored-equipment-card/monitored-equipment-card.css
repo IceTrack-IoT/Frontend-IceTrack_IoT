@@ -1,0 +1,41 @@
+.monitored-card__bar {
+  display: flex;
+  gap: 2px;
+  height: 10px;
+}
+
+.monitored-card__segment {
+  min-width: 6px;
+  border-radius: 4px;
+}
+
+.monitored-card__segment--within {
+  background-color: var(--status-optimal);
+}
+
+.monitored-card__segment--outside {
+  background-color: var(--tone-critical-fg);
+}
+
+.monitored-card__segment--offline {
+  background-color: var(--status-warning);
+}
+
+.monitored-card__segment--none {
+  background-color: var(--border-control);
+}
+
+.monitored-card__legend {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.monitored-card__legend-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1);
+}

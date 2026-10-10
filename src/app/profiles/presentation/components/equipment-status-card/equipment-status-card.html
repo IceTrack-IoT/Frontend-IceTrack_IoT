@@ -1,0 +1,58 @@
+<section class="ui-panel dashboard-card" aria-labelledby="dashboard-status-title">
+  <div class="dashboard-card__header">
+    <span class="dashboard-card__icon"><app-icon name="temperature" /></span>
+    <div>
+      <h2 class="dashboard-card__title" id="dashboard-status-title">
+        {{ 'profiles.cardType.EQUIPMENT_STATUS' | translate }}
+      </h2>
+      <p class="dashboard-card__meta status-card__subtitle">
+        {{ 'profiles.dashboard.status.subtitle' | translate }}
+      </p>
+    </div>
+  </div>
+
+  @if (sorted().length === 0) {
+    <p class="dashboard-card__empty">{{ 'profiles.dashboard.status.empty' | translate }}</p>
+  } @else {
+    <ul class="status-card__grid">
+      @for (item of sorted(); track item.id) {
+        <li class="status-card__item" [class.status-card__item--outside]="item.state === 'outside'">
+          <h3 class="status-card__name">
+            <a class="ui-link" [routerLink]="['/monitoring/equipment', item.id, 'telemetry']">
+              {{ item.name }}
+            </a>
+          </h3>
+          @if (item.temperature !== null) {
+            <p class="telemetry status-card__value">{{ item.temperature | temperature }}</p>
+          } @else {
+            <p class="status-card__value status-card__value--none" aria-hidden="true">—</p>
+          }
+          <app-status-tag
+            [label]="'profiles.dashboard.state.' + item.state | translate"
+            [appearance]="stateAppearance[item.state]"
+          />
+          <p class="dashboard-card__meta status-card__meta">
+            {{
+              'profiles.dashboard.status.threshold'
+                | translate
+                  : { min: (item.minCelsius | temperature), max: (item.maxCelsius | temperature) }
+            }}
+            @if (item.recordedAt; as recordedAt) {
+              <br />
+              <time [attr.datetime]="recordedAt.toISOString()">
+                {{
+                  'profiles.dashboard.status.readingAge'
+                    | translate: { age: (recordedAt | relativeTime) }
+                }}
+              </time>
+            }
+          </p>
+        </li>
+      }
+    </ul>
+  }
+
+  <a class="ui-link dashboard-card__footer" routerLink="/monitoring">
+    {{ 'profiles.dashboard.status.link' | translate }}
+  </a>
+</section>

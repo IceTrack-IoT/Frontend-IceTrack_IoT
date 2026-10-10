@@ -1,0 +1,50 @@
+<section class="ui-panel dashboard-card" aria-labelledby="dashboard-monitored-title">
+  <div class="dashboard-card__header">
+    <span class="dashboard-card__icon"><app-icon name="fridge" /></span>
+    <h2 class="dashboard-card__title" id="dashboard-monitored-title">
+      {{ 'profiles.cardType.MONITORED_EQUIPMENT' | translate }}
+    </h2>
+  </div>
+
+  @if (equipment().length === 0) {
+    <p class="dashboard-card__empty">{{ 'profiles.dashboard.monitored.empty' | translate }}</p>
+  } @else {
+    <p class="dashboard-card__figure">
+      <span class="dashboard-card__value">{{ equipment().length }}</span>
+      <span class="dashboard-card__unit">{{
+        'profiles.dashboard.monitored.unit' | translate
+      }}</span>
+    </p>
+
+    <div class="monitored-card__bar" aria-hidden="true">
+      @for (item of counts(); track item.state) {
+        @if (item.count > 0) {
+          <span
+            [class]="'monitored-card__segment monitored-card__segment--' + item.state"
+            [style.flex-grow]="item.count"
+          ></span>
+        }
+      }
+    </div>
+
+    <ul class="monitored-card__legend">
+      @for (item of counts(); track item.state) {
+        <li class="monitored-card__legend-item">
+          <app-status-tag
+            [label]="'profiles.dashboard.state.' + item.state | translate"
+            [appearance]="stateAppearance[item.state]"
+          />
+          <span class="telemetry">{{ item.count }}</span>
+        </li>
+      }
+    </ul>
+  }
+
+  <a
+    class="ui-link dashboard-card__footer"
+    routerLink="/assets/equipment"
+    [queryParams]="siteId() === null ? {} : { siteId: siteId() }"
+  >
+    {{ 'profiles.dashboard.monitored.link' | translate }}
+  </a>
+</section>

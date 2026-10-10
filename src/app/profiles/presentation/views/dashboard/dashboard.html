@@ -1,1 +1,139 @@
-<p>dashboard works!</p>
+<div class="ui-stack">
+  <header class="ui-page-header">
+    <div>
+      <p class="ui-page-header__eyebrow">{{ today | localizedDate: 'date' }}</p>
+      <h1 class="ui-page-header__title">{{ 'profiles.dashboard.title' | translate }}</h1>
+      <p class="ui-page-header__subtitle">
+        @if (scopeName(); as site) {
+          {{ 'profiles.dashboard.subtitleSite' | translate: { site } }}
+        } @else {
+          {{ 'profiles.dashboard.subtitleAll' | translate }}
+        }
+      </p>
+    </div>
+    <div class="ui-page-header__actions">
+      <button
+        class="ui-button ui-button--secondary"
+        type="button"
+        [disabled]="source.status() !== 'ready'"
+        (click)="openCustomize()"
+      >
+        <app-icon class="ui-button__icon" name="pencil" />
+        {{ 'profiles.dashboard.customizeLayout' | translate }}
+      </button>
+      <a class="ui-button ui-button--primary" routerLink="/reports/new">
+        <app-icon class="ui-button__icon" name="report-analytics" />
+        {{ 'profiles.dashboard.generateReport' | translate }}
+      </a>
+    </div>
+  </header>
+
+  @if (announcement(); as key) {
+    <p class="ui-alert ui-alert--success" role="status">
+      <app-icon class="ui-alert__icon" name="circle-check" />
+      {{ key | translate }}
+    </p>
+  }
+
+  @switch (source.status()) {
+    @case ('loading') {
+      <app-state-panel kind="loading" [heading]="'profiles.dashboard.loading' | translate" />
+    }
+    @case ('error') {
+      <app-state-panel
+        kind="error"
+        [heading]="'profiles.dashboard.errorTitle' | translate"
+        [message]="'shared.states.errorMessage' | translate"
+      >
+        <button class="ui-button ui-button--primary" type="button" (click)="load()">
+          <app-icon class="ui-button__icon" name="refresh" />
+          {{ 'shared.actions.retry' | translate }}
+        </button>
+      </app-state-panel>
+    }
+    @default {
+      <div class="dashboard__toolbar">
+        <div class="ui-field dashboard__scope">
+          <label class="ui-field__label" for="dashboard-scope">{{
+            'profiles.dashboard.scope' | translate
+          }}</label>
+          <select class="ui-field__control" id="dashboard-scope" [formControl]="scope">
+            <option [ngValue]="null">{{ 'profiles.dashboard.allSites' | translate }}</option>
+            @for (site of sites; track site.id) {
+              <option [ngValue]="site.id">
+                {{ site.name }}
+                @if (site.id === config()?.default_site_id) {
+                  ({{ 'profiles.dashboard.defaultMark' | translate }})
+                }
+              </option>
+            }
+          </select>
+        </div>
+        @if (config(); as current) {
+          @let range = current.default_temperature_range;
+          <p class="dashboard__range">
+            <app-icon name="temperature" />
+            <span>
+              {{
+                (range.label
+                  ? 'profiles.dashboard.referenceRangeNamed'
+                  : 'profiles.dashboard.referenceRange'
+                ) | translate: { label: range.label }
+              }}
+              <span class="telemetry"
+                >{{ range.min | temperature }} – {{ range.max | temperature }}</span
+              >
+            </span>
+          </p>
+        }
+      </div>
+
+      @if (visibleCards().length === 0) {
+        <app-state-panel
+          kind="empty"
+          [heading]="'profiles.dashboard.noCardsTitle' | translate"
+          [message]="'profiles.dashboard.noCardsMessage' | translate"
+        >
+          <button class="ui-button ui-button--primary" type="button" (click)="openCustomize()">
+            {{ 'profiles.dashboard.customizeLayout' | translate }}
+          </button>
+        </app-state-panel>
+      } @else {
+        <div class="dashboard__grid">
+          @for (card of visibleCards(); track card.card_id) {
+            @switch (card.card_type) {
+              @case (cardTypes.MONITORED_EQUIPMENT) {
+                <app-monitored-equipment-card
+                  [equipment]="scopedEquipment()"
+                  [siteId]="scopeValue()"
+                />
+              }
+              @case (cardTypes.OPEN_ALERTS) {
+                <app-open-alerts-card [alerts]="scopedAlerts()" />
+              }
+              @case (cardTypes.ACTIVE_ORDERS) {
+                <app-active-orders-card [orders]="scopedOrders()" />
+              }
+              @case (cardTypes.EQUIPMENT_STATUS) {
+                <app-equipment-status-card
+                  class="dashboard__wide"
+                  [equipment]="scopedEquipment()"
+                />
+              }
+            }
+          }
+        </div>
+      }
+    }
+  }
+</div>
+
+@if (customizing() && config(); as current) {
+  <app-dashboard-customize-dialog
+    [config]="current"
+    [sites]="sites"
+    [pending]="source.pending()"
+    (saved)="saveLayout($event)"
+    (closed)="customizing.set(false)"
+  />
+}

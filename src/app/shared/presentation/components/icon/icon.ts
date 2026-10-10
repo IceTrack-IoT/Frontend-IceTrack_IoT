@@ -18,6 +18,7 @@ export type IconName =
   | 'building-store'
   | 'calendar'
   | 'check'
+  | 'chevron-down'
   | 'chevron-left'
   | 'chevron-right'
   | 'chevron-up'

@@ -1,0 +1,50 @@
+<section class="ui-panel dashboard-card" aria-labelledby="dashboard-orders-title">
+  <div class="dashboard-card__header">
+    <span class="dashboard-card__icon"><app-icon name="tools" /></span>
+    <h2 class="dashboard-card__title" id="dashboard-orders-title">
+      {{ 'profiles.cardType.ACTIVE_ORDERS' | translate }}
+    </h2>
+  </div>
+
+  @if (orders().length === 0) {
+    <p class="dashboard-card__empty">{{ 'profiles.dashboard.orders.empty' | translate }}</p>
+  } @else {
+    <p class="dashboard-card__figure">
+      <span class="dashboard-card__value">{{ orders().length }}</span>
+      <span class="dashboard-card__unit">{{ 'profiles.dashboard.orders.unit' | translate }}</span>
+    </p>
+
+    <ul class="orders-card__breakdown">
+      @for (item of counts(); track item.status) {
+        <li>
+          {{ 'profiles.dashboard.orderStatus.' + item.status | translate }}:
+          <span class="telemetry">{{ item.count }}</span>
+        </li>
+      }
+    </ul>
+
+    <ul class="dashboard-card__list">
+      @for (order of latest(); track order.id) {
+        <li class="dashboard-card__item">
+          <span class="dashboard-card__item-text">
+            <a class="ui-link" [routerLink]="['/service-requests', order.id]">
+              {{ 'profiles.dashboard.orders.number' | translate: { id: order.id } }} ·
+              {{ order.equipmentName }}
+            </a>
+            <span class="dashboard-card__meta">
+              {{ order.technicianName ?? ('profiles.dashboard.orders.unassigned' | translate) }}
+            </span>
+          </span>
+          <app-status-tag
+            [label]="'profiles.dashboard.orderStatus.' + order.status | translate"
+            [appearance]="statusAppearance[order.status]"
+          />
+        </li>
+      }
+    </ul>
+  }
+
+  <a class="ui-link dashboard-card__footer" routerLink="/service-requests">
+    {{ 'profiles.dashboard.orders.link' | translate }}
+  </a>
+</section>

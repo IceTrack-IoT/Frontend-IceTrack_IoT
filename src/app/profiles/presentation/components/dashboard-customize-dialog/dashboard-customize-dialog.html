@@ -1,0 +1,208 @@
+<app-dialog
+  [heading]="'profiles.dashboard.customize.title' | translate"
+  [description]="'profiles.dashboard.customize.description' | translate"
+  (closed)="closed.emit()"
+>
+  <p class="visually-hidden" role="status">
+    @if (announcement(); as message) {
+      {{ message.key | translate: message.params }}
+    }
+  </p>
+
+  <section class="customize__section" aria-labelledby="customize-cards-title">
+    <div class="customize__section-header">
+      <h3 class="customize__section-title" id="customize-cards-title">
+        {{ 'profiles.dashboard.customize.cardsTitle' | translate }}
+      </h3>
+      <span class="customize__count">
+        {{
+          'profiles.dashboard.customize.visibleCount'
+            | translate: { visible: visibleCount(), total: cards().length }
+        }}
+      </span>
+    </div>
+    <p class="ui-field__hint">{{ 'profiles.dashboard.customize.cardsHint' | translate }}</p>
+
+    <ol class="customize__cards">
+      @for (card of cards(); track card.card_id; let index = $index, first = $first, last = $last) {
+        @let name = 'profiles.cardType.' + card.card_type | translate;
+        <li class="customize__card" [class.customize__card--hidden]="!card.is_visible">
+          <span class="customize__position" aria-hidden="true">{{ index + 1 }}</span>
+          <app-icon class="customize__icon" [name]="cardIcons[card.card_type]" />
+          <span class="customize__text">
+            <label class="customize__name" [for]="'customize-card-' + card.card_id + '-visible'">
+              {{ name }}
+            </label>
+            <span
+              class="customize__description"
+              [id]="'customize-card-' + card.card_id + '-description'"
+            >
+              {{ 'profiles.cardTypeDescription.' + card.card_type | translate }}
+            </span>
+          </span>
+          <span class="customize__moves">
+            <button
+              class="ui-button ui-button--ghost ui-button--icon ui-button--small"
+              type="button"
+              [id]="'customize-card-' + card.card_id + '-up'"
+              [disabled]="first"
+              [attr.aria-label]="'profiles.dashboard.customize.moveUp' | translate: { card: name }"
+              (click)="move(index, -1)"
+            >
+              <app-icon class="ui-button__icon" name="chevron-up" />
+            </button>
+            <button
+              class="ui-button ui-button--ghost ui-button--icon ui-button--small"
+              type="button"
+              [id]="'customize-card-' + card.card_id + '-down'"
+              [disabled]="last"
+              [attr.aria-label]="
+                'profiles.dashboard.customize.moveDown' | translate: { card: name }
+              "
+              (click)="move(index, 1)"
+            >
+              <app-icon class="ui-button__icon" name="chevron-down" />
+            </button>
+          </span>
+          <input
+            class="customize__switch"
+            type="checkbox"
+            role="switch"
+            [id]="'customize-card-' + card.card_id + '-visible'"
+            [checked]="card.is_visible"
+            [attr.aria-describedby]="'customize-card-' + card.card_id + '-description'"
+            (change)="toggle(card.card_id)"
+          />
+        </li>
+      }
+    </ol>
+  </section>
+
+  <form
+    class="ui-form customize__section"
+    id="dashboard-customize-form"
+    novalidate
+    [formGroup]="defaults"
+    (ngSubmit)="submit()"
+  >
+    <h3 class="customize__section-title">
+      {{ 'profiles.dashboard.customize.defaultsTitle' | translate }}
+    </h3>
+
+    @let siteError = fieldErrorKey('siteId');
+    <div class="ui-field">
+      <label class="ui-field__label" for="customize-site">
+        {{ 'profiles.dashboard.customize.defaultSite' | translate }}
+      </label>
+      <select
+        class="ui-field__control"
+        id="customize-site"
+        formControlName="siteId"
+        [attr.aria-invalid]="siteError ? true : null"
+        [attr.aria-describedby]="siteError ? 'customize-site-error' : null"
+      >
+        @for (site of sites(); track site.id) {
+          <option [ngValue]="site.id">{{ site.name }}</option>
+        }
+      </select>
+      @if (siteError) {
+        <p class="ui-field__error" id="customize-site-error">{{ siteError | translate }}</p>
+      }
+    </div>
+
+    <fieldset class="ui-fieldset">
+      <legend class="ui-fieldset__legend">
+        {{ 'profiles.dashboard.customize.rangeLegend' | translate }}
+      </legend>
+      <div class="ui-form__grid customize__range">
+        @let minError = fieldErrorKey('min');
+        <div class="ui-field">
+          <label class="ui-field__label" for="customize-min">{{
+            'profiles.dashboard.customize.min' | translate
+          }}</label>
+          <input
+            class="ui-field__control telemetry"
+            id="customize-min"
+            type="number"
+            step="0.1"
+            inputmode="decimal"
+            formControlName="min"
+            [attr.aria-invalid]="minError || rangeInvalid() ? true : null"
+            [attr.aria-describedby]="
+              minError ? 'customize-min-error' : rangeInvalid() ? 'customize-range-error' : null
+            "
+          />
+          @if (minError) {
+            <p class="ui-field__error" id="customize-min-error">{{ minError | translate }}</p>
+          }
+        </div>
+        @let maxError = fieldErrorKey('max');
+        <div class="ui-field">
+          <label class="ui-field__label" for="customize-max">{{
+            'profiles.dashboard.customize.max' | translate
+          }}</label>
+          <input
+            class="ui-field__control telemetry"
+            id="customize-max"
+            type="number"
+            step="0.1"
+            inputmode="decimal"
+            formControlName="max"
+            [attr.aria-invalid]="maxError || rangeInvalid() ? true : null"
+            [attr.aria-describedby]="
+              maxError ? 'customize-max-error' : rangeInvalid() ? 'customize-range-error' : null
+            "
+          />
+          @if (maxError) {
+            <p class="ui-field__error" id="customize-max-error">{{ maxError | translate }}</p>
+          }
+        </div>
+        @let labelError = fieldErrorKey('label');
+        <div class="ui-field">
+          <label class="ui-field__label" for="customize-label">
+            {{ 'profiles.dashboard.customize.rangeLabel' | translate }}
+          </label>
+          <input
+            class="ui-field__control"
+            id="customize-label"
+            formControlName="label"
+            [attr.maxlength]="labelMaxLength"
+            [placeholder]="'profiles.dashboard.customize.rangeLabelPlaceholder' | translate"
+            [attr.aria-invalid]="labelError ? true : null"
+            [attr.aria-describedby]="labelError ? 'customize-label-error' : null"
+          />
+          @if (labelError) {
+            <p class="ui-field__error" id="customize-label-error">{{ labelError | translate }}</p>
+          }
+        </div>
+      </div>
+      @if (rangeInvalid()) {
+        <p class="ui-field__error" id="customize-range-error">
+          {{ 'profiles.dashboard.customize.minBelowMax' | translate }}
+        </p>
+      }
+    </fieldset>
+  </form>
+
+  <div dialogActions class="ui-form__actions customize__actions">
+    <button
+      class="ui-button ui-button--ghost customize__restore"
+      type="button"
+      (click)="restoreLayout()"
+    >
+      <app-icon class="ui-button__icon" name="refresh" />
+      {{ 'profiles.dashboard.customize.restore' | translate }}
+    </button>
+    <button class="ui-button ui-button--secondary" type="button" (click)="closed.emit()">
+      {{ 'shared.actions.cancel' | translate }}
+    </button>
+    <button
+      class="ui-button ui-button--primary"
+      type="submit"
+      form="dashboard-customize-form"
+      [disabled]="pending()"
+    >
+      {{ (pending() ? 'shared.actions.saving' : 'profiles.dashboard.customize.save') | translate }}
+    </button>
+  </div>
+</app-dialog>

@@ -1,0 +1,41 @@
+<section class="ui-panel dashboard-card" aria-labelledby="dashboard-alerts-title">
+  <div class="dashboard-card__header">
+    <span class="dashboard-card__icon"><app-icon name="bell-ringing" /></span>
+    <h2 class="dashboard-card__title" id="dashboard-alerts-title">
+      {{ 'profiles.cardType.OPEN_ALERTS' | translate }}
+    </h2>
+  </div>
+
+  @if (alerts().length === 0) {
+    <p class="dashboard-card__empty">{{ 'profiles.dashboard.alerts.empty' | translate }}</p>
+  } @else {
+    <p class="dashboard-card__figure">
+      <span class="dashboard-card__value">{{ alerts().length }}</span>
+      <span class="dashboard-card__unit">
+        {{ 'profiles.dashboard.alerts.critical' | translate: { count: criticalCount() } }}
+      </span>
+    </p>
+
+    <ul class="dashboard-card__list">
+      @for (alert of latest(); track alert.id) {
+        <li class="dashboard-card__item">
+          <span class="dashboard-card__item-text">
+            <a class="ui-link" [routerLink]="['/monitoring/alerts', alert.id]">
+              {{ 'profiles.dashboard.alertType.' + alert.type | translate }} ·
+              {{ alert.equipmentName }}
+            </a>
+            <span class="dashboard-card__meta">{{ alert.openedAt | relativeTime }}</span>
+          </span>
+          <app-status-tag
+            [label]="'profiles.dashboard.severity.' + alert.severity | translate"
+            [appearance]="severityAppearance[alert.severity]"
+          />
+        </li>
+      }
+    </ul>
+  }
+
+  <a class="ui-link dashboard-card__footer" routerLink="/monitoring/alerts">
+    {{ 'profiles.dashboard.alerts.link' | translate }}
+  </a>
+</section>
