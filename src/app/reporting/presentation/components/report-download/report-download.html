@@ -1,0 +1,45 @@
+@let format = 'reporting.format.' + report().format | translate;
+@if (own()?.url; as url) {
+  <a
+    class="ui-button ui-button--primary"
+    target="_blank"
+    rel="noopener noreferrer"
+    [class.ui-button--small]="compact()"
+    [href]="url"
+    [attr.aria-label]="'reporting.download.openFor' | translate: { name: report().name, format }"
+  >
+    <app-icon class="ui-button__icon" name="download" />
+    {{ 'reporting.download.open' | translate: { format } }}
+  </a>
+  @if (!compact()) {
+    <p class="report-download__hint" role="status">
+      {{ 'reporting.download.linkValidity' | translate }}
+    </p>
+  }
+} @else {
+  <button
+    class="ui-button"
+    type="button"
+    [class.ui-button--primary]="!compact()"
+    [class.ui-button--secondary]="compact()"
+    [class.ui-button--small]="compact()"
+    [disabled]="own()?.status === 'pending' || busy()"
+    [attr.aria-label]="
+      compact() ? ('reporting.download.prepareFor' | translate: { name: report().name }) : null
+    "
+    [attr.aria-describedby]="errorKey() ? errorId() : null"
+    (click)="requested.emit()"
+  >
+    <app-icon class="ui-button__icon" name="download" />
+    @if (own()?.status === 'pending') {
+      {{ 'reporting.download.preparing' | translate }}
+    } @else if (compact()) {
+      {{ 'reporting.actions.download' | translate }}
+    } @else {
+      {{ 'reporting.detail.downloadAs' | translate: { format } }}
+    }
+  </button>
+  @if (errorKey(); as error) {
+    <p class="ui-field__error" role="alert" [id]="errorId()">{{ error | translate }}</p>
+  }
+}

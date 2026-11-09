@@ -22,7 +22,7 @@
       <dl class="ui-details">
         <div>
           <dt>{{ 'reporting.fields.report' | translate }}</dt>
-          <dd>{{ report.title }}</dd>
+          <dd>{{ report.name }}</dd>
         </div>
         <div>
           <dt>{{ 'reporting.fields.type' | translate }}</dt>
@@ -46,8 +46,11 @@
         <button class="ui-button ui-button--secondary" type="button" (click)="requestAnother()">
           {{ 'reporting.form.requestAnother' | translate }}
         </button>
-        <a class="ui-button ui-button--primary" routerLink="/reports">{{
+        <a class="ui-button ui-button--secondary" routerLink="/reports">{{
           'reporting.form.goToReports' | translate
+        }}</a>
+        <a class="ui-button ui-button--primary" [routerLink]="['/reports', report.id]">{{
+          'reporting.form.followReport' | translate
         }}</a>
       </div>
     </section>
@@ -61,22 +64,29 @@
     </header>
 
     <form class="ui-panel ui-form" novalidate [formGroup]="form" (ngSubmit)="submit()">
-      @let titleError = errorKey('title');
+      @if (requestErrorKey(); as error) {
+        <p class="ui-alert ui-alert--critical" role="alert">
+          <app-icon class="ui-alert__icon" name="alert-triangle" />
+          {{ error | translate }}
+        </p>
+      }
+
+      @let nameError = errorKey('name');
       <div class="ui-field">
-        <label class="ui-field__label" for="report-title">{{
-          'reporting.fields.title' | translate
+        <label class="ui-field__label" for="report-name">{{
+          'reporting.fields.name' | translate
         }}</label>
         <input
           class="ui-field__control"
-          id="report-title"
-          formControlName="title"
-          [attr.maxlength]="titleMaxLength"
-          [placeholder]="'reporting.form.titlePlaceholder' | translate"
-          [attr.aria-invalid]="titleError ? true : null"
-          [attr.aria-describedby]="titleError ? 'report-title-error' : null"
+          id="report-name"
+          formControlName="name"
+          [attr.maxlength]="nameMaxLength"
+          [placeholder]="'reporting.form.namePlaceholder' | translate"
+          [attr.aria-invalid]="nameError ? true : null"
+          [attr.aria-describedby]="nameError ? 'report-name-error' : null"
         />
-        @if (titleError) {
-          <p class="ui-field__error" id="report-title-error">{{ titleError | translate }}</p>
+        @if (nameError) {
+          <p class="ui-field__error" id="report-name-error">{{ nameError | translate }}</p>
         }
       </div>
 
@@ -117,6 +127,17 @@
         </div>
       </fieldset>
 
+      @if (store.scopeFailure()) {
+        <p class="ui-alert ui-alert--warning" role="alert">
+          <app-icon class="ui-alert__icon" name="alert-triangle" />
+          <span>
+            {{ 'reporting.form.scopeUnavailable' | translate }}
+            <button class="ui-link generate-report__retry" type="button" (click)="retryScope()">
+              {{ 'shared.actions.retry' | translate }}
+            </button>
+          </span>
+        </p>
+      }
       <div class="ui-form__grid">
         <div class="ui-field">
           <label class="ui-field__label" for="report-site">{{
@@ -124,7 +145,7 @@
           }}</label>
           <select class="ui-field__control" id="report-site" formControlName="siteId">
             <option [ngValue]="null">{{ 'reporting.form.allSites' | translate }}</option>
-            @for (site of sites; track site.id) {
+            @for (site of store.sites(); track site.id) {
               <option [ngValue]="site.id">{{ site.name }}</option>
             }
           </select>
@@ -191,10 +212,15 @@
         <a class="ui-button ui-button--secondary" routerLink="/reports">{{
           'shared.actions.cancel' | translate
         }}</a>
-        <button class="ui-button ui-button--primary" type="submit" [disabled]="source.pending()">
+        <button
+          class="ui-button ui-button--primary"
+          type="submit"
+          [disabled]="store.requestPending()"
+        >
           <app-icon class="ui-button__icon" name="report-analytics" />
           {{
-            (source.pending() ? 'reporting.form.submitting' : 'reporting.form.submit') | translate
+            (store.requestPending() ? 'reporting.form.submitting' : 'reporting.form.submit')
+              | translate
           }}
         </button>
       </div>

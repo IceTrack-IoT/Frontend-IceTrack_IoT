@@ -2,9 +2,9 @@ import {
   afterRenderEffect,
   Component,
   computed,
+  DestroyRef,
   ElementRef,
   inject,
-  signal,
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
@@ -16,20 +16,19 @@ import {
 } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { Report } from '@reporting/domain/model/report.entity';
 import { isReportFormat, ReportFormat } from '@reporting/domain/value-objects/report-format';
 import { isReportType, ReportType } from '@reporting/domain/value-objects/report-type';
+import { ReportingStore } from '@reporting/application/reporting-store';
+import { REPORT_NAME_MAX_LENGTH } from '@reporting/application/contracts/report-request';
 import {
-  REPORT_EQUIPMENT,
-  REPORT_SITES,
-  requestReportMock,
-} from '@reporting/presentation/mocks/reporting.mock';
-import { REPORT_STATUS_APPEARANCE } from '@reporting/presentation/report-appearance';
+  REPORT_STATUS_APPEARANCE,
+  reportRequestErrorKey,
+} from '@reporting/presentation/report-appearance';
 import { Icon } from '@shared/presentation/components/icon/icon';
 import { StatusTag } from '@shared/presentation/components/status-tag/status-tag';
-import { injectMockDataSource } from '@shared/presentation/mock/mock-data-source';
 
-const TITLE_MAX_LENGTH = 120;
+/** A value with at least one non-blank character, as the backend's `@NotBlank` requires. */
+const NOT_BLANK = /\S/;
 
 /** The start of the period must not be after its end. */
 const orderedRange: ValidatorFn = (group) => {
@@ -40,12 +39,13 @@ const orderedRange: ValidatorFn = (group) => {
     : null;
 };
 
-type ReportFormControl = 'title' | 'type' | 'from' | 'to';
+type ReportFormControl = 'name' | 'type' | 'from' | 'to';
 
 /**
  * Requests the generation of a report for a period, optionally scoped to a site or an equipment item.
- * Generation is asynchronous: the confirmation shows the request as pending. The `type` and `format`
- * query parameters prefill the form, for example to request a failed report again.
+ * Generation is asynchronous: the confirmation shows the request as pending and links to the report,
+ * whose detail follows its status. The `type` and `format` query parameters prefill the form, for example
+ * to request a failed report again.
  */
 @Component({
   imports: [ReactiveFormsModule, RouterLink, TranslatePipe, Icon, StatusTag],
@@ -54,16 +54,22 @@ type ReportFormControl = 'title' | 'type' | 'from' | 'to';
   templateUrl: './generate-report.html',
 })
 export class GenerateReport {
-  protected readonly source = injectMockDataSource();
+  protected readonly store = inject(ReportingStore);
   protected readonly types = Object.values(ReportType);
   protected readonly formats = Object.values(ReportFormat);
-  protected readonly sites = REPORT_SITES;
   protected readonly statusAppearance = REPORT_STATUS_APPEARANCE;
-  protected readonly titleMaxLength = TITLE_MAX_LENGTH;
+  protected readonly nameMaxLength = REPORT_NAME_MAX_LENGTH;
 
   protected readonly form = inject(NonNullableFormBuilder).group(
     {
-      title: ['', [Validators.required, Validators.maxLength(TITLE_MAX_LENGTH)]],
+      name: [
+        '',
+        [
+          Validators.required,
+          Validators.pattern(NOT_BLANK),
+          Validators.maxLength(REPORT_NAME_MAX_LENGTH),
+        ],
+      ],
       type: ['' as ReportType | '', Validators.required],
       format: [ReportFormat.PDF as ReportFormat, Validators.required],
       siteId: [null as number | null],
@@ -77,16 +83,28 @@ export class GenerateReport {
     initialValue: null,
   });
 
-  protected readonly created = signal<Report | null>(null);
   private readonly confirmationHeading = viewChild<ElementRef<HTMLElement>>('confirmationHeading');
 
+  /** The report just requested. */
+  protected readonly created = computed(() => {
+    const state = this.store.requestState();
+    return state?.status === 'succeeded' ? state.report : null;
+  });
+  /** Why the last request failed. */
+  protected readonly requestErrorKey = computed(() => {
+    const state = this.store.requestState();
+    return state?.status === 'failed' ? reportRequestErrorKey(state.failure) : null;
+  });
   /** The equipment of the selected site, or all the equipment when no site is selected. */
   protected readonly equipmentOptions = computed(() => {
     const siteId = this.siteId();
-    return REPORT_EQUIPMENT.filter((item) => siteId === null || item.siteId === siteId);
+    return this.store.equipment().filter((item) => siteId === null || item.siteId === siteId);
   });
 
   constructor() {
+    this.store.attach(inject(DestroyRef));
+    this.store.clearRequest();
+    this.store.loadScope();
     this.prefill(inject(ActivatedRoute));
     // An equipment item of another site no longer fits the scope.
     this.form.controls.siteId.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => {
@@ -99,35 +117,35 @@ export class GenerateReport {
     afterRenderEffect(() => this.confirmationHeading()?.nativeElement.focus());
   }
 
+  protected retryScope(): void {
+    this.store.loadScope();
+  }
+
   protected submit(): void {
-    if (this.source.pending()) {
+    if (this.store.requestPending()) {
       return;
     }
-    const { title, type, format, siteId, equipmentId, from, to } = this.form.getRawValue();
+    const { name, type, format, siteId, equipmentId, from, to } = this.form.getRawValue();
     if (this.form.invalid || type === '') {
       this.form.markAllAsTouched();
       return;
     }
-    // TODO: Delegate to the reporting store (generate report use case).
-    this.source.mutate(() => {
-      this.created.set(
-        requestReportMock({
-          title: title.trim(),
-          type,
-          format,
-          filters: {
-            site_id: siteId,
-            equipment_id: equipmentId,
-            date_range: { from: new Date(`${from}T00:00:00`), to: new Date(`${to}T23:59:59`) },
-          },
-        }),
-      );
+    // The period covers whole local days: from the start of the first to the end of the last.
+    this.store.requestReport({
+      name,
+      type,
+      format,
+      siteId,
+      equipmentId,
+      technicianId: null,
+      from: new Date(`${from}T00:00:00`),
+      to: new Date(`${to}T23:59:59.999`),
     });
   }
 
   protected requestAnother(): void {
+    this.store.clearRequest();
     this.form.reset();
-    this.created.set(null);
   }
 
   protected errorKey(name: ReportFormControl): string | null {
@@ -135,7 +153,7 @@ export class GenerateReport {
     if (!control.touched) {
       return null;
     }
-    if (control.hasError('required')) {
+    if (control.hasError('required') || control.hasError('pattern')) {
       return name === 'type' ? 'reporting.form.typeRequired' : 'shared.validation.required';
     }
     if (control.hasError('maxlength')) {
