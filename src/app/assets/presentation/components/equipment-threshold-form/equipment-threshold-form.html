@@ -1,5 +1,7 @@
 <form class="ui-form" novalidate [formGroup]="form" (ngSubmit)="submit()">
-  <p class="ui-field__hint" id="threshold-hint">{{ 'assets.thresholdForm.hint' | translate }}</p>
+  <p class="ui-field__hint" id="threshold-hint">
+    {{ 'assets.thresholdForm.hint' | translate: { min: lowestCelsius, max: highestCelsius } }}
+  </p>
 
   <div class="ui-form__grid">
     @let minError = fieldErrorKey('minCelsius');
@@ -14,11 +16,15 @@
         step="0.1"
         inputmode="decimal"
         formControlName="minCelsius"
+        [attr.min]="lowestCelsius"
+        [attr.max]="highestCelsius"
         [attr.aria-invalid]="minError || rangeInvalid() ? true : null"
         [attr.aria-describedby]="describedBy('minCelsius')"
       />
       @if (minError) {
-        <p class="ui-field__error" id="threshold-minCelsius-error">{{ minError | translate }}</p>
+        <p class="ui-field__error" id="threshold-minCelsius-error">
+          {{ minError | translate: { min: lowestCelsius, max: highestCelsius } }}
+        </p>
       }
     </div>
 
@@ -34,11 +40,15 @@
         step="0.1"
         inputmode="decimal"
         formControlName="maxCelsius"
+        [attr.min]="lowestCelsius"
+        [attr.max]="highestCelsius"
         [attr.aria-invalid]="maxError || rangeInvalid() ? true : null"
         [attr.aria-describedby]="describedBy('maxCelsius')"
       />
       @if (maxError) {
-        <p class="ui-field__error" id="threshold-maxCelsius-error">{{ maxError | translate }}</p>
+        <p class="ui-field__error" id="threshold-maxCelsius-error">
+          {{ maxError | translate: { min: lowestCelsius, max: highestCelsius } }}
+        </p>
       }
     </div>
   </div>

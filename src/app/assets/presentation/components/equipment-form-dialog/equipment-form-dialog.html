@@ -1,0 +1,250 @@
+<app-dialog
+  [heading]="
+    (equipment() ? 'assets.equipmentForm.editTitle' : 'assets.equipmentForm.createTitle')
+      | translate
+  "
+  [description]="
+    (equipment()
+      ? 'assets.equipmentForm.editDescription'
+      : 'assets.equipmentForm.createDescription'
+    ) | translate
+  "
+  (closed)="closed.emit()"
+>
+  @if (errorKey(); as failureKey) {
+    <p class="ui-alert ui-alert--critical" role="alert">
+      <app-icon class="ui-alert__icon" name="alert-triangle" />
+      {{ failureKey | translate }}
+    </p>
+  }
+
+  @if (!equipment() && sites().length === 0) {
+    <p class="ui-alert ui-alert--info">
+      <app-icon class="ui-alert__icon" name="info-circle" />
+      {{ 'assets.equipmentForm.noSites' | translate }}
+      <a class="ui-link" routerLink="/assets/sites">{{
+        'assets.equipmentForm.goToSites' | translate
+      }}</a>
+    </p>
+  }
+
+  <form class="ui-form" id="equipment-form" novalidate [formGroup]="form" (ngSubmit)="submit()">
+    <div class="ui-form__grid">
+      @let siteError = fieldErrorKey('siteId');
+      <div class="ui-field">
+        <label class="ui-field__label" for="equipment-form-site">{{
+          'assets.fields.site' | translate
+        }}</label>
+        <select
+          class="ui-field__control"
+          id="equipment-form-site"
+          formControlName="siteId"
+          [attr.aria-invalid]="siteError ? true : null"
+          [attr.aria-describedby]="siteError ? 'equipment-siteId-error' : null"
+        >
+          <option [ngValue]="null" disabled>
+            {{ 'assets.equipmentForm.chooseSite' | translate }}
+          </option>
+          @for (site of sites(); track site.id) {
+            <option [ngValue]="site.id">{{ site.name }}</option>
+          }
+        </select>
+        @if (siteError) {
+          <p class="ui-field__error" id="equipment-siteId-error">{{ siteError | translate }}</p>
+        }
+      </div>
+
+      @let uidError = fieldErrorKey('uid');
+      <div class="ui-field">
+        <label class="ui-field__label" for="equipment-form-uid">{{
+          'assets.fields.code' | translate
+        }}</label>
+        <input
+          class="ui-field__control telemetry"
+          id="equipment-form-uid"
+          formControlName="uid"
+          autocomplete="off"
+          [attr.maxlength]="uidMaxLength"
+          [placeholder]="'assets.placeholders.code' | translate"
+          [attr.aria-invalid]="uidError ? true : null"
+          [attr.aria-describedby]="
+            uidError ? 'equipment-uid-hint equipment-uid-error' : 'equipment-uid-hint'
+          "
+        />
+        <p class="ui-field__hint" id="equipment-uid-hint">
+          {{
+            (equipment() ? 'assets.equipmentForm.fixedHint' : 'assets.equipmentForm.codeHint')
+              | translate: { max: uidMaxLength }
+          }}
+        </p>
+        @if (uidError) {
+          <p class="ui-field__error" id="equipment-uid-error">{{ uidError | translate }}</p>
+        }
+      </div>
+
+      @let nameError = fieldErrorKey('name');
+      <div class="ui-field">
+        <label class="ui-field__label" for="equipment-form-name">{{
+          'assets.fields.equipmentName' | translate
+        }}</label>
+        <input
+          class="ui-field__control"
+          id="equipment-form-name"
+          formControlName="name"
+          autocomplete="off"
+          [attr.maxlength]="nameMaxLength"
+          [placeholder]="'assets.placeholders.equipmentName' | translate"
+          [attr.aria-invalid]="nameError ? true : null"
+          [attr.aria-describedby]="nameError ? 'equipment-name-error' : null"
+        />
+        @if (nameError) {
+          <p class="ui-field__error" id="equipment-name-error">{{ nameError | translate }}</p>
+        }
+      </div>
+
+      @let typeError = fieldErrorKey('type');
+      <div class="ui-field">
+        <label class="ui-field__label" for="equipment-form-type">{{
+          'assets.fields.type' | translate
+        }}</label>
+        <select
+          class="ui-field__control"
+          id="equipment-form-type"
+          formControlName="type"
+          [attr.aria-invalid]="typeError ? true : null"
+          [attr.aria-describedby]="typeError ? 'equipment-type-error' : null"
+        >
+          <option [ngValue]="null" disabled>
+            {{ 'assets.equipmentForm.chooseType' | translate }}
+          </option>
+          @for (type of types; track type) {
+            <option [ngValue]="type">{{ 'assets.equipmentType.' + type | translate }}</option>
+          }
+        </select>
+        @if (typeError) {
+          <p class="ui-field__error" id="equipment-type-error">{{ typeError | translate }}</p>
+        }
+      </div>
+
+      @let reminderError = fieldErrorKey('reminderIntervalDays');
+      <div class="ui-field">
+        <label class="ui-field__label" for="equipment-form-reminder">{{
+          'assets.fields.reminderIntervalDays' | translate
+        }}</label>
+        <input
+          class="ui-field__control"
+          id="equipment-form-reminder"
+          type="number"
+          min="1"
+          step="1"
+          inputmode="numeric"
+          formControlName="reminderIntervalDays"
+          [attr.aria-invalid]="reminderError ? true : null"
+          [attr.aria-describedby]="
+            reminderError
+              ? 'equipment-reminder-hint equipment-reminderIntervalDays-error'
+              : 'equipment-reminder-hint'
+          "
+        />
+        <p class="ui-field__hint" id="equipment-reminder-hint">
+          {{ 'assets.equipmentForm.reminderHint' | translate }}
+        </p>
+        @if (reminderError) {
+          <p class="ui-field__error" id="equipment-reminderIntervalDays-error">
+            {{ reminderError | translate }}
+          </p>
+        }
+      </div>
+    </div>
+
+    @if (!equipment()) {
+      <fieldset class="ui-fieldset">
+        <legend class="ui-fieldset__legend">
+          {{ 'assets.equipmentDetail.thresholdTitle' | translate }}
+        </legend>
+        <p class="ui-field__hint" id="equipment-threshold-hint">
+          {{ 'assets.thresholdForm.hint' | translate: { min: lowestCelsius, max: highestCelsius } }}
+        </p>
+        <div class="ui-form__grid">
+          @let minError = boundErrorKey('minCelsius');
+          <div class="ui-field">
+            <label class="ui-field__label" for="equipment-form-min">
+              {{ 'assets.thresholdForm.min' | translate }}
+            </label>
+            <input
+              class="ui-field__control telemetry"
+              id="equipment-form-min"
+              type="number"
+              step="0.1"
+              inputmode="decimal"
+              formControlName="minCelsius"
+              [attr.min]="lowestCelsius"
+              [attr.max]="highestCelsius"
+              [attr.aria-invalid]="minError || rangeInvalid() ? true : null"
+              [attr.aria-describedby]="describedBy('minCelsius')"
+            />
+            @if (minError) {
+              <p class="ui-field__error" id="equipment-minCelsius-error">
+                {{ minError | translate: { min: lowestCelsius, max: highestCelsius } }}
+              </p>
+            }
+          </div>
+
+          @let maxError = boundErrorKey('maxCelsius');
+          <div class="ui-field">
+            <label class="ui-field__label" for="equipment-form-max">
+              {{ 'assets.thresholdForm.max' | translate }}
+            </label>
+            <input
+              class="ui-field__control telemetry"
+              id="equipment-form-max"
+              type="number"
+              step="0.1"
+              inputmode="decimal"
+              formControlName="maxCelsius"
+              [attr.min]="lowestCelsius"
+              [attr.max]="highestCelsius"
+              [attr.aria-invalid]="maxError || rangeInvalid() ? true : null"
+              [attr.aria-describedby]="describedBy('maxCelsius')"
+            />
+            @if (maxError) {
+              <p class="ui-field__error" id="equipment-maxCelsius-error">
+                {{ maxError | translate: { min: lowestCelsius, max: highestCelsius } }}
+              </p>
+            }
+          </div>
+        </div>
+        @if (rangeInvalid()) {
+          <p class="ui-field__error" id="equipment-range-error">
+            {{ 'assets.thresholdForm.minBelowMax' | translate }}
+          </p>
+        }
+      </fieldset>
+    }
+  </form>
+
+  <button
+    dialogActions
+    class="ui-button ui-button--secondary"
+    type="button"
+    (click)="closed.emit()"
+  >
+    {{ 'shared.actions.cancel' | translate }}
+  </button>
+  <button
+    dialogActions
+    class="ui-button ui-button--primary"
+    type="submit"
+    form="equipment-form"
+    [disabled]="pending() || (!equipment() && sites().length === 0)"
+  >
+    {{
+      (pending()
+        ? 'shared.actions.saving'
+        : equipment()
+          ? 'assets.equipmentForm.saveChanges'
+          : 'assets.equipmentForm.register'
+      ) | translate
+    }}
+  </button>
+</app-dialog>

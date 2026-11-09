@@ -1,0 +1,12 @@
+.ui-fieldset {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.equipment-status__option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 36px;
+  cursor: pointer;
+}

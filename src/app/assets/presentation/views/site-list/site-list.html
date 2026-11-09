@@ -3,11 +3,11 @@
     <div>
       <p class="ui-page-header__eyebrow">{{ 'assets.eyebrow' | translate }}</p>
       <h1 class="ui-page-header__title">{{ 'assets.siteList.title' | translate }}</h1>
-      @if (source.status() === 'ready') {
+      @if (status() === 'ready') {
         <p class="ui-page-header__subtitle">
           {{
             'assets.siteList.summary'
-              | translate: { sites: sites().length, equipment: equipmentTotal() }
+              | translate: { sites: store.sites().length, equipment: store.equipmentTotal() }
           }}
         </p>
       }
@@ -20,7 +20,7 @@
       <button
         class="ui-button ui-button--primary"
         type="button"
-        [disabled]="source.status() !== 'ready'"
+        [disabled]="status() !== 'ready'"
         (click)="openForm(null)"
       >
         <app-icon class="ui-button__icon" name="plus" />
@@ -36,7 +36,7 @@
     </p>
   }
 
-  @switch (source.status()) {
+  @switch (status()) {
     @case ('loading') {
       <app-state-panel kind="loading" [heading]="'assets.siteList.loading' | translate" />
     }
@@ -53,7 +53,7 @@
       </app-state-panel>
     }
     @default {
-      @if (sites().length === 0) {
+      @if (store.sites().length === 0) {
         <app-state-panel
           kind="empty"
           [heading]="'assets.siteList.emptyTitle' | translate"
@@ -66,13 +66,28 @@
         </app-state-panel>
       } @else {
         <ul class="site-list">
-          @for (site of sites(); track site.id) {
+          @for (site of store.sites(); track site.id) {
             <li class="ui-panel site-list__card">
               <h2 class="ui-panel__title">{{ site.name }}</h2>
               <dl class="site-list__facts">
                 <div class="site-list__fact">
                   <dt><app-icon [label]="'assets.fields.address' | translate" name="map-pin" /></dt>
-                  <dd>{{ site.address }}</dd>
+                  <dd>
+                    {{ site.address }}
+                    @if (site.navigation_url; as navigationUrl) {
+                      <a
+                        class="ui-link site-list__map-link"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        [href]="navigationUrl"
+                        [attr.aria-label]="
+                          'assets.siteList.openMapOf' | translate: { site: site.name }
+                        "
+                      >
+                        {{ 'assets.siteList.openMap' | translate }}
+                      </a>
+                    }
+                  </dd>
                 </div>
                 <div class="site-list__fact">
                   <dt>
@@ -103,13 +118,22 @@
                 <button
                   class="ui-button ui-button--ghost ui-button--small"
                   type="button"
-                  [attr.aria-label]="
-                    'assets.siteList.editContactOf' | translate: { site: site.name }
-                  "
+                  [attr.aria-label]="'assets.siteList.editOf' | translate: { site: site.name }"
                   (click)="openForm(site)"
                 >
                   <app-icon class="ui-button__icon" name="pencil" />
-                  {{ 'assets.siteList.editContact' | translate }}
+                  {{ 'assets.siteList.edit' | translate }}
+                </button>
+                <button
+                  class="ui-button ui-button--ghost ui-button--small"
+                  type="button"
+                  [attr.aria-label]="
+                    'assets.siteList.changeAddressOf' | translate: { site: site.name }
+                  "
+                  (click)="openAddress(site)"
+                >
+                  <app-icon class="ui-button__icon" name="map-pin" />
+                  {{ 'assets.siteList.changeAddress' | translate }}
                 </button>
               </div>
             </li>
@@ -120,11 +144,28 @@
   }
 </div>
 
-@if (formTarget(); as target) {
-  <app-site-form-dialog
-    [site]="target.site"
-    [pending]="source.pending()"
-    (saved)="save($event)"
-    (closed)="formTarget.set(null)"
-  />
+@if (dialog(); as current) {
+  @if (current.kind === 'form') {
+    <app-site-form-dialog
+      [site]="current.site"
+      [pending]="store.siteActionPending()"
+      [verification]="store.addressVerification()"
+      [errorKey]="dialogErrorKey()"
+      (saved)="save(current.site, $event)"
+      (verifyAddress)="store.verifyAddress($event)"
+      (resetAddress)="store.clearAddressVerification()"
+      (closed)="closeDialog()"
+    />
+  } @else {
+    <app-site-address-dialog
+      [site]="current.site"
+      [pending]="store.siteActionPending()"
+      [verification]="store.addressVerification()"
+      [errorKey]="dialogErrorKey()"
+      (confirmed)="store.changeSiteAddress(current.site.id)"
+      (verifyAddress)="store.verifyAddress($event)"
+      (resetAddress)="store.clearAddressVerification()"
+      (closed)="closeDialog()"
+    />
+  }
 }

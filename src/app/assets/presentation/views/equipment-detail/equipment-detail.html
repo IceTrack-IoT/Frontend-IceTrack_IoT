@@ -4,7 +4,7 @@
     {{ 'assets.equipmentDetail.back' | translate }}
   </a>
 
-  @switch (source.status()) {
+  @switch (status()) {
     @case ('loading') {
       <h1 class="visually-hidden">{{ 'assets.equipmentDetail.title' | translate }}</h1>
       <app-state-panel kind="loading" [heading]="'assets.equipmentDetail.loading' | translate" />
@@ -22,8 +22,33 @@
         </button>
       </app-state-panel>
     }
+    @case ('not-found') {
+      <h1 class="visually-hidden">{{ 'assets.equipmentDetail.title' | translate }}</h1>
+      <app-state-panel
+        kind="empty"
+        [heading]="'assets.equipmentDetail.notFoundTitle' | translate"
+        [message]="'assets.equipmentDetail.notFoundMessage' | translate"
+      >
+        <a class="ui-button ui-button--secondary" routerLink="/assets/equipment">
+          {{ 'assets.equipmentDetail.back' | translate }}
+        </a>
+      </app-state-panel>
+    }
     @default {
       @if (equipment(); as item) {
+        @if (announcement(); as key) {
+          <p class="ui-alert ui-alert--success" role="status">
+            <app-icon class="ui-alert__icon" name="circle-check" />
+            {{ key | translate }}
+          </p>
+        }
+        @if (pageErrorKey(); as key) {
+          <p class="ui-alert ui-alert--critical" role="alert">
+            <app-icon class="ui-alert__icon" name="alert-triangle" />
+            {{ key | translate }}
+          </p>
+        }
+
         <header class="ui-panel equipment-detail__header">
           <div class="equipment-detail__identity">
             <p class="ui-page-header__eyebrow">
@@ -39,6 +64,26 @@
                 <app-icon [name]="item.online ? 'wifi' : 'wifi-off'" />
                 {{ (item.online ? 'assets.online' : 'assets.offline') | translate }}
               </span>
+            </div>
+            <div class="equipment-detail__actions">
+              <button
+                class="ui-button ui-button--secondary ui-button--small"
+                type="button"
+                [disabled]="store.equipmentActionPending()"
+                (click)="openDialog('edit')"
+              >
+                <app-icon class="ui-button__icon" name="pencil" />
+                {{ 'assets.equipmentDetail.edit' | translate }}
+              </button>
+              <button
+                class="ui-button ui-button--secondary ui-button--small"
+                type="button"
+                [disabled]="store.equipmentActionPending()"
+                (click)="openDialog('status')"
+              >
+                <app-icon class="ui-button__icon" name="refresh" />
+                {{ 'assets.equipmentDetail.changeStatus' | translate }}
+              </button>
             </div>
           </div>
 
@@ -101,11 +146,20 @@
                 {{ 'assets.equipmentDetail.thresholdSaved' | translate }}
               </p>
             }
-            <app-equipment-threshold-form
-              [threshold]="item.temperature_threshold"
-              [pending]="source.pending()"
-              (saved)="saveThreshold($event)"
-            />
+            @if (thresholdErrorKey(); as key) {
+              <p class="ui-alert ui-alert--critical equipment-detail__saved" role="alert">
+                <app-icon class="ui-alert__icon" name="alert-triangle" />
+                {{ key | translate }}
+              </p>
+            }
+            <!-- Every accepted threshold raises the configuration version, so the form starts over from it. -->
+            @for (version of [item.config_version]; track version) {
+              <app-equipment-threshold-form
+                [threshold]="item.temperature_threshold"
+                [pending]="thresholdPending()"
+                (saved)="saveThreshold($event)"
+              />
+            }
           </section>
 
           <section class="ui-panel" aria-labelledby="equipment-details-title">
@@ -119,15 +173,13 @@
               <div>
                 <dt>{{ 'assets.fields.site' | translate }}</dt>
                 <dd>
-                  @if (site(); as itemSite) {
-                    <a
-                      class="ui-link"
-                      routerLink="/assets/equipment"
-                      [queryParams]="{ siteId: itemSite.id }"
-                    >
-                      {{ itemSite.name }}
-                    </a>
-                  }
+                  <a
+                    class="ui-link"
+                    routerLink="/assets/equipment"
+                    [queryParams]="{ siteId: item.site_id }"
+                  >
+                    {{ site()?.name ?? ('assets.siteNumber' | translate: { id: item.site_id }) }}
+                  </a>
                 </dd>
               </div>
               <div>
@@ -222,17 +274,28 @@
             </li>
           </ul>
         </section>
-      } @else {
-        <h1 class="visually-hidden">{{ 'assets.equipmentDetail.title' | translate }}</h1>
-        <app-state-panel
-          kind="empty"
-          [heading]="'assets.equipmentDetail.notFoundTitle' | translate"
-          [message]="'assets.equipmentDetail.notFoundMessage' | translate"
-        >
-          <a class="ui-button ui-button--secondary" routerLink="/assets/equipment">
-            {{ 'assets.equipmentDetail.back' | translate }}
-          </a>
-        </app-state-panel>
+
+        @switch (dialog()) {
+          @case ('edit') {
+            <app-equipment-form-dialog
+              [equipment]="item"
+              [sites]="store.sites()"
+              [pending]="store.equipmentActionPending()"
+              [errorKey]="dialogErrorKey()"
+              (updated)="saveChanges($event)"
+              (closed)="closeDialog()"
+            />
+          }
+          @case ('status') {
+            <app-equipment-status-dialog
+              [equipment]="item"
+              [pending]="store.equipmentActionPending()"
+              [errorKey]="dialogErrorKey()"
+              (confirmed)="changeStatus($event)"
+              (closed)="closeDialog()"
+            />
+          }
+        }
       }
     }
   }
