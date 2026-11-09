@@ -7,10 +7,20 @@ import { EquipmentApi } from '@assets/infrastructure/api/equipment-api';
 import { EquipmentDirectoryApi } from '@assets/infrastructure/api/equipment-directory-api';
 import { SiteDirectoryApi } from '@assets/infrastructure/api/site-directory-api';
 import { SitesApi } from '@assets/infrastructure/api/sites-api';
+import { MonitoredEquipmentFacade } from '@assets/application/facades/monitored-equipment.facade';
+import { EquipmentDirectoryPort as MonitoringEquipmentDirectoryPort } from '@monitoring/application/ports/equipment-directory.port';
+import { DeviceEquipmentFacade } from '@assets/application/facades/device-equipment.facade';
+import { EquipmentDirectoryPort as DeviceEquipmentDirectoryPort } from '@device/application/ports/equipment-directory.port';
+import { NotifiedEquipmentFacade } from '@assets/application/facades/notified-equipment.facade';
+import { EquipmentDirectoryPort as NotificationsEquipmentDirectoryPort } from '@notifications/application/ports/equipment-directory.port';
+import { ReportScopeFacade } from '@assets/application/facades/report-scope.facade';
+import { ReportScopePort } from '@reporting/application/ports/report-scope.port';
 
 /**
  * Binds the Assets application ports to their infrastructure adapters: the site and equipment ports used
- * by Assets Management itself, and the read-only directories that other bounded contexts consume.
+ * by Assets Management itself, and the read-only directories that other bounded contexts consume. The
+ * equipment directory ports Monitoring and Alerting, Device Management and Notifications define, and the
+ * report scope port of Reporting, are bound to the Assets facades implementing them.
  */
 export function provideAssets(): EnvironmentProviders {
   return makeEnvironmentProviders([
@@ -18,5 +28,9 @@ export function provideAssets(): EnvironmentProviders {
     { provide: EquipmentPort, useExisting: EquipmentApi },
     { provide: SiteDirectoryPort, useExisting: SiteDirectoryApi },
     { provide: EquipmentDirectoryPort, useExisting: EquipmentDirectoryApi },
+    { provide: MonitoringEquipmentDirectoryPort, useExisting: MonitoredEquipmentFacade },
+    { provide: DeviceEquipmentDirectoryPort, useExisting: DeviceEquipmentFacade },
+    { provide: NotificationsEquipmentDirectoryPort, useExisting: NotifiedEquipmentFacade },
+    { provide: ReportScopePort, useExisting: ReportScopeFacade },
   ]);
 }
