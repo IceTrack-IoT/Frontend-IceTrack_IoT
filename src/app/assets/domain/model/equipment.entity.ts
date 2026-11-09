@@ -6,11 +6,12 @@ import { TemperatureThreshold } from '@assets/domain/value-objects/temperature-t
 /**
  * Represents a refrigeration equipment item installed at a site and monitored against its temperature threshold.
  *
- * `last_reading_at` and `last_known_temperature` are null while the equipment has not reported telemetry.
+ * `online`, `last_reading_at` and `last_known_temperature` are written by Monitoring from the equipment's
+ * telemetry; the last two are null while the equipment has not reported yet. `config_version` is the version
+ * of the configuration its edge gateway enforces.
  */
 export class Equipment implements BaseEntity {
   private _id: number;
-  private _owner_id: number;
   private _equipment_code_uid: string;
   private _name: string;
   private _equipment_type: EquipmentType;
@@ -21,6 +22,7 @@ export class Equipment implements BaseEntity {
   private _temperature_threshold: TemperatureThreshold;
   private _last_reading_at: Date | null;
   private _last_known_temperature: number | null;
+  private _config_version: number;
 
   /**
    * Creates a new instance of the Equipment class.
@@ -29,7 +31,6 @@ export class Equipment implements BaseEntity {
    */
   public constructor(equipment: {
     id: number;
-    owner_id: number;
     equipment_code_uid: string;
     name: string;
     equipment_type: EquipmentType;
@@ -40,9 +41,9 @@ export class Equipment implements BaseEntity {
     temperature_threshold: TemperatureThreshold;
     last_reading_at: Date | null;
     last_known_temperature: number | null;
+    config_version: number;
   }) {
     this._id = equipment.id;
-    this._owner_id = equipment.owner_id;
     this._equipment_code_uid = equipment.equipment_code_uid;
     this._name = equipment.name;
     this._equipment_type = equipment.equipment_type;
@@ -53,6 +54,7 @@ export class Equipment implements BaseEntity {
     this._temperature_threshold = equipment.temperature_threshold;
     this._last_reading_at = equipment.last_reading_at;
     this._last_known_temperature = equipment.last_known_temperature;
+    this._config_version = equipment.config_version;
   }
 
   get id(): number {
@@ -60,12 +62,6 @@ export class Equipment implements BaseEntity {
   }
   set id(id: number) {
     this._id = id;
-  }
-  get owner_id(): number {
-    return this._owner_id;
-  }
-  set owner_id(owner_id: number) {
-    this._owner_id = owner_id;
   }
   get equipment_code_uid(): string {
     return this._equipment_code_uid;
@@ -126,6 +122,12 @@ export class Equipment implements BaseEntity {
   }
   set last_known_temperature(last_known_temperature: number | null) {
     this._last_known_temperature = last_known_temperature;
+  }
+  get config_version(): number {
+    return this._config_version;
+  }
+  set config_version(config_version: number) {
+    this._config_version = config_version;
   }
 
   /**

@@ -6,3 +6,8 @@ export interface TemperatureThreshold {
   readonly min_celsius: number;
   readonly max_celsius: number;
 }
+
+/** The lowest bound, in degrees Celsius, a threshold may have. */
+export const THRESHOLD_LOWEST_CELSIUS = 0;
+/** The highest bound, in degrees Celsius, a threshold may have. */
+export const THRESHOLD_HIGHEST_CELSIUS = 30;

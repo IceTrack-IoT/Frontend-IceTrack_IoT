@@ -1,10 +1,11 @@
 /**
- * EquipmentType enum represents the kinds of refrigeration equipment.
+ * EquipmentType enum represents the kinds of refrigeration equipment the backend accepts.
  */
 export enum EquipmentType {
-  FREEZER = 'FREEZER',
+  DISPLAY_CASE = 'DISPLAY_CASE',
   COLD_ROOM = 'COLD_ROOM',
   REFRIGERATOR = 'REFRIGERATOR',
+  OTHER = 'OTHER',
 }
 
 /**
