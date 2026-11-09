@@ -27,6 +27,12 @@ export const environment = {
   /** Assets endpoints */
   iceTrackProviderSitesEndpointPath: '/assets/sites',
   iceTrackProviderEquipmentEndpointPath: '/assets/equipments',
+  iceTrackProviderValidateSiteAddressEndpointPath: '/assets/sites/validate-address',
+  iceTrackProviderSiteByIdEndpointPath: '/assets/sites/{siteId}',
+  iceTrackProviderSiteAddressEndpointPath: '/assets/sites/{siteId}/address',
+  iceTrackProviderEquipmentByIdEndpointPath: '/assets/equipments/{equipmentId}',
+  iceTrackProviderEquipmentThresholdEndpointPath: '/assets/equipments/{equipmentId}/threshold',
+  iceTrackProviderEquipmentStatusEndpointPath: '/assets/equipments/{equipmentId}/status',
 
   /** Service request endpoints */
   iceTrackProviderServiceRequestsEndpointPath: '/service-requests',
