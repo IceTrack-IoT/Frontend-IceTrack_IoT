@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AddressValidationResource",
+  "type": "object",
+  "properties": {
+    "formatted_address": {
+      "type": "string",
+      "description": "Normalized address"
+    },
+    "latitude": {
+      "type": "number",
+      "format": "double",
+      "description": "Latitude of the verified point"
+    },
+    "longitude": {
+      "type": "number",
+      "format": "double",
+      "description": "Longitude of the verified point"
+    },
+    "place_id": {
+      "type": "string",
+      "description": "Provider place identifier"
+    },
+    "district": {
+      "type": "string",
+      "description": "District"
+    },
+    "area": {
+      "type": "string",
+      "enum": [
+        "LIMA_METROPOLITANA",
+        "CALLAO"
+      ],
+      "description": "Coverage area"
+    },
+    "validation_token": {
+      "type": "string",
+      "description": "Token to present when saving the site; valid for 15 minutes"
+    }
+  },
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/assets/interfaces/rest/resources/AddressValidationResource.java"
+}

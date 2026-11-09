@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CreateServiceRequestResource",
+  "type": "object",
+  "properties": {
+    "equipment_id": {
+      "type": "integer",
+      "format": "int64",
+      "exclusiveMinimum": 0,
+      "description": "Identifier of the unit to service"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "PREVENTIVE_MAINTENANCE",
+        "REPAIR"
+      ],
+      "description": "Kind of work"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "LOW",
+        "MEDIUM",
+        "HIGH",
+        "URGENT"
+      ],
+      "description": "Urgency"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1000,
+      "description": "What the owner needs"
+    }
+  },
+  "required": [
+    "equipment_id",
+    "type",
+    "priority",
+    "description"
+  ],
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/service/request/interfaces/rest/resources/CreateServiceRequestResource.java"
+}

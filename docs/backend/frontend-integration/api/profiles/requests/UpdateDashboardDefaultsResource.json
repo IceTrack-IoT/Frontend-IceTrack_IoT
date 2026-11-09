@@ -1,0 +1,9 @@
+{
+  "default_site_id": 3,
+  "default_temperature_range": {
+    "min": 2,
+    "max": 8,
+    "unit": "C",
+    "label": "2°C to 8°C"
+  }
+}

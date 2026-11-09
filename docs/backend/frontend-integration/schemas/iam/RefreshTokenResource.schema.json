@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RefreshTokenResource",
+  "type": "object",
+  "properties": {
+    "refresh_token": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Opaque refresh token; single use, rotated on every refresh"
+    },
+    "channel": {
+      "type": "string",
+      "enum": [
+        "WEB",
+        "MOBILE"
+      ],
+      "description": "Client application the refresh comes from; when present it must be the channel the session was opened from. Ignored by logout."
+    }
+  },
+  "required": [
+    "refresh_token"
+  ],
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/iam/interfaces/rest/resources/RefreshTokenResource.java"
+}

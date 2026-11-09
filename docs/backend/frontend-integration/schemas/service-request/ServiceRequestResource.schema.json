@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ServiceRequestResource",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Service request unique identifier"
+    },
+    "owner_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Owner who created the request"
+    },
+    "equipment_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Unit to service"
+    },
+    "site_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Site the unit is installed at"
+    },
+    "technician_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Assigned technician; null while none is assigned"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "PREVENTIVE_MAINTENANCE",
+        "REPAIR"
+      ],
+      "description": "Kind of work"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "LOW",
+        "MEDIUM",
+        "HIGH",
+        "URGENT"
+      ],
+      "description": "Urgency"
+    },
+    "description": {
+      "type": "string",
+      "description": "What the owner needs"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "PENDING",
+        "ACCEPTED",
+        "IN_PROGRESS",
+        "COMPLETED",
+        "CANCELED"
+      ],
+      "description": "Current lifecycle status"
+    },
+    "created_at": {
+      "type": "string",
+      "description": "When the request was created, ISO-8601 UTC"
+    },
+    "assigned_at": {
+      "type": "string",
+      "description": "When the current technician was assigned"
+    },
+    "started_at": {
+      "type": "string",
+      "description": "When the work started"
+    },
+    "completed_at": {
+      "type": "string",
+      "description": "When the work finished"
+    },
+    "canceled_at": {
+      "type": "string",
+      "description": "When the owner canceled"
+    },
+    "cancel_reason": {
+      "type": "string",
+      "description": "Why the owner canceled"
+    },
+    "history": {
+      "type": "array",
+      "items": {
+        "$ref": "StatusTransitionResource.schema.json"
+      },
+      "description": "Status history, oldest first; the first entry is the creation"
+    },
+    "intervention": {
+      "$ref": "InterventionResource.schema.json",
+      "description": "The intervention that completed the request; null until completed"
+    },
+    "maintenance_windows": {
+      "type": "array",
+      "items": {
+        "$ref": "MaintenanceWindowLinkResource.schema.json"
+      },
+      "description": "Maintenance windows opened on the unit while the work was in progress, oldest first; empty when there were none"
+    },
+    "edge_grant": {
+      "$ref": "IssuedEdgeGrantResource.schema.json",
+      "description": "The edge grant issued when the request was accepted, token included. Present only in the response of PUT /accept; omitted everywhere else"
+    }
+  },
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/service/request/interfaces/rest/resources/ServiceRequestResource.java"
+}

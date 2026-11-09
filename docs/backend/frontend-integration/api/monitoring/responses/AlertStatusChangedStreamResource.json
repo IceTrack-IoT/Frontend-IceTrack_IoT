@@ -1,0 +1,11 @@
+{
+  "type": "ALERT_STATUS_CHANGED",
+  "alert_id": 301,
+  "equipment_id": 21,
+  "alert_type": "TEMPERATURE_EXCURSION",
+  "severity": "CRITICAL",
+  "previous_status": "OPEN",
+  "status": "ACKNOWLEDGED",
+  "peak_temperature": 9.5,
+  "changed_at": "2026-09-29T08:40:00Z"
+}

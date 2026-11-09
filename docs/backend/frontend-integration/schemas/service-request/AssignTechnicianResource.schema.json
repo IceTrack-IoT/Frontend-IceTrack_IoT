@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AssignTechnicianResource",
+  "type": "object",
+  "properties": {
+    "technician_profile_id": {
+      "type": "integer",
+      "format": "int64",
+      "exclusiveMinimum": 0,
+      "description": "Identifier of the technician profile to assign"
+    }
+  },
+  "required": [
+    "technician_profile_id"
+  ],
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/service/request/interfaces/rest/resources/AssignTechnicianResource.java"
+}

@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ReportResource",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Report unique identifier"
+    },
+    "name": {
+      "type": "string",
+      "description": "Display name of the report"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "MAINTENANCE_COMPLIANCE",
+        "EQUIPMENT_UPTIME",
+        "TECHNICIAN_PERFORMANCE",
+        "TEMPERATURE_EXCURSION"
+      ],
+      "description": "Report type's enum name"
+    },
+    "format": {
+      "type": "string",
+      "enum": [
+        "PDF",
+        "XLSX",
+        "CSV"
+      ],
+      "description": "Output format's enum name"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "PENDING",
+        "GENERATING",
+        "COMPLETED",
+        "FAILED"
+      ],
+      "description": "Current generation status"
+    },
+    "failure_reason": {
+      "type": "string",
+      "description": "Why the report failed; present only when FAILED"
+    },
+    "result_payload": {
+      "type": "string",
+      "description": "JSON array of the KPIs once completed; null otherwise"
+    },
+    "user_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Identifier of the user who requested the report"
+    },
+    "site_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Site the report covers"
+    },
+    "equipment_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Unit the report covers"
+    },
+    "technician_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Technician the report covers"
+    },
+    "from": {
+      "type": "string",
+      "description": "Format: date-time (ISO 8601 UTC with Z, e.g. 2026-09-29T08:30:00Z) Inclusive start of the period"
+    },
+    "to": {
+      "type": "string",
+      "description": "Format: date-time (ISO 8601 UTC with Z, e.g. 2026-09-29T08:30:00Z) Inclusive end of the period"
+    },
+    "requested_at": {
+      "type": "string",
+      "description": "Format: date-time (ISO 8601 UTC with Z, e.g. 2026-09-29T08:30:00Z) When the report was requested"
+    },
+    "completed_at": {
+      "type": "string",
+      "description": "Format: date-time (ISO 8601 UTC with Z, e.g. 2026-09-29T08:30:00Z) When the report reached COMPLETED or FAILED; null while in progress"
+    },
+    "download_url": {
+      "type": "string",
+      "description": "Signed download URL valid for 15 minutes; only for a COMPLETED report read by id"
+    }
+  },
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/reporting/interfaces/rest/resources/ReportResource.java"
+}

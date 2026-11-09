@@ -1,0 +1,9 @@
+{
+  "id": 7,
+  "device_uid": "ESP32-ICE-001",
+  "board_model": "ESP32-DevKitC",
+  "firmware_version": "1.0.0",
+  "status": "PAIRED",
+  "paired_equipment_id": 21,
+  "last_seen_at": "2026-10-23T17:00:00Z"
+}

@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CompleteGoogleOwnerRegistrationResource",
+  "type": "object",
+  "properties": {
+    "id_token": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Google OIDC id_token issued to the frontend"
+    },
+    "username": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Desired username, unique on the platform. The Google email is never used as username."
+    },
+    "phone": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Phone number, optionally prefixed by the country code and a space"
+    },
+    "street": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Street of the address"
+    },
+    "number": {
+      "type": "string",
+      "description": "Street number or apartment"
+    },
+    "city": {
+      "type": "string",
+      "minLength": 1,
+      "description": "City of the address"
+    },
+    "postal_code": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Postal code of the address"
+    },
+    "country": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Country of the address"
+    },
+    "ruc": {
+      "type": "integer",
+      "format": "int64",
+      "description": "11 digit taxpayer registration number (RUC)"
+    }
+  },
+  "required": [
+    "id_token",
+    "username",
+    "phone",
+    "street",
+    "city",
+    "postal_code",
+    "country",
+    "ruc"
+  ],
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/iam/interfaces/rest/resources/CompleteGoogleOwnerRegistrationResource.java"
+}

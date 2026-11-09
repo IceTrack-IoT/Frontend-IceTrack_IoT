@@ -1,0 +1,8 @@
+{
+  "from_status": "PENDING",
+  "to_status": "ACCEPTED",
+  "actor_id": 7,
+  "occurred_at": "2026-10-23T13:40:00Z",
+  "reason": null,
+  "technician_id": 7
+}

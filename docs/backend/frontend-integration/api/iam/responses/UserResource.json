@@ -1,0 +1,6 @@
+{
+  "id": 1,
+  "username": "john.doe",
+  "role": "OWNER_ROLE",
+  "provider": "LOCAL"
+}

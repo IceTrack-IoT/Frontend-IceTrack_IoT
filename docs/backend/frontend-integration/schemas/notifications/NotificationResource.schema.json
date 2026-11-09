@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "NotificationResource",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Notification unique identifier"
+    },
+    "recipient_user_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Identifier of the owner or technician profile the notification is addressed to"
+    },
+    "equipment_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Identifier of the equipment the notification concerns"
+    },
+    "device_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Identifier of the device the notification concerns"
+    },
+    "source_alert_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Identifier of the alert that triggered the notification"
+    },
+    "message": {
+      "type": "string",
+      "description": "Human-readable notification text"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "MAINTENANCE_REMINDER",
+        "TEMPERATURE_EXCURSION",
+        "DEVICE_OFFLINE",
+        "LOW_BATTERY",
+        "SENSOR_FAILURE",
+        "SERVICE_REQUEST_UPDATE",
+        "MAINTENANCE_WINDOW",
+        "UNLINKED_MAINTENANCE_WINDOW"
+      ],
+      "description": "Kind of event that produced the notification"
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "INFO",
+        "WARNING",
+        "CRITICAL"
+      ],
+      "description": "Urgency of the notification"
+    },
+    "is_read": {
+      "type": "boolean",
+      "description": "Whether the user has already read the notification"
+    },
+    "read_at": {
+      "type": "string",
+      "description": "Format: date-time (ISO 8601 UTC with Z, e.g. 2026-09-29T08:30:00Z) When the notification was read; null while unread"
+    },
+    "dismissed_at": {
+      "type": "string",
+      "description": "Format: date-time (ISO 8601 UTC with Z, e.g. 2026-09-29T08:30:00Z) When the user dismissed the notification; null while not dismissed"
+    }
+  },
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/notifications/interfaces/rest/resources/NotificationResource.java"
+}

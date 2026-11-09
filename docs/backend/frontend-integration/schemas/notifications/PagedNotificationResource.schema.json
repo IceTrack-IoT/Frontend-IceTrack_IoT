@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PagedNotificationResource",
+  "type": "object",
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "$ref": "NotificationResource.schema.json"
+      },
+      "description": "Notifications of this page, most recent first"
+    },
+    "page": {
+      "type": "integer",
+      "format": "int32",
+      "description": "Zero-based index of this page"
+    },
+    "size": {
+      "type": "integer",
+      "format": "int32",
+      "description": "Maximum number of notifications a page may hold"
+    },
+    "total_elements": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Total number of notifications matching the filter"
+    },
+    "total_pages": {
+      "type": "integer",
+      "format": "int32",
+      "description": "Number of pages the matching notifications span; at least 1"
+    }
+  },
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/notifications/interfaces/rest/resources/PagedNotificationResource.java"
+}

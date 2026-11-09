@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "StartServiceRequestResource",
+  "type": "object",
+  "properties": {
+    "started_at": {
+      "type": "string",
+      "description": "Format: date-time (UTC instant, e.g. 2026-11-07T13:05:00Z) When the work started according to the technician's device, ISO-8601; the server clock is used when absent. Repeating the same instant is a no-op."
+    }
+  },
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/service/request/interfaces/rest/resources/StartServiceRequestResource.java"
+}

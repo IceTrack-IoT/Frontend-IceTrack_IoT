@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "UpdateDashboardLayoutResource",
+  "type": "object",
+  "properties": {
+    "cards": {
+      "type": "array",
+      "items": {
+        "$ref": "CardLayoutItemResource.schema.json"
+      },
+      "description": "Placement of every card of the dashboard"
+    }
+  },
+  "required": [
+    "cards"
+  ],
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/profiles/interfaces/rest/resources/UpdateDashboardLayoutResource.java"
+}

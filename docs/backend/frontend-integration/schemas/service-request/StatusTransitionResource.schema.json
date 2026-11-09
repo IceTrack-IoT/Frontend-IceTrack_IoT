@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "StatusTransitionResource",
+  "type": "object",
+  "properties": {
+    "from_status": {
+      "type": "string",
+      "enum": [
+        "PENDING",
+        "ACCEPTED",
+        "IN_PROGRESS",
+        "COMPLETED",
+        "CANCELED"
+      ],
+      "description": "Status before the transition; null for the creation"
+    },
+    "to_status": {
+      "type": "string",
+      "enum": [
+        "PENDING",
+        "ACCEPTED",
+        "IN_PROGRESS",
+        "COMPLETED",
+        "CANCELED"
+      ],
+      "description": "Status after the transition"
+    },
+    "actor_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Profile identifier of the owner or technician who acted"
+    },
+    "occurred_at": {
+      "type": "string",
+      "description": "When the transition happened, ISO-8601 UTC"
+    },
+    "reason": {
+      "type": "string",
+      "description": "Why it happened, for a rejection or a cancellation"
+    },
+    "technician_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Technician the transition concerns"
+    }
+  },
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/service/request/interfaces/rest/resources/StatusTransitionResource.java"
+}

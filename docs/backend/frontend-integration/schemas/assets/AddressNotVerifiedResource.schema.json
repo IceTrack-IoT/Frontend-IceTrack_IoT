@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AddressNotVerifiedResource",
+  "type": "object",
+  "properties": {
+    "code": {
+      "type": "string"
+    },
+    "message": {
+      "type": "string"
+    },
+    "candidates": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Candidate addresses to choose from, at most five"
+    }
+  },
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/assets/interfaces/rest/resources/AddressNotVerifiedResource.java"
+}

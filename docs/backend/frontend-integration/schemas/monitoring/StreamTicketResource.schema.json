@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "StreamTicketResource",
+  "type": "object",
+  "properties": {
+    "ticket": {
+      "type": "string",
+      "description": "Opaque ticket: st_ followed by 64 hexadecimal characters. Shown only in this response"
+    },
+    "expires_in": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Seconds the ticket stays redeemable; it opens one stream at most"
+    }
+  },
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/monitoring/interfaces/rest/resources/StreamTicketResource.java"
+}

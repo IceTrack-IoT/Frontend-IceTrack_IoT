@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ChangeStatusResource",
+  "type": "object",
+  "properties": {
+    "new_status": {
+      "type": "string",
+      "enum": [
+        "ACTIVE",
+        "MAINTENANCE",
+        "REPAIR",
+        "DEACTIVATED"
+      ],
+      "description": "Status to move to. Allowed transitions: ACTIVE to MAINTENANCE/REPAIR/DEACTIVATED, MAINTENANCE to ACTIVE/REPAIR/DEACTIVATED, REPAIR to ACTIVE/DEACTIVATED, DEACTIVATED to ACTIVE"
+    }
+  },
+  "required": [
+    "new_status"
+  ],
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/assets/interfaces/rest/resources/ChangeStatusResource.java"
+}

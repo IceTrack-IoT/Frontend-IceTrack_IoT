@@ -1,0 +1,13 @@
+{
+  "id": 18,
+  "equipment_id": 10,
+  "origin": "APP",
+  "started_at": "2026-11-07T13:05:00Z",
+  "expires_at": "2026-11-07T15:05:00Z",
+  "ended_at": "2026-11-07T14:10:00Z",
+  "closure_reason": "MANUAL_APP",
+  "technician_id": 7,
+  "service_request_id": 42,
+  "unlinked": false,
+  "active": false
+}

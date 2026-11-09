@@ -1,0 +1,5 @@
+{
+  "code": "VALIDATION_ERROR",
+  "message": "Field min_celsius: must be between 0 and 30 °C; Field name: must not be blank",
+  "details": "Field min_celsius: must be between 0 and 30 °C; Field name: must not be blank"
+}

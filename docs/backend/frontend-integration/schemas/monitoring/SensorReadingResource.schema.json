@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SensorReadingResource",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Reading unique identifier"
+    },
+    "reading_uid": {
+      "type": "string",
+      "description": "Client-generated identifier of the batch"
+    },
+    "equipment_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Identifier of the equipment the reading belongs to"
+    },
+    "device_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Identifier of the device that produced the reading"
+    },
+    "min_temperature": {
+      "type": "number",
+      "format": "double",
+      "description": "Calibrated minimum temperature observed in the window, in Celsius"
+    },
+    "max_temperature": {
+      "type": "number",
+      "format": "double",
+      "description": "Calibrated maximum temperature observed in the window, in Celsius"
+    },
+    "avg_temperature": {
+      "type": "number",
+      "format": "double",
+      "description": "Calibrated average temperature observed in the window, in Celsius"
+    },
+    "raw_min_temperature": {
+      "type": "number",
+      "format": "double",
+      "description": "Minimum temperature measured by the probe before calibration, in Celsius"
+    },
+    "raw_max_temperature": {
+      "type": "number",
+      "format": "double",
+      "description": "Maximum temperature measured by the probe before calibration, in Celsius"
+    },
+    "raw_avg_temperature": {
+      "type": "number",
+      "format": "double",
+      "description": "Average temperature measured by the probe before calibration, in Celsius"
+    },
+    "humidity": {
+      "type": "number",
+      "format": "double",
+      "description": "Average relative humidity observed in the window, as a percentage"
+    },
+    "sample_count": {
+      "type": "integer",
+      "format": "int32",
+      "description": "Number of raw samples folded into this reading"
+    },
+    "light_level_max": {
+      "type": "number",
+      "format": "double",
+      "description": "Highest light level inside the unit, 0 to 100 %; null when not reported"
+    },
+    "door_open_seconds": {
+      "type": "integer",
+      "format": "int32",
+      "description": "Seconds the door was detected open; null when not reported"
+    },
+    "presence_detected": {
+      "type": "boolean",
+      "description": "Whether presence was detected near the unit; null when presence is unavailable"
+    },
+    "recorded_at": {
+      "type": "string",
+      "description": "Format: date-time (ISO 8601 UTC with Z, e.g. 2026-09-29T08:30:00Z) Timestamp assigned by the device clock"
+    },
+    "applied_config_version": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Edge configuration version the gateway was running"
+    },
+    "under_maintenance": {
+      "type": "boolean",
+      "description": "Whether a maintenance window covered recorded_at; such readings never change an alert"
+    }
+  },
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/monitoring/interfaces/rest/resources/SensorReadingResource.java"
+}

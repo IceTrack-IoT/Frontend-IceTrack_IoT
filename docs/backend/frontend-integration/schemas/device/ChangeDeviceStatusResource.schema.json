@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ChangeDeviceStatusResource",
+  "type": "object",
+  "properties": {
+    "new_status": {
+      "type": "string",
+      "enum": [
+        "UNPAIRED",
+        "PAIRED",
+        "REVOKED"
+      ],
+      "description": "Status to move the device to. REVOKED invalidates the API key, UNPAIRED also unlinks the equipment; a revoked device resumes only by rotating its API key"
+    }
+  },
+  "required": [
+    "new_status"
+  ],
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/device/interfaces/rest/resources/ChangeDeviceStatusResource.java"
+}

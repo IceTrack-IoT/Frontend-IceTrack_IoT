@@ -1,0 +1,14 @@
+{
+  "id": 8,
+  "name": "Excursions - October",
+  "type": "TEMPERATURE_EXCURSION",
+  "format": "PDF",
+  "status": "COMPLETED",
+  "user_id": 42,
+  "site_id": 1,
+  "from": "2026-10-01T00:00:00Z",
+  "to": "2026-10-31T23:59:59Z",
+  "requested_at": "2026-11-01T08:00:00Z",
+  "completed_at": "2026-11-01T08:00:09Z",
+  "download_url": "https://storage.googleapis.com/icetrack-reports/reports/7/8.pdf?X-Goog-Signature=abc"
+}

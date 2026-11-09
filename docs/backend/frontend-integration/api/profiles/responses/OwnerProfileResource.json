@@ -1,0 +1,9 @@
+{
+  "id": 1,
+  "user_id": 42,
+  "full_name": "John Doe",
+  "email": "john.doe@example.com",
+  "phone": "+51 987654321",
+  "address": "Av. Primavera 123, Lima, 15023, Peru",
+  "ruc": 20123456789
+}

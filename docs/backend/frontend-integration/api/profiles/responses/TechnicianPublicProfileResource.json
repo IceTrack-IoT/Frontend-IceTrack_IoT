@@ -1,0 +1,9 @@
+{
+  "id": 7,
+  "full_name": "Jane Doe",
+  "speciality": "Refrigeration",
+  "certification_number": "CERT-2024-001",
+  "completed_services": 12,
+  "average_rating": 4.6,
+  "rating_available": true
+}

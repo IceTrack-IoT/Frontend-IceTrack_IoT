@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RegisterEquipmentResource",
+  "type": "object",
+  "properties": {
+    "site_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Identifier of the site the unit is installed at"
+    },
+    "uid": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 30,
+      "description": "The unit's own identifier, unique across the platform"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 30,
+      "description": "Name assigned to the unit"
+    },
+    "equipment_type": {
+      "type": "string",
+      "enum": [
+        "DISPLAY_CASE",
+        "COLD_ROOM",
+        "REFRIGERATOR",
+        "OTHER"
+      ],
+      "description": "Kind of refrigeration unit"
+    },
+    "min_celsius": {
+      "type": "number",
+      "format": "double",
+      "minimum": 0.0,
+      "maximum": 30.0,
+      "description": "Lowest acceptable temperature in Celsius, within 0 to 30 and strictly below max_celsius"
+    },
+    "max_celsius": {
+      "type": "number",
+      "format": "double",
+      "minimum": 0.0,
+      "maximum": 30.0,
+      "description": "Highest acceptable temperature in Celsius, within 0 to 30 and strictly above min_celsius"
+    },
+    "reminder_interval_days": {
+      "type": "integer",
+      "format": "int32",
+      "exclusiveMinimum": 0,
+      "description": "Preventive maintenance interval in days"
+    }
+  },
+  "required": [
+    "site_id",
+    "uid",
+    "name",
+    "equipment_type",
+    "min_celsius",
+    "max_celsius",
+    "reminder_interval_days"
+  ],
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/assets/interfaces/rest/resources/RegisterEquipmentResource.java"
+}

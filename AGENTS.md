@@ -150,7 +150,6 @@ Rules:
 - Follow UI rules in `.claude/rules/angular-web-ui.md`.
 - Follow bounded-context ownership in `.claude/rules/bounded-contexts.md`.
 - Follow shared-code rules in `.claude/rules/shared.md`.
-- Follow testing rules in `.claude/rules/testing.md`.
 - Follow IAM-specific rules only when touching IAM or authentication wiring.
 - Follow real-time monitoring rules only when touching telemetry streaming, live dashboard updates, or alert subscriptions.
 - Use only the Angular, TypeScript, and package versions pinned in `package.json`.

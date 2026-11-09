@@ -1,0 +1,21 @@
+{
+  "id": 301,
+  "equipment_id": 1,
+  "type": "TEMPERATURE_EXCURSION",
+  "severity": "CRITICAL",
+  "status": "DISMISSED",
+  "triggering_reading_id": 8812,
+  "triggering_temperature": 9.5,
+  "triggering_recorded_at": "2026-09-29T08:31:00Z",
+  "peak_temperature": 9.5,
+  "opened_at": "2026-09-29T08:32:00Z",
+  "acknowledged_by": 42,
+  "acknowledged_at": "2026-09-29T08:40:00Z",
+  "resolved_by": null,
+  "resolved_at": null,
+  "dismissed_by": 42,
+  "dismissed_at": "2026-09-29T08:45:00Z",
+  "dismiss_reason": "Planned defrost cycle",
+  "dismiss_evidence": null,
+  "total_duration_seconds": 780
+}

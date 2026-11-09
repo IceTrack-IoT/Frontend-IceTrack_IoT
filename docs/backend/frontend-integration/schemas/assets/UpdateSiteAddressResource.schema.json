@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "UpdateSiteAddressResource",
+  "type": "object",
+  "properties": {
+    "validation_token": {
+      "type": "string",
+      "description": "Token issued by the address validation endpoint, valid for 15 minutes"
+    },
+    "pin": {
+      "$ref": "PinResource.schema.json",
+      "description": "Owner-adjusted location, within 150 meters of the verified point"
+    }
+  },
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/assets/interfaces/rest/resources/UpdateSiteAddressResource.java"
+}

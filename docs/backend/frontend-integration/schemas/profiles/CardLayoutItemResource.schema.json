@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CardLayoutItemResource",
+  "type": "object",
+  "properties": {
+    "card_id": {
+      "type": "integer",
+      "format": "int64",
+      "exclusiveMinimum": 0,
+      "description": "Card unique identifier"
+    },
+    "order": {
+      "type": "integer",
+      "format": "int32",
+      "exclusiveMinimum": 0,
+      "description": "Requested 1-based position of the card; the positions of a layout must be exactly 1 to N"
+    },
+    "is_visible": {
+      "type": "boolean",
+      "description": "Whether the card is shown"
+    }
+  },
+  "required": [
+    "card_id",
+    "order",
+    "is_visible"
+  ],
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/profiles/interfaces/rest/resources/CardLayoutItemResource.java"
+}

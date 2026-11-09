@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AuthErrorResource",
+  "type": "object",
+  "properties": {
+    "timestamp": {
+      "type": "string",
+      "description": "Instant the error occurred, ISO-8601 in UTC"
+    },
+    "status": {
+      "type": "integer",
+      "format": "int32",
+      "description": "HTTP status code"
+    },
+    "error": {
+      "type": "string",
+      "description": "HTTP status reason phrase"
+    },
+    "code": {
+      "type": "string",
+      "enum": [
+        "REFRESH_TOKEN_RECENTLY_ROTATED",
+        "REFRESH_TOKEN_REPLAY_DETECTED",
+        "REFRESH_TOKEN_EXPIRED",
+        "REFRESH_TOKEN_REVOKED",
+        "REFRESH_TOKEN_INVALID"
+      ],
+      "description": "Machine-readable reason. Only REFRESH_TOKEN_RECENTLY_ROTATED is recoverable, by retrying once with the latest refresh token; every other code ends the session"
+    },
+    "message": {
+      "type": "string",
+      "description": "Human-readable description of the error"
+    }
+  },
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/iam/interfaces/rest/resources/AuthErrorResource.java"
+}

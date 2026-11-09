@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AlertResource",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Alert unique identifier"
+    },
+    "equipment_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Identifier of the equipment the alert concerns"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "TEMPERATURE_EXCURSION",
+        "DEVICE_OFFLINE"
+      ],
+      "description": "Kind of anomalous condition raised"
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "INFO",
+        "WARNING",
+        "CRITICAL"
+      ],
+      "description": "How urgently the alert should be surfaced. Thermal excursions are always CRITICAL."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "OPEN",
+        "ACKNOWLEDGED",
+        "RESOLVED",
+        "DISMISSED"
+      ],
+      "description": "Current lifecycle status: OPEN, then optionally ACKNOWLEDGED, and finally RESOLVED or DISMISSED"
+    },
+    "triggering_reading_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Identifier of the sensor reading that raised the alert"
+    },
+    "triggering_temperature": {
+      "type": "number",
+      "format": "double",
+      "description": "Out-of-range value of the triggering reading, in Celsius: its maximum above the range, its minimum below it; null for a DEVICE_OFFLINE alert"
+    },
+    "triggering_recorded_at": {
+      "type": "string",
+      "description": "Format: date-time (ISO 8601 UTC with Z, e.g. 2026-09-29T08:30:00Z) When the triggering reading was recorded"
+    },
+    "peak_temperature": {
+      "type": "number",
+      "format": "double",
+      "description": "Peak temperature observed during the excursion, in Celsius; null for a DEVICE_OFFLINE alert"
+    },
+    "opened_at": {
+      "type": "string",
+      "description": "Format: date-time (ISO 8601 UTC with Z, e.g. 2026-09-29T08:30:00Z) Timestamp the alert was raised"
+    },
+    "acknowledged_by": {
+      "type": "integer",
+      "format": "int64",
+      "description": "IAM user identifier of who acknowledged the alert"
+    },
+    "acknowledged_at": {
+      "type": "string",
+      "description": "Format: date-time (ISO 8601 UTC with Z, e.g. 2026-09-29T08:30:00Z) When the alert was acknowledged"
+    },
+    "resolved_by": {
+      "type": "integer",
+      "format": "int64",
+      "description": "IAM user identifier of who resolved the alert; null while not resolved, or when it was resolved automatically because readings returned within range"
+    },
+    "resolved_at": {
+      "type": "string",
+      "description": "Format: date-time (ISO 8601 UTC with Z, e.g. 2026-09-29T08:30:00Z) When the alert was resolved"
+    },
+    "dismissed_by": {
+      "type": "integer",
+      "format": "int64",
+      "description": "IAM user identifier of who dismissed the alert"
+    },
+    "dismissed_at": {
+      "type": "string",
+      "description": "Format: date-time (ISO 8601 UTC with Z, e.g. 2026-09-29T08:30:00Z) When the alert was dismissed"
+    },
+    "dismiss_reason": {
+      "type": "string",
+      "description": "Justification given when the alert was dismissed"
+    },
+    "dismiss_evidence": {
+      "type": "string",
+      "description": "Evidence given when the alert was dismissed"
+    },
+    "total_duration_seconds": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Seconds between opening and resolution or dismissal; null while the alert is active"
+    }
+  },
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/monitoring/interfaces/rest/resources/AlertResource.java"
+}

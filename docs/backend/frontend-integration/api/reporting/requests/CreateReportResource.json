@@ -1,0 +1,12 @@
+{
+  "name": "Excursions - October",
+  "type": "TEMPERATURE_EXCURSION",
+  "format": "PDF",
+  "filters": {
+    "site_id": 1,
+    "equipment_id": null,
+    "technician_id": null,
+    "from": "2026-10-01T00:00:00Z",
+    "to": "2026-10-31T23:59:59Z"
+  }
+}

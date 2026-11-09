@@ -1,0 +1,13 @@
+{
+  "id": 12,
+  "recipient_user_id": 42,
+  "equipment_id": 10,
+  "device_id": 7,
+  "source_alert_id": 301,
+  "message": "Equipment 10 is above its maximum temperature",
+  "type": "TEMPERATURE_EXCURSION",
+  "severity": "CRITICAL",
+  "is_read": false,
+  "read_at": null,
+  "dismissed_at": null
+}

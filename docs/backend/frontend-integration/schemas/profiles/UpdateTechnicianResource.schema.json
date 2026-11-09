@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "UpdateTechnicianResource",
+  "type": "object",
+  "properties": {
+    "full_name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Technician full name"
+    },
+    "phone": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Phone number, optionally prefixed by the country code and a space"
+    },
+    "street": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Street of the address"
+    },
+    "number": {
+      "type": "string",
+      "description": "Street number or apartment"
+    },
+    "city": {
+      "type": "string",
+      "minLength": 1,
+      "description": "City of the address"
+    },
+    "postal_code": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Postal code of the address"
+    },
+    "country": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Country of the address"
+    },
+    "speciality": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": "Speciality.MAX_LENGTH",
+      "description": "Technician speciality"
+    },
+    "certification_number": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "TechnicianProfile.CERTIFICATION_NUMBER_PATTERN",
+      "description": "Technician certification number: 3 to 50 letters, digits, '-', '.' or '/'"
+    }
+  },
+  "required": [
+    "full_name",
+    "phone",
+    "street",
+    "city",
+    "postal_code",
+    "country",
+    "speciality",
+    "certification_number"
+  ],
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/profiles/interfaces/rest/resources/UpdateTechnicianResource.java"
+}

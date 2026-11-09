@@ -1,0 +1,10 @@
+{
+  "id": 1,
+  "user_id": 43,
+  "full_name": "Jane Doe",
+  "email": "jane.doe@example.com",
+  "phone": "+51 987654321",
+  "address": "Av. Primavera 123, Lima, 15023, Peru",
+  "speciality": "Refrigeration",
+  "certification_number": "CERT-2024-001"
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DismissAlertResource",
+  "type": "object",
+  "properties": {
+    "reason": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500,
+      "description": "Why the alert does not represent an actual fault"
+    },
+    "evidence": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional supporting evidence, such as a note or a link to a maintenance record"
+    }
+  },
+  "required": [
+    "reason"
+  ],
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/monitoring/interfaces/rest/resources/DismissAlertResource.java"
+}

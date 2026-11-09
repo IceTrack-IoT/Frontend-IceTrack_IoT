@@ -1,0 +1,13 @@
+{
+  "id": 5,
+  "service_request_id": 42,
+  "owner_id": 3,
+  "technician_id": 7,
+  "communication": 5,
+  "efficacy": 4,
+  "performance": 5,
+  "average_rating": 4.67,
+  "comment": "Quick and clear",
+  "created_at": "2026-10-23T17:00:00Z",
+  "editable_until": "2026-10-25T17:00:00Z"
+}

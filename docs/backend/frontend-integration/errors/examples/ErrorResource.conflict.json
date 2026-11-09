@@ -1,0 +1,5 @@
+{
+  "code": "INVALID_STATUS_TRANSITION",
+  "message": "Illegal equipment status transition from DEACTIVATED to MAINTENANCE; allowed targets are [ACTIVE]",
+  "details": "Illegal equipment status transition from DEACTIVATED to MAINTENANCE; allowed targets are [ACTIVE]"
+}

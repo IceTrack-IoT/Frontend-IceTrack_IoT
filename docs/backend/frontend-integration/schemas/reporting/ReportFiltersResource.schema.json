@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ReportFiltersResource",
+  "type": "object",
+  "properties": {
+    "site_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Site to report on; must belong to the caller"
+    },
+    "equipment_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Single unit to report on; must belong to the caller"
+    },
+    "technician_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Technician to report on"
+    },
+    "from": {
+      "type": "string",
+      "description": "Format: date-time (ISO 8601 UTC with Z, e.g. 2026-09-29T08:30:00Z) Inclusive start of the period"
+    },
+    "to": {
+      "type": "string",
+      "description": "Format: date-time (ISO 8601 UTC with Z, e.g. 2026-09-29T08:30:00Z) Inclusive end of the period"
+    }
+  },
+  "required": [
+    "from",
+    "to"
+  ],
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/reporting/interfaces/rest/resources/ReportFiltersResource.java"
+}

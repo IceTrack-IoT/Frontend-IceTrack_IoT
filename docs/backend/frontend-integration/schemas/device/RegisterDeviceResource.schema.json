@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RegisterDeviceResource",
+  "type": "object",
+  "properties": {
+    "equipment_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Identifier of the equipment the device will be paired with"
+    },
+    "device_uid": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "description": "Unique identifier of the board"
+    },
+    "board_model": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "description": "Board model"
+    },
+    "firmware_version": {
+      "type": "string",
+      "maxLength": 64,
+      "description": "Firmware version currently running on the board"
+    }
+  },
+  "required": [
+    "equipment_id",
+    "device_uid",
+    "board_model"
+  ],
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/device/interfaces/rest/resources/RegisterDeviceResource.java"
+}

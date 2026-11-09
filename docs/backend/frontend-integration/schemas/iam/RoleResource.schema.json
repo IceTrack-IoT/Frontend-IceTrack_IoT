@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RoleResource",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Role unique identifier"
+    },
+    "name": {
+      "type": "string",
+      "enum": [
+        "OWNER_ROLE",
+        "TECHNICIAN_ROLE"
+      ],
+      "description": "Role name"
+    }
+  },
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/iam/interfaces/rest/resources/RoleResource.java"
+}

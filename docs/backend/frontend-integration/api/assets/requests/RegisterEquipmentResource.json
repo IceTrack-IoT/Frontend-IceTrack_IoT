@@ -1,0 +1,9 @@
+{
+  "site_id": 1,
+  "uid": "ESP32-0001",
+  "name": "Refrigerador 1",
+  "equipment_type": "REFRIGERATOR",
+  "min_celsius": 2.0,
+  "max_celsius": 8.0,
+  "reminder_interval_days": 90
+}

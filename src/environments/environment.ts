@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  iceTrackProviderApiBaseUrl: 'https://platform-icetrackiot-production.up.railway.app/api/v1',
+  iceTrackProviderApiBaseUrl: 'http://localhost:8080/api/v1',
 
   /** User endpoint */
   iceTrackProviderUsersEndpointPath: '/users',
@@ -30,5 +30,5 @@ export const environment = {
   iceTrackProviderNotificationsEndpointPath: '/notifications',
 
   /** Google Identity Services */
-  googleClientId: '',
+  googleClientId: '235296518162-amt44u4ha0908lh9oa5h23lifb5jbi07.apps.googleusercontent.com',
 };
