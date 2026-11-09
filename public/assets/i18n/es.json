@@ -977,61 +977,36 @@
       "generateReport": "Generar reporte",
       "loading": "Cargando tu panel…",
       "errorTitle": "No pudimos cargar tu panel.",
+      "unavailable": "La información del panel no está disponible.",
       "scope": "Sede",
       "allSites": "Todas las sedes",
       "defaultMark": "predeterminada",
-      "referenceRange": "Rango de referencia:",
       "referenceRangeNamed": "Rango de referencia ({{label}}):",
       "noCardsTitle": "Todas las tarjetas están ocultas",
       "noCardsMessage": "Personaliza el panel para elegir qué tarjetas muestra.",
       "saved": "La configuración de tu panel fue guardada.",
-      "state": {
-        "outside": "Fuera del umbral",
-        "offline": "Sin lecturas recientes",
-        "within": "Dentro del umbral",
-        "none": "Aún sin telemetría"
+      "cardUnavailable": "Los datos de esta tarjeta aún no están disponibles.",
+      "cardLink": {
+        "MONITORED_EQUIPMENT": "Ver equipos",
+        "OPEN_ALERTS": "Ver todas las alertas",
+        "ACTIVE_ORDERS": "Ver solicitudes de servicio",
+        "EQUIPMENT_STATUS": "Abrir monitoreo"
       },
-      "severity": {
-        "INFO": "Informativa",
-        "WARNING": "Advertencia",
-        "CRITICAL": "Crítica"
+      "setup": {
+        "title": "Configura tu panel",
+        "message": "Elige la sede y el rango de temperatura de referencia con los que abre tu panel.",
+        "action": "Configurar panel",
+        "noSitesTitle": "Primero registra una sede",
+        "noSitesMessage": "Tu panel abre con una de tus sedes. Registra tu primera sede para configurarlo.",
+        "noSitesAction": "Registrar sede",
+        "created": "Tu panel está listo."
       },
-      "alertType": {
-        "TEMPERATURE_EXCURSION": "Excursión de temperatura",
-        "DEVICE_OFFLINE": "Dispositivo sin conexión"
-      },
-      "orderStatus": {
-        "PENDING": "Pendiente",
-        "ACCEPTED": "Aceptada",
-        "IN_PROGRESS": "En curso"
-      },
-      "monitored": {
-        "unit": "equipos",
-        "empty": "Aún no hay equipos monitoreados en esta sede.",
-        "link": "Ver equipos"
-      },
-      "alerts": {
-        "critical": "Críticas: {{count}}",
-        "empty": "No hay alertas abiertas en esta sede.",
-        "link": "Ver todas las alertas"
-      },
-      "orders": {
-        "unit": "sin terminar",
-        "number": "Solicitud #{{id}}",
-        "unassigned": "Sin técnico asignado",
-        "empty": "No hay solicitudes de servicio activas en esta sede.",
-        "link": "Ver solicitudes de servicio"
-      },
-      "status": {
-        "subtitle": "Última lectura de cada equipo, primero los más urgentes.",
-        "threshold": "Rango seguro {{min}} a {{max}}",
-        "readingAge": "Reportada {{age}}",
-        "empty": "Aún no hay equipos en esta sede.",
-        "link": "Abrir monitoreo"
-      },
+      "sitesError": "No pudimos cargar tus sedes, así que el selector de sede y la personalización del panel no están disponibles.",
       "customize": {
         "title": "Personalizar panel",
         "description": "Elige qué tarjetas muestra tu panel, en qué orden y sus valores predeterminados.",
+        "setupTitle": "Configura tu panel",
+        "setupDescription": "Elige la sede y el rango de temperatura de referencia con los que abre tu panel. Todas las tarjetas empiezan visibles; puedes personalizarlas después.",
         "cardsTitle": "Tarjetas",
         "visibleCount": "{{visible}} de {{total}} visibles",
         "cardsHint": "Usa las flechas para cambiar el orden. Las tarjetas ocultas conservan sus datos.",
@@ -1042,13 +1017,18 @@
         "restored": "Todas las tarjetas vuelven a estar visibles, en el orden predeterminado.",
         "defaultsTitle": "Valores predeterminados",
         "defaultSite": "Sede con la que abre el panel",
+        "chooseSite": "Elige una sede",
         "rangeLegend": "Rango de temperatura de referencia",
-        "min": "Mínima (°C)",
-        "max": "Máxima (°C)",
+        "min": "Mínima ({{unit}})",
+        "max": "Máxima ({{unit}})",
+        "wholeNumber": "Ingresa un número entero.",
         "rangeLabel": "Nombre del rango",
         "rangeLabelPlaceholder": "Ej. Congelados",
-        "minBelowMax": "La temperatura mínima debe ser menor que la temperatura máxima.",
-        "save": "Guardar panel"
+        "minAboveMax": "La temperatura mínima no puede ser mayor que la temperatura máxima.",
+        "save": "Guardar panel",
+        "create": "Crear panel",
+        "invalid": "Algunos valores fueron rechazados. Revísalos e inténtalo de nuevo.",
+        "saveFailed": "No pudimos guardar tu panel. Inténtalo de nuevo."
       }
     },
     "ownerProfile": {
@@ -1060,7 +1040,28 @@
       "ruc": "RUC",
       "loading": "Cargando tu perfil…",
       "errorTitle": "No se pudo cargar tu perfil",
-      "unavailable": "La información del perfil no está disponible."
+      "unavailable": "La información del perfil no está disponible.",
+      "edit": "Editar perfil",
+      "save": "Guardar cambios",
+      "saved": "Tu perfil fue guardado.",
+      "saveFailed": "No pudimos guardar tu perfil. Inténtalo de nuevo.",
+      "invalid": "Algunos de tus datos fueron rechazados. Revísalos e inténtalo de nuevo.",
+      "notAllowed": "No puedes editar este perfil.",
+      "notFound": "Tu cuenta no tiene un perfil de propietario vinculado.",
+      "emailNote": "Tu correo pertenece a tu cuenta y no se puede cambiar aquí.",
+      "rucHint": "11 dígitos, solo números.",
+      "addressSection": "Dirección",
+      "addressNote": "Ingresa tu dirección completa cada vez que guardes. Dirección actual: {{address}}",
+      "street": "Calle",
+      "number": "Número",
+      "numberHint": "Opcional.",
+      "city": "Ciudad",
+      "postalCode": "Código postal",
+      "country": "País",
+      "validation": {
+        "phone": "Ingresa un teléfono válido: dígitos, espacios, guiones o paréntesis, con un + inicial opcional.",
+        "ruc": "El RUC debe tener exactamente 11 dígitos."
+      }
     }
   }
 }

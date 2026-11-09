@@ -1,31 +1,258 @@
 <section class="ui-panel" aria-labelledby="owner-profile-title">
-  <h2 class="ui-panel__title owner-profile__title" id="owner-profile-title">
-    {{ 'profiles.ownerProfile.title' | translate }}
-  </h2>
+  <div class="owner-profile__header">
+    <h2 class="ui-panel__title" id="owner-profile-title">
+      {{ 'profiles.ownerProfile.title' | translate }}
+    </h2>
+    @if (profile() && !editing()) {
+      <button
+        class="ui-button ui-button--secondary ui-button--small"
+        type="button"
+        (click)="startEditing()"
+      >
+        <app-icon class="ui-button__icon" name="pencil" />
+        {{ 'profiles.ownerProfile.edit' | translate }}
+      </button>
+    }
+  </div>
+
+  @if (store.ownerProfileSaved() && !editing()) {
+    <p class="ui-alert ui-alert--success" role="status">
+      <app-icon class="ui-alert__icon" name="circle-check" />
+      {{ 'profiles.ownerProfile.saved' | translate }}
+    </p>
+  }
 
   @if (profile(); as current) {
-    <dl class="ui-details">
-      <div>
-        <dt>{{ 'profiles.ownerProfile.fullName' | translate }}</dt>
-        <dd>{{ current.full_name }}</dd>
-      </div>
-      <div>
-        <dt>{{ 'profiles.ownerProfile.email' | translate }}</dt>
-        <dd>{{ current.email }}</dd>
-      </div>
-      <div>
-        <dt>{{ 'profiles.ownerProfile.phone' | translate }}</dt>
-        <dd>{{ current.phone }}</dd>
-      </div>
-      <div>
-        <dt>{{ 'profiles.ownerProfile.ruc' | translate }}</dt>
-        <dd class="telemetry">{{ current.ruc }}</dd>
-      </div>
-      <div class="owner-profile__wide">
-        <dt>{{ 'profiles.ownerProfile.address' | translate }}</dt>
-        <dd>{{ current.address }}</dd>
-      </div>
-    </dl>
+    @if (editing()) {
+      @if (saveErrorKey(); as key) {
+        <p class="ui-alert ui-alert--critical" id="owner-profile-save-error" role="alert">
+          <app-icon class="ui-alert__icon" name="alert-triangle" />
+          {{ key | translate }}
+        </p>
+      }
+
+      <form class="ui-form" novalidate [formGroup]="form" (ngSubmit)="submit()">
+        <div class="ui-form__grid">
+          @let fullNameError = fieldErrorKey('fullName');
+          <div class="ui-field">
+            <label class="ui-field__label" for="owner-profile-fullName">
+              {{ 'profiles.ownerProfile.fullName' | translate }}
+            </label>
+            <input
+              class="ui-field__control"
+              id="owner-profile-fullName"
+              formControlName="fullName"
+              autocomplete="name"
+              [attr.aria-invalid]="fullNameError ? true : null"
+              [attr.aria-describedby]="fullNameError ? 'owner-profile-fullName-error' : null"
+            />
+            @if (fullNameError) {
+              <p class="ui-field__error" id="owner-profile-fullName-error">
+                {{ fullNameError | translate }}
+              </p>
+            }
+          </div>
+
+          <div class="ui-field">
+            <span class="ui-field__label">{{ 'profiles.ownerProfile.email' | translate }}</span>
+            <p class="owner-profile__readonly" id="owner-profile-email">{{ current.email }}</p>
+            <p class="ui-field__hint">{{ 'profiles.ownerProfile.emailNote' | translate }}</p>
+          </div>
+
+          @let phoneError = fieldErrorKey('phone');
+          <div class="ui-field">
+            <label class="ui-field__label" for="owner-profile-phone">
+              {{ 'profiles.ownerProfile.phone' | translate }}
+            </label>
+            <input
+              class="ui-field__control"
+              id="owner-profile-phone"
+              type="tel"
+              formControlName="phone"
+              autocomplete="tel"
+              [attr.aria-invalid]="phoneError ? true : null"
+              [attr.aria-describedby]="phoneError ? 'owner-profile-phone-error' : null"
+            />
+            @if (phoneError) {
+              <p class="ui-field__error" id="owner-profile-phone-error">
+                {{ phoneError | translate }}
+              </p>
+            }
+          </div>
+
+          @let rucError = fieldErrorKey('ruc');
+          <div class="ui-field">
+            <label class="ui-field__label" for="owner-profile-ruc">
+              {{ 'profiles.ownerProfile.ruc' | translate }}
+            </label>
+            <input
+              class="ui-field__control telemetry"
+              id="owner-profile-ruc"
+              formControlName="ruc"
+              inputmode="numeric"
+              maxlength="11"
+              [attr.aria-invalid]="rucError ? true : null"
+              [attr.aria-describedby]="
+                rucError
+                  ? 'owner-profile-ruc-hint owner-profile-ruc-error'
+                  : 'owner-profile-ruc-hint'
+              "
+            />
+            <p class="ui-field__hint" id="owner-profile-ruc-hint">
+              {{ 'profiles.ownerProfile.rucHint' | translate }}
+            </p>
+            @if (rucError) {
+              <p class="ui-field__error" id="owner-profile-ruc-error">{{ rucError | translate }}</p>
+            }
+          </div>
+        </div>
+
+        <fieldset class="ui-fieldset" aria-describedby="owner-profile-address-note">
+          <legend class="ui-fieldset__legend">
+            {{ 'profiles.ownerProfile.addressSection' | translate }}
+          </legend>
+          <p class="ui-field__hint" id="owner-profile-address-note">
+            {{ 'profiles.ownerProfile.addressNote' | translate: { address: current.address } }}
+          </p>
+          <div class="ui-form__grid">
+            @let streetError = fieldErrorKey('street');
+            <div class="ui-field">
+              <label class="ui-field__label" for="owner-profile-street">
+                {{ 'profiles.ownerProfile.street' | translate }}
+              </label>
+              <input
+                class="ui-field__control"
+                id="owner-profile-street"
+                formControlName="street"
+                autocomplete="address-line1"
+                [attr.aria-invalid]="streetError ? true : null"
+                [attr.aria-describedby]="streetError ? 'owner-profile-street-error' : null"
+              />
+              @if (streetError) {
+                <p class="ui-field__error" id="owner-profile-street-error">
+                  {{ streetError | translate }}
+                </p>
+              }
+            </div>
+
+            <div class="ui-field">
+              <label class="ui-field__label" for="owner-profile-number">
+                {{ 'profiles.ownerProfile.number' | translate }}
+              </label>
+              <input
+                class="ui-field__control"
+                id="owner-profile-number"
+                formControlName="number"
+                autocomplete="address-line2"
+                aria-describedby="owner-profile-number-hint"
+              />
+              <p class="ui-field__hint" id="owner-profile-number-hint">
+                {{ 'profiles.ownerProfile.numberHint' | translate }}
+              </p>
+            </div>
+
+            @let cityError = fieldErrorKey('city');
+            <div class="ui-field">
+              <label class="ui-field__label" for="owner-profile-city">
+                {{ 'profiles.ownerProfile.city' | translate }}
+              </label>
+              <input
+                class="ui-field__control"
+                id="owner-profile-city"
+                formControlName="city"
+                autocomplete="address-level2"
+                [attr.aria-invalid]="cityError ? true : null"
+                [attr.aria-describedby]="cityError ? 'owner-profile-city-error' : null"
+              />
+              @if (cityError) {
+                <p class="ui-field__error" id="owner-profile-city-error">
+                  {{ cityError | translate }}
+                </p>
+              }
+            </div>
+
+            @let postalCodeError = fieldErrorKey('postalCode');
+            <div class="ui-field">
+              <label class="ui-field__label" for="owner-profile-postalCode">
+                {{ 'profiles.ownerProfile.postalCode' | translate }}
+              </label>
+              <input
+                class="ui-field__control"
+                id="owner-profile-postalCode"
+                formControlName="postalCode"
+                autocomplete="postal-code"
+                [attr.aria-invalid]="postalCodeError ? true : null"
+                [attr.aria-describedby]="postalCodeError ? 'owner-profile-postalCode-error' : null"
+              />
+              @if (postalCodeError) {
+                <p class="ui-field__error" id="owner-profile-postalCode-error">
+                  {{ postalCodeError | translate }}
+                </p>
+              }
+            </div>
+
+            @let countryError = fieldErrorKey('country');
+            <div class="ui-field">
+              <label class="ui-field__label" for="owner-profile-country">
+                {{ 'profiles.ownerProfile.country' | translate }}
+              </label>
+              <input
+                class="ui-field__control"
+                id="owner-profile-country"
+                formControlName="country"
+                autocomplete="country-name"
+                [attr.aria-invalid]="countryError ? true : null"
+                [attr.aria-describedby]="countryError ? 'owner-profile-country-error' : null"
+              />
+              @if (countryError) {
+                <p class="ui-field__error" id="owner-profile-country-error">
+                  {{ countryError | translate }}
+                </p>
+              }
+            </div>
+          </div>
+        </fieldset>
+
+        <div class="ui-form__actions">
+          <button class="ui-button ui-button--secondary" type="button" (click)="cancelEditing()">
+            {{ 'shared.actions.cancel' | translate }}
+          </button>
+          <button
+            class="ui-button ui-button--primary"
+            type="submit"
+            [disabled]="store.ownerProfileSaving()"
+          >
+            {{
+              (store.ownerProfileSaving() ? 'shared.actions.saving' : 'profiles.ownerProfile.save')
+                | translate
+            }}
+          </button>
+        </div>
+      </form>
+    } @else {
+      <dl class="ui-details">
+        <div>
+          <dt>{{ 'profiles.ownerProfile.fullName' | translate }}</dt>
+          <dd>{{ current.full_name }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'profiles.ownerProfile.email' | translate }}</dt>
+          <dd>{{ current.email }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'profiles.ownerProfile.phone' | translate }}</dt>
+          <dd>{{ current.phone }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'profiles.ownerProfile.ruc' | translate }}</dt>
+          <dd class="telemetry">{{ current.ruc }}</dd>
+        </div>
+        <div class="owner-profile__wide">
+          <dt>{{ 'profiles.ownerProfile.address' | translate }}</dt>
+          <dd>{{ current.address }}</dd>
+        </div>
+      </dl>
+    }
   } @else {
     @switch (status()) {
       @case ('loading') {
@@ -42,6 +269,11 @@
             {{ 'shared.actions.retry' | translate }}
           </button>
         </app-state-panel>
+      }
+      @case ('not-found') {
+        <p class="owner-profile__unavailable">
+          {{ 'profiles.ownerProfile.notFound' | translate }}
+        </p>
       }
       @case ('unavailable') {
         <p class="owner-profile__unavailable">

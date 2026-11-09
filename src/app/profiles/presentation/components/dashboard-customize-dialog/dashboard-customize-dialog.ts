@@ -12,35 +12,38 @@ import {
 } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, type ValidatorFn, Validators } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
-import { DashboardConfig } from '@profiles/domain/model/dashboard-config.entity';
+import type { DashboardConfig } from '@profiles/domain/model/dashboard-config.entity';
+import { DEFAULT_CARD_ORDER } from '@profiles/domain/value-objects/card-type';
 import type { DashboardCard } from '@profiles/domain/value-objects/dashboard-card';
-import type { TemperatureRange } from '@profiles/domain/value-objects/temperature-range';
+import type { TemperatureUnit } from '@profiles/domain/value-objects/temperature-range';
+import type { DashboardConfigChange } from '@profiles/application/contracts/dashboard-config-change';
+import type { DashboardSite } from '@profiles/application/contracts/dashboard-site';
 import { CARD_TYPE_ICONS } from '@profiles/presentation/dashboard-appearance';
-import {
-  type DashboardSite,
-  DEFAULT_CARD_ORDER,
-} from '@profiles/presentation/mocks/dashboard.mock';
 import { Dialog } from '@shared/presentation/components/dialog/dialog';
 import { Icon } from '@shared/presentation/components/icon/icon';
 
 const LABEL_MAX_LENGTH = 40;
 
-/** The minimum temperature must be strictly lower than the maximum temperature. */
-const minBelowMax: ValidatorFn = (group) => {
+/** The unit of the temperature range of a new dashboard. */
+const NEW_DASHBOARD_UNIT: TemperatureUnit = 'C';
+
+/** The minimum temperature must never be above the maximum temperature. */
+const minNotAboveMax: ValidatorFn = (group) => {
   const min: unknown = group.get('min')?.value;
   const max: unknown = group.get('max')?.value;
-  return typeof min === 'number' && typeof max === 'number' && min >= max
-    ? { minNotBelowMax: true }
+  return typeof min === 'number' && typeof max === 'number' && min > max
+    ? { minAboveMax: true }
     : null;
 };
 
-/** The dashboard layout and defaults chosen by the owner. */
-export interface DashboardLayoutChange {
-  /** Every card, in display order, with its position and visibility. */
-  readonly cards: DashboardCard[];
-  readonly defaultSiteId: number;
-  readonly defaultTemperatureRange: TemperatureRange;
-}
+/** The temperature bounds are whole numbers. */
+const wholeNumber: ValidatorFn = (control) => {
+  const value: unknown = control.value;
+  return typeof value === 'number' && !Number.isInteger(value) ? { wholeNumber: true } : null;
+};
+
+/** A text that holds more than whitespace. */
+const notBlank = Validators.pattern(/\S/);
 
 /** A pending announcement for assistive technologies: a translation key and its parameters. */
 interface Announcement {
@@ -54,6 +57,9 @@ type DefaultsControl = 'siteId' | 'min' | 'max' | 'label';
  * Lets the owner choose which dashboard cards are visible and in which order, and the defaults of the
  * dashboard: the site it opens on and the reference temperature range. Cards move with buttons rather
  * than dragging, so the order can be changed with the keyboard; the focus follows the moved card.
+ *
+ * Without a configuration it sets up a new dashboard: only the defaults are chosen, and the cards start in
+ * the default layout.
  */
 @Component({
   imports: [ReactiveFormsModule, TranslatePipe, Dialog, Icon],
@@ -62,15 +68,23 @@ type DefaultsControl = 'siteId' | 'min' | 'max' | 'label';
   templateUrl: './dashboard-customize-dialog.html',
 })
 export class DashboardCustomizeDialog implements OnInit {
-  readonly config = input.required<DashboardConfig>();
+  /** The configuration to customize, or null to set up a new dashboard. */
+  readonly config = input<DashboardConfig | null>(null);
   readonly sites = input.required<readonly DashboardSite[]>();
   /** Whether the save is in progress. */
   readonly pending = input(false);
-  readonly saved = output<DashboardLayoutChange>();
+  /** The translation key of the failure of the last save, or null. */
+  readonly errorKey = input<string | null>(null);
+  readonly saved = output<DashboardConfigChange>();
   readonly closed = output<void>();
 
   protected readonly cardIcons = CARD_TYPE_ICONS;
   protected readonly labelMaxLength = LABEL_MAX_LENGTH;
+  protected readonly settingUp = computed(() => this.config() === null);
+  protected readonly unit = computed<TemperatureUnit>(
+    () => this.config()?.default_temperature_range.unit ?? NEW_DASHBOARD_UNIT,
+  );
+  protected readonly unitSymbol = computed(() => `°${this.unit()}`);
   /** The cards being arranged, in display order. */
   protected readonly cards = signal<DashboardCard[]>([]);
   protected readonly announcement = signal<Announcement | null>(null);
@@ -82,11 +96,15 @@ export class DashboardCustomizeDialog implements OnInit {
   protected readonly defaults = this.formBuilder.group(
     {
       siteId: this.formBuilder.control<number | null>(null, Validators.required),
-      min: this.formBuilder.control<number | null>(null, Validators.required),
-      max: this.formBuilder.control<number | null>(null, Validators.required),
-      label: this.formBuilder.nonNullable.control('', Validators.maxLength(LABEL_MAX_LENGTH)),
+      min: this.formBuilder.control<number | null>(null, [Validators.required, wholeNumber]),
+      max: this.formBuilder.control<number | null>(null, [Validators.required, wholeNumber]),
+      label: this.formBuilder.nonNullable.control('', [
+        Validators.required,
+        notBlank,
+        Validators.maxLength(LABEL_MAX_LENGTH),
+      ]),
     },
-    { validators: minBelowMax },
+    { validators: minNotAboveMax },
   );
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
@@ -94,6 +112,9 @@ export class DashboardCustomizeDialog implements OnInit {
 
   ngOnInit(): void {
     const config = this.config();
+    if (config === null) {
+      return;
+    }
     this.cards.set(
       [...config.cards]
         .sort((first, second) => first.order - second.order)
@@ -132,7 +153,7 @@ export class DashboardCustomizeDialog implements OnInit {
     );
   }
 
-  /** Shows every card again, in the default order. */
+  /** Shows every card again, in the default order of the platform. */
   protected restoreLayout(): void {
     const cards = this.cards();
     this.cards.set(
@@ -156,12 +177,7 @@ export class DashboardCustomizeDialog implements OnInit {
     this.saved.emit({
       cards: this.cards().map((card, index) => ({ ...card, order: index + 1 })),
       defaultSiteId: siteId,
-      defaultTemperatureRange: {
-        min,
-        max,
-        unit: this.config().default_temperature_range.unit,
-        label: label.trim(),
-      },
+      defaultTemperatureRange: { min, max, unit: this.unit(), label: label.trim() },
     });
   }
 
@@ -170,8 +186,11 @@ export class DashboardCustomizeDialog implements OnInit {
     if (!control.touched) {
       return null;
     }
-    if (control.hasError('required')) {
+    if (control.hasError('required') || control.hasError('pattern')) {
       return 'shared.validation.required';
+    }
+    if (control.hasError('wholeNumber')) {
+      return 'profiles.dashboard.customize.wholeNumber';
     }
     return control.hasError('maxlength') ? 'shared.validation.tooLong' : null;
   }
@@ -179,7 +198,7 @@ export class DashboardCustomizeDialog implements OnInit {
   /** Whether the range is inverted, once the owner has edited either limit. */
   protected rangeInvalid(): boolean {
     const { min, max } = this.defaults.controls;
-    return (min.touched || max.touched) && this.defaults.hasError('minNotBelowMax');
+    return (min.touched || max.touched) && this.defaults.hasError('minAboveMax');
   }
 
   /**

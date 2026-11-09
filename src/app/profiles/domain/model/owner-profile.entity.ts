@@ -2,6 +2,9 @@ import { BaseEntity } from '@shared/domain/model/base-entity';
 
 /**
  * Represents an owner profile entity in the system.
+ *
+ * `id` is the owner profile id and `user_id` the platform account id. `address` is the complete street
+ * address as one text; the email belongs to the platform account and cannot be changed through the profile.
  */
 export class OwnerProfile implements BaseEntity {
   private _id: number;

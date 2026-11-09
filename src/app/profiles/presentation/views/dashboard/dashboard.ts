@@ -1,53 +1,47 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { DashboardConfig } from '@profiles/domain/model/dashboard-config.entity';
 import { CardType } from '@profiles/domain/value-objects/card-type';
-import { ActiveOrdersCard } from '@profiles/presentation/components/active-orders-card/active-orders-card';
-import {
-  DashboardCustomizeDialog,
-  type DashboardLayoutChange,
-} from '@profiles/presentation/components/dashboard-customize-dialog/dashboard-customize-dialog';
-import { EquipmentStatusCard } from '@profiles/presentation/components/equipment-status-card/equipment-status-card';
-import { MonitoredEquipmentCard } from '@profiles/presentation/components/monitored-equipment-card/monitored-equipment-card';
-import { OpenAlertsCard } from '@profiles/presentation/components/open-alerts-card/open-alerts-card';
-import {
-  type ActiveOrderSummary,
-  createActiveOrdersMock,
-  createDashboardConfigMock,
-  createEquipmentSnapshotsMock,
-  createOpenAlertsMock,
-  DASHBOARD_SITES,
-  type EquipmentSnapshot,
-  type OpenAlertSummary,
-} from '@profiles/presentation/mocks/dashboard.mock';
+import { DashboardConfigStore } from '@profiles/application/dashboard-config-store';
+import type { DashboardConfigChange } from '@profiles/application/contracts/dashboard-config-change';
+import { DashboardCardShell } from '@profiles/presentation/components/dashboard-card-shell/dashboard-card-shell';
+import { DashboardCustomizeDialog } from '@profiles/presentation/components/dashboard-customize-dialog/dashboard-customize-dialog';
+import { dashboardSaveErrorKey } from '@profiles/presentation/profiles-feedback';
 import { Icon } from '@shared/presentation/components/icon/icon';
+import { SIGNED_IN_ACCOUNT } from '@shared/presentation/components/private-layout/signed-in-account';
 import { StatePanel } from '@shared/presentation/components/state-panel/state-panel';
-import { injectMockDataSource } from '@shared/presentation/mock/mock-data-source';
 import { LocalizedDatePipe } from '@shared/presentation/pipes/localized-date.pipe';
+import { LocalizedNumberPipe } from '@shared/presentation/pipes/localized-number.pipe';
 import { TemperaturePipe } from '@shared/presentation/pipes/temperature.pipe';
 
 /**
+ * The states of the dashboard:
+ * - `ready`: the configuration is loaded.
+ * - `setup`: the account has no configuration yet and the owner can set it up.
+ * - `no-sites`: no configuration yet, and the owner has no site to open it on.
+ */
+type DashboardStatus = 'loading' | 'error' | 'unavailable' | 'setup' | 'no-sites' | 'ready';
+
+/**
  * Owner dashboard: the cards of the owner's dashboard configuration that are visible, in their configured
- * order, scoped to a site (the default site of the configuration at first). Profiles owns the card
- * layout and the defaults; the cards show data that the other contexts own. The owner rearranges the
- * cards and changes the defaults in the customize dialog.
+ * order, scoped to a site (the default site of the configuration at first). Profiles owns the card layout
+ * and the defaults; the data of each card belongs to other bounded contexts and is not shown here yet.
+ * The owner rearranges the cards and changes the defaults in the customize dialog, and sets the dashboard
+ * up there when the account has none.
  */
 @Component({
   imports: [
     ReactiveFormsModule,
     RouterLink,
     TranslatePipe,
-    ActiveOrdersCard,
+    DashboardCardShell,
     DashboardCustomizeDialog,
-    EquipmentStatusCard,
     Icon,
-    MonitoredEquipmentCard,
-    OpenAlertsCard,
     StatePanel,
     LocalizedDatePipe,
+    LocalizedNumberPipe,
     TemperaturePipe,
   ],
   selector: 'app-dashboard',
@@ -55,80 +49,102 @@ import { TemperaturePipe } from '@shared/presentation/pipes/temperature.pipe';
   templateUrl: './dashboard.html',
 })
 export class Dashboard {
-  protected readonly source = injectMockDataSource();
+  protected readonly store = inject(DashboardConfigStore);
+  private readonly account = inject(SIGNED_IN_ACCOUNT);
+
   protected readonly cardTypes = CardType;
-  protected readonly sites = DASHBOARD_SITES;
   protected readonly today = new Date();
 
   /** The site the dashboard is scoped to, or null for every site. */
   protected readonly scope = new FormControl<number | null>(null);
   protected readonly scopeValue = toSignal(this.scope.valueChanges, { initialValue: null });
 
-  protected readonly config = signal<DashboardConfig | null>(null);
-  private readonly equipment = signal<EquipmentSnapshot[]>([]);
-  private readonly alerts = signal<OpenAlertSummary[]>([]);
-  private readonly orders = signal<ActiveOrderSummary[]>([]);
-  protected readonly customizing = signal(false);
-  /** The translation key of the outcome of the last save, announced to assistive technologies. */
-  protected readonly announcement = signal<string | null>(null);
+  /** The dialog that is open: setting up a new dashboard or customizing the existing one. */
+  protected readonly dialog = signal<'setup' | 'customize' | null>(null);
 
-  protected readonly visibleCards = computed(() =>
-    [...(this.config()?.cards ?? [])]
-      .filter((card) => card.is_visible)
-      .sort((first, second) => first.order - second.order),
-  );
+  protected readonly status = computed<DashboardStatus>(() => {
+    if (this.account() === null) {
+      return 'unavailable';
+    }
+    if (this.store.config() !== null) {
+      return 'ready';
+    }
+    if (this.store.configMissing()) {
+      if (this.store.sitesLoaded()) {
+        return this.store.sites().length === 0 ? 'no-sites' : 'setup';
+      }
+      return this.store.sitesFailure() !== null ? 'error' : 'loading';
+    }
+    return this.store.configFailure() !== null ? 'error' : 'loading';
+  });
+
+  protected readonly visibleCards = computed(() => this.store.config()?.visibleCards() ?? []);
   protected readonly scopeName = computed(
-    () => this.sites.find((site) => site.id === this.scopeValue())?.name ?? null,
+    () => this.store.sites().find((site) => site.id === this.scopeValue())?.name ?? null,
   );
-  protected readonly scopedEquipment = computed(() => this.inScope(this.equipment()));
-  protected readonly scopedAlerts = computed(() => this.inScope(this.alerts()));
-  protected readonly scopedOrders = computed(() => this.inScope(this.orders()));
+  /** Customizing needs the sites, since the defaults name the site the dashboard opens on. */
+  protected readonly canCustomize = computed(
+    () => this.status() === 'ready' && this.store.sitesLoaded(),
+  );
+  protected readonly saveErrorKey = computed(() => dashboardSaveErrorKey(this.store.saveFailure()));
+  /** The translation key of the outcome of the last save, announced to assistive technologies. */
+  protected readonly announcement = computed(() => {
+    switch (this.store.saveOutcome()) {
+      case 'created':
+        return 'profiles.dashboard.setup.created';
+      case 'saved':
+        return 'profiles.dashboard.saved';
+      default:
+        return null;
+    }
+  });
 
   constructor() {
     this.load();
+    // The dashboard opens on its default site, again after the defaults change.
+    effect(() => {
+      const siteId = this.store.config()?.default_site_id;
+      if (siteId !== undefined) {
+        this.scope.setValue(siteId);
+      }
+    });
+    // A successful save closes the dialog.
+    effect(() => {
+      if (this.store.saveOutcome() !== null) {
+        this.dialog.set(null);
+      }
+    });
   }
 
   protected load(): void {
-    // TODO: Read the configuration from the ProfilesStore and the card data from the owning contexts.
-    this.source.load((empty) => {
-      const config = createDashboardConfigMock();
-      this.config.set(config);
-      this.scope.setValue(config.default_site_id);
-      this.equipment.set(empty ? [] : createEquipmentSnapshotsMock());
-      this.alerts.set(empty ? [] : createOpenAlertsMock());
-      this.orders.set(empty ? [] : createActiveOrdersMock());
-    });
+    const account = this.account();
+    if (account !== null) {
+      this.store.load(account.id);
+    }
   }
 
-  protected openCustomize(): void {
-    this.announcement.set(null);
-    this.customizing.set(true);
+  protected open(dialog: 'setup' | 'customize'): void {
+    this.store.clearSaveFeedback();
+    this.dialog.set(dialog);
   }
 
-  protected saveLayout(change: DashboardLayoutChange): void {
-    const config = this.config();
-    if (!config) {
+  protected close(): void {
+    this.store.clearSaveFeedback();
+    this.dialog.set(null);
+  }
+
+  protected save(change: DashboardConfigChange): void {
+    this.store.saveConfig(change);
+  }
+
+  protected setUp(change: DashboardConfigChange): void {
+    const account = this.account();
+    if (account === null) {
       return;
     }
-    // TODO: Delegate to the ProfilesStore (update dashboard layout and defaults).
-    this.source.mutate(() => {
-      this.config.set(
-        new DashboardConfig({
-          id: config.id,
-          user_id: config.user_id,
-          default_site_id: change.defaultSiteId,
-          default_temperature_range: change.defaultTemperatureRange,
-          cards: change.cards,
-        }),
-      );
-      this.scope.setValue(change.defaultSiteId);
-      this.customizing.set(false);
-      this.announcement.set('profiles.dashboard.saved');
+    this.store.createConfig(account.id, {
+      defaultSiteId: change.defaultSiteId,
+      defaultTemperatureRange: change.defaultTemperatureRange,
     });
-  }
-
-  private inScope<T extends { readonly siteId: number }>(items: readonly T[]): T[] {
-    const siteId = this.scopeValue();
-    return items.filter((item) => siteId === null || item.siteId === siteId);
   }
 }

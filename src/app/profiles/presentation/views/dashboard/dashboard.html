@@ -15,8 +15,8 @@
       <button
         class="ui-button ui-button--secondary"
         type="button"
-        [disabled]="source.status() !== 'ready'"
-        (click)="openCustomize()"
+        [disabled]="!canCustomize()"
+        (click)="open('customize')"
       >
         <app-icon class="ui-button__icon" name="pencil" />
         {{ 'profiles.dashboard.customizeLayout' | translate }}
@@ -35,7 +35,7 @@
     </p>
   }
 
-  @switch (source.status()) {
+  @switch (status()) {
     @case ('loading') {
       <app-state-panel kind="loading" [heading]="'profiles.dashboard.loading' | translate" />
     }
@@ -51,89 +51,128 @@
         </button>
       </app-state-panel>
     }
-    @default {
-      <div class="dashboard__toolbar">
-        <div class="ui-field dashboard__scope">
-          <label class="ui-field__label" for="dashboard-scope">{{
-            'profiles.dashboard.scope' | translate
-          }}</label>
-          <select class="ui-field__control" id="dashboard-scope" [formControl]="scope">
-            <option [ngValue]="null">{{ 'profiles.dashboard.allSites' | translate }}</option>
-            @for (site of sites; track site.id) {
-              <option [ngValue]="site.id">
-                {{ site.name }}
-                @if (site.id === config()?.default_site_id) {
-                  ({{ 'profiles.dashboard.defaultMark' | translate }})
-                }
-              </option>
-            }
-          </select>
-        </div>
-        @if (config(); as current) {
+    @case ('unavailable') {
+      <app-state-panel kind="empty" [heading]="'profiles.dashboard.unavailable' | translate" />
+    }
+    @case ('no-sites') {
+      <app-state-panel
+        kind="empty"
+        [heading]="'profiles.dashboard.setup.noSitesTitle' | translate"
+        [message]="'profiles.dashboard.setup.noSitesMessage' | translate"
+      >
+        <a class="ui-button ui-button--primary" routerLink="/assets/sites">
+          {{ 'profiles.dashboard.setup.noSitesAction' | translate }}
+        </a>
+      </app-state-panel>
+    }
+    @case ('setup') {
+      <app-state-panel
+        kind="empty"
+        [heading]="'profiles.dashboard.setup.title' | translate"
+        [message]="'profiles.dashboard.setup.message' | translate"
+      >
+        <button class="ui-button ui-button--primary" type="button" (click)="open('setup')">
+          {{ 'profiles.dashboard.setup.action' | translate }}
+        </button>
+      </app-state-panel>
+
+      @if (dialog() === 'setup') {
+        <app-dashboard-customize-dialog
+          [sites]="store.sites()"
+          [pending]="store.saving()"
+          [errorKey]="saveErrorKey()"
+          (saved)="setUp($event)"
+          (closed)="close()"
+        />
+      }
+    }
+    @case ('ready') {
+      @if (store.config(); as current) {
+        @if (store.sitesFailure()) {
+          <div class="ui-alert ui-alert--warning dashboard__notice" role="alert">
+            <app-icon class="ui-alert__icon" name="alert-triangle" />
+            <span>{{ 'profiles.dashboard.sitesError' | translate }}</span>
+            <button
+              class="ui-button ui-button--secondary ui-button--small"
+              type="button"
+              [disabled]="store.sitesLoading()"
+              (click)="store.loadSites()"
+            >
+              {{ 'shared.actions.retry' | translate }}
+            </button>
+          </div>
+        }
+
+        <div class="dashboard__toolbar">
+          <div class="ui-field dashboard__scope">
+            <label class="ui-field__label" for="dashboard-scope">{{
+              'profiles.dashboard.scope' | translate
+            }}</label>
+            <select class="ui-field__control" id="dashboard-scope" [formControl]="scope">
+              <option [ngValue]="null">{{ 'profiles.dashboard.allSites' | translate }}</option>
+              @for (site of store.sites(); track site.id) {
+                <option [ngValue]="site.id">
+                  {{ site.name }}
+                  @if (site.id === current.default_site_id) {
+                    ({{ 'profiles.dashboard.defaultMark' | translate }})
+                  }
+                </option>
+              }
+            </select>
+          </div>
           @let range = current.default_temperature_range;
           <p class="dashboard__range">
             <app-icon name="temperature" />
             <span>
-              {{
-                (range.label
-                  ? 'profiles.dashboard.referenceRangeNamed'
-                  : 'profiles.dashboard.referenceRange'
-                ) | translate: { label: range.label }
-              }}
-              <span class="telemetry"
-                >{{ range.min | temperature }} – {{ range.max | temperature }}</span
-              >
+              {{ 'profiles.dashboard.referenceRangeNamed' | translate: { label: range.label } }}
+              <span class="telemetry">
+                @if (range.unit === 'C') {
+                  {{ range.min | temperature: 0 }} – {{ range.max | temperature: 0 }}
+                } @else {
+                  {{ range.min | localizedNumber }} – {{ range.max | localizedNumber }} °F
+                }
+              </span>
             </span>
           </p>
-        }
-      </div>
-
-      @if (visibleCards().length === 0) {
-        <app-state-panel
-          kind="empty"
-          [heading]="'profiles.dashboard.noCardsTitle' | translate"
-          [message]="'profiles.dashboard.noCardsMessage' | translate"
-        >
-          <button class="ui-button ui-button--primary" type="button" (click)="openCustomize()">
-            {{ 'profiles.dashboard.customizeLayout' | translate }}
-          </button>
-        </app-state-panel>
-      } @else {
-        <div class="dashboard__grid">
-          @for (card of visibleCards(); track card.card_id) {
-            @switch (card.card_type) {
-              @case (cardTypes.MONITORED_EQUIPMENT) {
-                <app-monitored-equipment-card
-                  [equipment]="scopedEquipment()"
-                  [siteId]="scopeValue()"
-                />
-              }
-              @case (cardTypes.OPEN_ALERTS) {
-                <app-open-alerts-card [alerts]="scopedAlerts()" />
-              }
-              @case (cardTypes.ACTIVE_ORDERS) {
-                <app-active-orders-card [orders]="scopedOrders()" />
-              }
-              @case (cardTypes.EQUIPMENT_STATUS) {
-                <app-equipment-status-card
-                  class="dashboard__wide"
-                  [equipment]="scopedEquipment()"
-                />
-              }
-            }
-          }
         </div>
+
+        @if (visibleCards().length === 0) {
+          <app-state-panel
+            kind="empty"
+            [heading]="'profiles.dashboard.noCardsTitle' | translate"
+            [message]="'profiles.dashboard.noCardsMessage' | translate"
+          >
+            <button
+              class="ui-button ui-button--primary"
+              type="button"
+              [disabled]="!canCustomize()"
+              (click)="open('customize')"
+            >
+              {{ 'profiles.dashboard.customizeLayout' | translate }}
+            </button>
+          </app-state-panel>
+        } @else {
+          <div class="dashboard__grid">
+            @for (card of visibleCards(); track card.card_id) {
+              <app-dashboard-card-shell
+                [class.dashboard__wide]="card.card_type === cardTypes.EQUIPMENT_STATUS"
+                [cardType]="card.card_type"
+              />
+            }
+          </div>
+        }
+
+        @if (dialog() === 'customize') {
+          <app-dashboard-customize-dialog
+            [config]="current"
+            [sites]="store.sites()"
+            [pending]="store.saving()"
+            [errorKey]="saveErrorKey()"
+            (saved)="save($event)"
+            (closed)="close()"
+          />
+        }
       }
     }
   }
 </div>
-
-@if (customizing() && config(); as current) {
-  <app-dashboard-customize-dialog
-    [config]="current"
-    [sites]="sites"
-    [pending]="source.pending()"
-    (saved)="saveLayout($event)"
-    (closed)="customizing.set(false)"
-  />
-}

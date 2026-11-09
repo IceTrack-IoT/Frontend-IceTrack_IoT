@@ -977,61 +977,36 @@
       "generateReport": "Generate report",
       "loading": "Loading your dashboard…",
       "errorTitle": "We couldn't load your dashboard.",
+      "unavailable": "Dashboard information is not available.",
       "scope": "Site",
       "allSites": "All sites",
       "defaultMark": "default",
-      "referenceRange": "Reference range:",
       "referenceRangeNamed": "Reference range ({{label}}):",
       "noCardsTitle": "All cards are hidden",
       "noCardsMessage": "Customize the layout to choose which cards your dashboard shows.",
       "saved": "Your dashboard layout was saved.",
-      "state": {
-        "outside": "Outside threshold",
-        "offline": "No recent readings",
-        "within": "Within threshold",
-        "none": "No telemetry yet"
+      "cardUnavailable": "The data for this card isn't available yet.",
+      "cardLink": {
+        "MONITORED_EQUIPMENT": "View equipment",
+        "OPEN_ALERTS": "View all alerts",
+        "ACTIVE_ORDERS": "View service requests",
+        "EQUIPMENT_STATUS": "Open monitoring"
       },
-      "severity": {
-        "INFO": "Info",
-        "WARNING": "Warning",
-        "CRITICAL": "Critical"
+      "setup": {
+        "title": "Set up your dashboard",
+        "message": "Choose the site and the reference temperature range your dashboard opens on.",
+        "action": "Set up dashboard",
+        "noSitesTitle": "Register a site first",
+        "noSitesMessage": "Your dashboard opens on one of your sites. Register your first site to set it up.",
+        "noSitesAction": "Register site",
+        "created": "Your dashboard is ready."
       },
-      "alertType": {
-        "TEMPERATURE_EXCURSION": "Temperature excursion",
-        "DEVICE_OFFLINE": "Device offline"
-      },
-      "orderStatus": {
-        "PENDING": "Pending",
-        "ACCEPTED": "Accepted",
-        "IN_PROGRESS": "In progress"
-      },
-      "monitored": {
-        "unit": "equipment items",
-        "empty": "No equipment is monitored at this site yet.",
-        "link": "View equipment"
-      },
-      "alerts": {
-        "critical": "Critical: {{count}}",
-        "empty": "No open alerts at this site.",
-        "link": "View all alerts"
-      },
-      "orders": {
-        "unit": "not finished yet",
-        "number": "Request #{{id}}",
-        "unassigned": "No technician assigned",
-        "empty": "No active service requests at this site.",
-        "link": "View service requests"
-      },
-      "status": {
-        "subtitle": "Last reading of each item, the most urgent first.",
-        "threshold": "Safe range {{min}} to {{max}}",
-        "readingAge": "Reported {{age}}",
-        "empty": "No equipment at this site yet.",
-        "link": "Open monitoring"
-      },
+      "sitesError": "Your sites couldn't be loaded, so the site selector and layout customization are unavailable.",
       "customize": {
         "title": "Customize dashboard",
         "description": "Choose which cards your dashboard shows, in what order, and its defaults.",
+        "setupTitle": "Set up your dashboard",
+        "setupDescription": "Choose the site and the reference temperature range your dashboard opens on. Every card starts visible; you can customize them afterwards.",
         "cardsTitle": "Cards",
         "visibleCount": "{{visible}} of {{total}} visible",
         "cardsHint": "Use the arrows to change the order. Hidden cards keep their data.",
@@ -1042,13 +1017,18 @@
         "restored": "Every card is visible again, in the default order.",
         "defaultsTitle": "Defaults",
         "defaultSite": "Site the dashboard opens on",
+        "chooseSite": "Choose a site",
         "rangeLegend": "Reference temperature range",
-        "min": "Minimum (°C)",
-        "max": "Maximum (°C)",
+        "min": "Minimum ({{unit}})",
+        "max": "Maximum ({{unit}})",
+        "wholeNumber": "Enter a whole number.",
         "rangeLabel": "Range name",
         "rangeLabelPlaceholder": "e.g. Frozen goods",
-        "minBelowMax": "The minimum temperature must be lower than the maximum temperature.",
-        "save": "Save layout"
+        "minAboveMax": "The minimum temperature can't be higher than the maximum temperature.",
+        "save": "Save layout",
+        "create": "Create dashboard",
+        "invalid": "Some values were rejected. Review them and try again.",
+        "saveFailed": "We couldn't save your dashboard. Try again."
       }
     },
     "ownerProfile": {
@@ -1060,7 +1040,28 @@
       "ruc": "RUC",
       "loading": "Loading your profile…",
       "errorTitle": "Your profile could not be loaded",
-      "unavailable": "Profile information is not available."
+      "unavailable": "Profile information is not available.",
+      "edit": "Edit profile",
+      "save": "Save changes",
+      "saved": "Your profile was saved.",
+      "saveFailed": "We couldn't save your profile. Try again.",
+      "invalid": "Some of your details were rejected. Review them and try again.",
+      "notAllowed": "You can't edit this profile.",
+      "notFound": "No owner profile is linked to your account.",
+      "emailNote": "Your email belongs to your account and can't be changed here.",
+      "rucHint": "11 digits, numbers only.",
+      "addressSection": "Address",
+      "addressNote": "Enter your complete address every time you save. Current address: {{address}}",
+      "street": "Street",
+      "number": "Number",
+      "numberHint": "Optional.",
+      "city": "City",
+      "postalCode": "Postal code",
+      "country": "Country",
+      "validation": {
+        "phone": "Enter a valid phone number: digits, spaces, hyphens or parentheses, with an optional leading +.",
+        "ruc": "The RUC must have exactly 11 digits."
+      }
     }
   }
 }

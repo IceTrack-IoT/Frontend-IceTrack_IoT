@@ -1,5 +1,6 @@
 /**
- * This file contains the interface definitions for the dashboard configuration response from the API.
+ * DashboardConfigResponse is returned by every dashboard configuration endpoint. `cards` holds one card
+ * per card type, sorted by their order.
  */
 export interface DashboardConfigResponse {
   id: number;
@@ -10,7 +11,8 @@ export interface DashboardConfigResponse {
 }
 
 /**
- * Represents the temperature range configuration for a user's dashboard, including minimum and maximum values, unit of measurement, and a descriptive label.
+ * The temperature range a dashboard opens on: whole-number bounds (`min` never above `max`), a unit
+ * (`C` or `F`) and a non-blank label.
  */
 export interface TemperatureRangeResource {
   min: number;
@@ -20,7 +22,7 @@ export interface TemperatureRangeResource {
 }
 
 /**
- * Represents a card displayed on a user's dashboard, including its unique identifier, type, order of appearance, and visibility status.
+ * A card of a dashboard: its identifier, type, 1-based position and visibility.
  */
 export interface DashboardCardResource {
   card_id: number;

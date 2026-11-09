@@ -1,44 +1,39 @@
-import { BaseApiEndpoint } from '@shared/infrastructure/api/base-api-endpoint';
-import { OwnerProfile } from '@profiles/domain/model/owner-profile.entity';
-import { OwnerProfileResource, OwnerProfileResponse } from '@profiles/infrastructure/api/owner-profile.response';
-import { OwnerProfileAssembler } from '@profiles/infrastructure/api/owner-profile-assembler';
-import { HttpClient } from '@angular/common/http';
+import type { HttpClient } from '@angular/common/http';
+import type { Observable } from 'rxjs';
 import { environment } from '@env/environment';
-import { catchError, map, Observable } from 'rxjs';
-import { handleError } from '@shared/infrastructure/http/handle-error-http';
+import type { OwnerProfileResource } from '@profiles/infrastructure/api/owner-profile.response';
+import type { UpdateOwnerProfileRequest } from '@profiles/infrastructure/api/update-owner-profile.request';
 
 /**
- * OwnerProfileApiEndpoint is responsible for handling API operations related to OwnerProfile entities.
+ * OwnerProfileApiEndpoint sends the owner profile requests of the `OwnerProfilesController`.
  */
-export class OwnerProfileApiEndpoint extends BaseApiEndpoint<
-  OwnerProfile,
-  OwnerProfileResource,
-  OwnerProfileResponse,
-  OwnerProfileAssembler
-> {
-  private readonly getOwnerProfileByUserIdEndpointUrl = `${environment.iceTrackProviderApiBaseUrl}${environment.iceTrackProviderGetOwnerProfileByUserIdEndpointPath}`;
+export class OwnerProfileApiEndpoint {
+  private readonly byUserIdEndpointUrl = `${environment.iceTrackProviderApiBaseUrl}${environment.iceTrackProviderGetOwnerProfileByUserIdEndpointPath}`;
+  private readonly updateEndpointUrl = `${environment.iceTrackProviderApiBaseUrl}${environment.iceTrackProviderUpdateOwnerProfileEndpointPath}`;
 
-  constructor(http: HttpClient) {
-    super(
-      http,
-      `${environment.iceTrackProviderApiBaseUrl}${environment.iceTrackProviderOwnerProfilesEndpointPath}`,
-      new OwnerProfileAssembler(),
+  constructor(private readonly http: HttpClient) {}
+
+  /**
+   * Retrieves the owner profile bound to a platform account (`GET /profiles/owners/user/{userId}`).
+   * @param userId - The identifier of the platform account.
+   * @returns An Observable of the OwnerProfileResource.
+   */
+  getByUserId(userId: number): Observable<OwnerProfileResource> {
+    return this.http.get<OwnerProfileResource>(
+      this.byUserIdEndpointUrl.replace('{userId}', String(userId)),
     );
   }
 
   /**
-   * Retrieves the owner profile bound to a platform account (`GET /profiles/owners/user/{userId}`).
-   * @param userId - The unique identifier of the platform account.
-   * @returns An Observable of the owner profile.
+   * Replaces the caller's own owner profile (`PUT /profiles/owners/{ownerId}`).
+   * @param ownerId - The identifier of the owner profile.
+   * @param request - The UpdateOwnerProfileRequest.
+   * @returns An Observable of the updated OwnerProfileResource.
    */
-  getByUserId(userId: number): Observable<OwnerProfile> {
-    return this.http
-      .get<OwnerProfileResource>(
-        `${this.getOwnerProfileByUserIdEndpointUrl.replace('{userId}', userId.toString())}`,
-      )
-      .pipe(
-        map((resource) => this.assembler.toEntityFromResource(resource)),
-        catchError(handleError('Failed to fetch owner profile')),
-      );
+  update(ownerId: number, request: UpdateOwnerProfileRequest): Observable<OwnerProfileResource> {
+    return this.http.put<OwnerProfileResource>(
+      this.updateEndpointUrl.replace('{ownerId}', String(ownerId)),
+      request,
+    );
   }
 }

@@ -1,111 +1,60 @@
-import { Injectable } from '@angular/core';
-import { BaseApi } from '@shared/infrastructure/api/base-api';
-import { OwnerProfileApiEndpoint } from '@profiles/infrastructure/api/owner-profile-api-endpoint';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { OwnerProfile } from '@profiles/domain/model/owner-profile.entity';
-import { TechnicianProfileApiEndpoint } from '@profiles/infrastructure/api/technician-profile-api-endpoint';
-import { TechnicianProfile } from '@profiles/domain/model/technician-profile.entity';
+import { inject, Injectable } from '@angular/core';
+import { map, type Observable } from 'rxjs';
+import { BaseApi } from '@shared/infrastructure/api/base-api';
+import type { OwnerProfile } from '@profiles/domain/model/owner-profile.entity';
+import type { TechnicianProfile } from '@profiles/domain/model/technician-profile.entity';
+import type { TechnicianPublicProfile } from '@profiles/domain/model/technician-public-profile.entity';
+import type { OwnerProfileUpdate } from '@profiles/application/contracts/owner-profile-update';
 import type { ProfilesPort } from '@profiles/application/ports/profiles.port';
-
+import { OwnerProfileApiEndpoint } from '@profiles/infrastructure/api/owner-profile-api-endpoint';
+import { OwnerProfileAssembler } from '@profiles/infrastructure/api/owner-profile-assembler';
+import { mapProfilesErrors } from '@profiles/infrastructure/api/profiles-error-mapping';
+import { TechnicianProfileApiEndpoint } from '@profiles/infrastructure/api/technician-profile-api-endpoint';
+import { TechnicianProfileAssembler } from '@profiles/infrastructure/api/technician-profile-assembler';
 
 /**
- * ProfilesApi is a service that provides methods for interacting with the API endpoints.
- * It implements the Profiles ProfilesPort.
+ * ProfilesApi implements the ProfilesPort against the owner and technician profile endpoints.
  */
 @Injectable({
   providedIn: 'root',
 })
 export class ProfilesApi extends BaseApi implements ProfilesPort {
-  private readonly ownerProfilesEndpoint: OwnerProfileApiEndpoint;
-  private readonly technicianProfilesEndpoint: TechnicianProfileApiEndpoint;
+  private readonly http = inject(HttpClient);
+  private readonly ownerProfilesEndpoint = new OwnerProfileApiEndpoint(this.http);
+  private readonly technicianProfilesEndpoint = new TechnicianProfileApiEndpoint(this.http);
+  private readonly ownerProfileAssembler = new OwnerProfileAssembler();
+  private readonly technicianProfileAssembler = new TechnicianProfileAssembler();
 
-  /**
-   * Creates an instance of ProfilesApi.
-   * @param http - The HttpClient used for making HTTP requests.
-   */
-  constructor(http: HttpClient) {
-    super();
-    this.ownerProfilesEndpoint = new OwnerProfileApiEndpoint(http);
-    this.technicianProfilesEndpoint = new TechnicianProfileApiEndpoint(http);
-  }
-
-  /**
-   * Fetches all owner profiles from the API.
-   * @returns An Observable that emits an array of OwnerProfile entities.
-   */
-  getOwnerProfiles(): Observable<OwnerProfile[]> {
-    return this.ownerProfilesEndpoint.getAll();
-  }
-
-  /**
-   * Fetches the owner profile bound to a platform account from the API.
-   * @param userId - The ID of the platform account.
-   * @returns An Observable that emits the OwnerProfile entity of the account.
-   */
   getOwnerProfileByUserId(userId: number): Observable<OwnerProfile> {
-    return this.ownerProfilesEndpoint.getByUserId(userId);
+    return this.ownerProfilesEndpoint.getByUserId(userId).pipe(
+      map((resource) => this.ownerProfileAssembler.toEntityFromResource(resource)),
+      mapProfilesErrors(),
+    );
   }
 
-  /**
-   * Creates a new owner profile by sending a POST request to the API.
-   * @param profile - The OwnerProfile entity to be created.
-   * @returns An Observable that emits the created OwnerProfile entity.
-   */
-  createOwnerProfile(profile: OwnerProfile): Observable<OwnerProfile> {
-    return this.ownerProfilesEndpoint.create(profile);
+  updateOwnerProfile(ownerId: number, update: OwnerProfileUpdate): Observable<OwnerProfile> {
+    return this.ownerProfilesEndpoint
+      .update(ownerId, this.ownerProfileAssembler.toRequestFromUpdate(update))
+      .pipe(
+        map((resource) => this.ownerProfileAssembler.toEntityFromResource(resource)),
+        mapProfilesErrors(),
+      );
   }
 
-  /**
-   * Updates an existing owner profile by sending a PUT request to the API.
-   * @param profile - The OwnerProfile entity to be updated.
-   * @returns An Observable that emits the updated OwnerProfile entity.
-   */
-  updateOwnerProfile(profile: OwnerProfile): Observable<OwnerProfile> {
-    return this.ownerProfilesEndpoint.update(profile, profile.id);
-  }
-
-  /**
-   * Deletes an owner profile by sending a DELETE request to the API.
-   * @param id - The ID of the OwnerProfile entity to be deleted.
-   * @returns An Observable that emits void upon successful deletion.
-   */
-  deleteOwnerProfile(id: number): Observable<void> {
-    return this.ownerProfilesEndpoint.delete(id);
-  }
-
-  /**
-   * Fetches all technician profiles from the API.
-   * @returns An Observable that emits an array of TechnicianProfile entities.
-   */
   getTechnicianProfiles(): Observable<TechnicianProfile[]> {
-    return this.technicianProfilesEndpoint.getAll();
+    return this.technicianProfilesEndpoint.getAll().pipe(
+      map((resources) =>
+        resources.map((resource) => this.technicianProfileAssembler.toEntityFromResource(resource)),
+      ),
+      mapProfilesErrors(),
+    );
   }
 
-  /**
-   * Creates a new technician profile by sending a POST request to the API.
-   * @param profile - The TechnicianProfile entity to be created.
-   * @returns An Observable that emits the created TechnicianProfile entity.
-   */
-  createTechnicianProfile(profile: TechnicianProfile): Observable<TechnicianProfile> {
-    return this.technicianProfilesEndpoint.create(profile);
-  }
-
-  /**
-   * Updates an existing technician profile by sending a PUT request to the API.
-   * @param profile - The TechnicianProfile entity to be updated.
-   * @returns An Observable that emits the updated TechnicianProfile entity.
-   */
-  updateTechnicianProfile(profile: TechnicianProfile): Observable<TechnicianProfile> {
-    return this.technicianProfilesEndpoint.update(profile, profile.id);
-  }
-
-  /**
-   * Deletes a technician profile by sending a DELETE request to the API.
-   * @param id - The ID of the TechnicianProfile entity to be deleted.
-   * @returns An Observable that emits void upon successful deletion.
-   */
-  deleteTechnicianProfile(id: number): Observable<void> {
-    return this.technicianProfilesEndpoint.delete(id);
+  getTechnicianPublicProfile(technicianId: number): Observable<TechnicianPublicProfile> {
+    return this.technicianProfilesEndpoint.getPublicProfile(technicianId).pipe(
+      map((resource) => this.technicianProfileAssembler.toPublicProfileFromResource(resource)),
+      mapProfilesErrors(),
+    );
   }
 }
