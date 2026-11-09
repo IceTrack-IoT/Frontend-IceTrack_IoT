@@ -189,15 +189,16 @@
     "noTelemetry": "No telemetry yet",
     "outsideThreshold": "Outside threshold",
     "equipmentType": {
-      "FREEZER": "Freezer",
       "COLD_ROOM": "Cold room",
-      "REFRIGERATOR": "Refrigerator"
+      "REFRIGERATOR": "Refrigerator",
+      "DISPLAY_CASE": "Display case",
+      "OTHER": "Other"
     },
     "statusEquipment": {
       "ACTIVE": "Active",
-      "DESACTIVATE": "Deactivated",
       "MAINTENANCE": "Maintenance",
-      "REPAIR": "Under repair"
+      "REPAIR": "Under repair",
+      "DEACTIVATED": "Deactivated"
     },
     "fields": {
       "siteName": "Site name",
@@ -212,16 +213,21 @@
       "lastKnownTemperature": "Last known temperature",
       "lastReadingAt": "Last reading",
       "reminderInterval": "Maintenance reminder",
-      "code": "Equipment code"
+      "code": "Equipment code",
+      "equipmentName": "Equipment name",
+      "reminderIntervalDays": "Maintenance reminder (days)"
     },
     "placeholders": {
       "siteName": "e.g. San Miguel Depot",
-      "address": "e.g. Av. La Marina 2355, San Miguel, Lima",
+      "address": "e.g. Av. Primavera 123, Santiago de Surco",
       "contactName": "e.g. Rosa Quispe",
-      "phone": "e.g. +51 987 654 321"
+      "phone": "e.g. +51 987 654 321",
+      "code": "e.g. ESP32-0001",
+      "equipmentName": "e.g. Refrigerator 1"
     },
     "validation": {
-      "phone": "Enter a valid phone number: digits, spaces, hyphens or parentheses, with an optional leading +."
+      "phone": "Enter a valid phone number: digits separated by single spaces, with an optional leading +.",
+      "positiveDays": "Enter a whole number of days greater than zero."
     },
     "siteList": {
       "title": "Sites",
@@ -235,17 +241,23 @@
       "equipmentCount": "Equipment items: {{count}}",
       "viewEquipment": "View equipment",
       "viewEquipmentOf": "View equipment of {{site}}",
-      "editContact": "Edit contact",
-      "editContactOf": "Edit contact of {{site}}",
       "registered": "The site was registered.",
-      "updated": "The site contact was updated."
+      "updated": "The site was updated.",
+      "edit": "Edit",
+      "editOf": "Edit {{site}}",
+      "changeAddress": "Change address",
+      "changeAddressOf": "Change the address of {{site}}",
+      "openMap": "Open in maps",
+      "openMapOf": "Open {{site}} in maps (new tab)",
+      "addressChanged": "The site address was changed. Its equipment stays registered at the site."
     },
     "siteForm": {
       "createTitle": "Register site",
-      "createDescription": "Add a facility where your refrigeration equipment operates.",
-      "editTitle": "Edit site contact",
-      "editDescription": "The name and address of a site cannot be changed once it is registered.",
-      "submit": "Save site"
+      "createDescription": "Add a facility where your refrigeration equipment operates. Its address is verified before it is saved.",
+      "editTitle": "Edit site",
+      "editDescription": "Update the name and contact of the site.",
+      "submit": "Save site",
+      "addressHint": "To move the site, use \"Change address\" in the site list."
     },
     "equipmentList": {
       "title": "Refrigeration equipment",
@@ -261,9 +273,11 @@
       "loading": "Loading equipment…",
       "errorTitle": "We couldn't load your equipment.",
       "emptyTitle": "No equipment registered yet",
-      "emptyMessage": "The refrigeration equipment of your sites will appear here once it is registered.",
+      "emptyMessage": "Register the refrigeration equipment of your sites to start monitoring it.",
       "noMatchesTitle": "No equipment matches the filters",
-      "noMatchesMessage": "Try another search or widen the site, type or status filters."
+      "noMatchesMessage": "Try another search or widen the site, type or status filters.",
+      "register": "Register equipment",
+      "registered": "The equipment was registered."
     },
     "equipmentDetail": {
       "title": "Equipment detail",
@@ -276,7 +290,7 @@
       "readingAge": "Reported {{age}}",
       "thresholdTitle": "Temperature threshold",
       "thresholdCurrent": "Current safe range: {{min}} to {{max}}",
-      "thresholdSaved": "The temperature threshold was saved.",
+      "thresholdSaved": "The temperature threshold was saved. The monitoring gateway applies it on its next sync.",
       "detailsTitle": "Equipment information",
       "days": "Every {{count}} days",
       "relatedTitle": "Related information",
@@ -290,15 +304,81 @@
       "serviceTitle": "Service history",
       "serviceText": "Service requests and interventions of this equipment.",
       "serviceHistoryLink": "View service history",
-      "requestServiceLink": "Request a service"
+      "requestServiceLink": "Request a service",
+      "edit": "Edit",
+      "changeStatus": "Change status",
+      "updated": "The equipment was updated.",
+      "statusChanged": "The equipment status was changed."
     },
     "thresholdForm": {
-      "hint": "Values in degrees Celsius (°C). The minimum must be lower than the maximum.",
+      "hint": "Values in degrees Celsius (°C), from {{min}} to {{max}}. The minimum must be lower than the maximum.",
       "min": "Minimum temperature (°C)",
       "max": "Maximum temperature (°C)",
       "minBelowMax": "The minimum temperature must be lower than the maximum temperature.",
       "discard": "Discard changes",
-      "save": "Save threshold"
+      "save": "Save threshold",
+      "outOfRange": "Enter a value from {{min}} to {{max}} °C."
+    },
+    "siteNumber": "Site #{{id}}",
+    "coverageArea": {
+      "LIMA_METROPOLITANA": "Metropolitan Lima",
+      "CALLAO": "Callao"
+    },
+    "addressVerification": {
+      "verify": "Verify address",
+      "verifying": "Verifying…",
+      "hint": "We verify the address within Metropolitan Lima or Callao before saving it.",
+      "verified": "Verified address",
+      "validity": "The verification is valid for 15 minutes. Save the site before it expires.",
+      "useAnother": "Use another address",
+      "candidates": "Did you mean one of these addresses?",
+      "required": "Verify the address before saving the site."
+    },
+    "siteAddress": {
+      "title": "Change the address of {{site}}",
+      "description": "Verify the new address. The site keeps its equipment.",
+      "current": "Current address",
+      "submit": "Save address"
+    },
+    "equipmentForm": {
+      "createTitle": "Register equipment",
+      "createDescription": "Add a refrigeration unit to one of your sites with its temperature threshold.",
+      "editTitle": "Edit equipment",
+      "editDescription": "Update the name, type and maintenance reminder. Its telemetry and service history are kept.",
+      "noSites": "Register a site before adding equipment.",
+      "goToSites": "Go to sites",
+      "chooseSite": "Choose a site",
+      "chooseType": "Choose a type",
+      "codeHint": "The unit's own identifier, unique across IceTrack. Up to {{max}} characters.",
+      "fixedHint": "The equipment code and site cannot be changed.",
+      "reminderHint": "How often the equipment needs preventive maintenance.",
+      "register": "Register equipment",
+      "saveChanges": "Save changes"
+    },
+    "statusForm": {
+      "title": "Change the status of {{equipment}}",
+      "description": "Only the changes allowed from the current status are offered.",
+      "current": "Current status:",
+      "newStatus": "New status",
+      "deactivateWarning": "A deactivated unit stops being shown as online. It must be reactivated before moving to another status.",
+      "submit": "Change status",
+      "confirmDeactivate": "Deactivate equipment"
+    },
+    "errors": {
+      "invalid": "Some data was rejected. Review the fields and try again.",
+      "invalidThreshold": "The threshold was rejected. Both limits must be from 0 to 30 °C and the minimum lower than the maximum.",
+      "notAllowed": "Your account isn't allowed to do this.",
+      "siteNotFound": "This site doesn't exist or isn't registered to your account.",
+      "equipmentNotFound": "This equipment doesn't exist or isn't registered to your account.",
+      "duplicateUid": "Another unit already uses this equipment code. Enter a different one.",
+      "statusNotAllowed": "This status change isn't allowed from the current status. The equipment was reloaded.",
+      "concurrentChange": "This equipment was changed at the same time. Review it and try again.",
+      "addressVerificationExpired": "The address verification expired. Verify the address again and save.",
+      "addressNotVerified": "We couldn't find that address as a single location. Choose a suggestion or refine the address.",
+      "addressOutOfCoverage": "The address is outside the service area. IceTrack serves Metropolitan Lima and Callao only.",
+      "tooManyVerifications": "Too many address verifications. Wait a minute and try again.",
+      "verificationUnavailable": "The address verification service is unavailable. Try again in about 30 seconds.",
+      "unexpected": "Something went wrong. Try again in a moment."
     }
   },
   "devices": {

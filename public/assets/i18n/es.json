@@ -189,15 +189,16 @@
     "noTelemetry": "Aún sin telemetría",
     "outsideThreshold": "Fuera del umbral",
     "equipmentType": {
-      "FREEZER": "Congelador",
       "COLD_ROOM": "Cámara frigorífica",
-      "REFRIGERATOR": "Refrigerador"
+      "REFRIGERATOR": "Refrigerador",
+      "DISPLAY_CASE": "Vitrina",
+      "OTHER": "Otro"
     },
     "statusEquipment": {
       "ACTIVE": "Activo",
-      "DESACTIVATE": "Desactivado",
       "MAINTENANCE": "En mantenimiento",
-      "REPAIR": "En reparación"
+      "REPAIR": "En reparación",
+      "DEACTIVATED": "Desactivado"
     },
     "fields": {
       "siteName": "Nombre de la sede",
@@ -212,16 +213,21 @@
       "lastKnownTemperature": "Última temperatura conocida",
       "lastReadingAt": "Última lectura",
       "reminderInterval": "Recordatorio de mantenimiento",
-      "code": "Código del equipo"
+      "code": "Código del equipo",
+      "equipmentName": "Nombre del equipo",
+      "reminderIntervalDays": "Recordatorio de mantenimiento (días)"
     },
     "placeholders": {
       "siteName": "Ej. Depósito San Miguel",
-      "address": "Ej. Av. La Marina 2355, San Miguel, Lima",
+      "address": "Ej. Av. Primavera 123, Santiago de Surco",
       "contactName": "Ej. Rosa Quispe",
-      "phone": "Ej. +51 987 654 321"
+      "phone": "Ej. +51 987 654 321",
+      "code": "Ej. ESP32-0001",
+      "equipmentName": "Ej. Refrigerador 1"
     },
     "validation": {
-      "phone": "Ingresa un teléfono válido: dígitos, espacios, guiones o paréntesis, con un + inicial opcional."
+      "phone": "Ingresa un teléfono válido: dígitos separados por un solo espacio, con un + inicial opcional.",
+      "positiveDays": "Ingresa un número entero de días mayor que cero."
     },
     "siteList": {
       "title": "Sedes",
@@ -235,17 +241,23 @@
       "equipmentCount": "Equipos: {{count}}",
       "viewEquipment": "Ver equipos",
       "viewEquipmentOf": "Ver equipos de {{site}}",
-      "editContact": "Editar contacto",
-      "editContactOf": "Editar contacto de {{site}}",
       "registered": "La sede fue registrada.",
-      "updated": "El contacto de la sede fue actualizado."
+      "updated": "La sede fue actualizada.",
+      "edit": "Editar",
+      "editOf": "Editar {{site}}",
+      "changeAddress": "Cambiar dirección",
+      "changeAddressOf": "Cambiar la dirección de {{site}}",
+      "openMap": "Abrir en mapas",
+      "openMapOf": "Abrir {{site}} en mapas (nueva pestaña)",
+      "addressChanged": "La dirección de la sede fue cambiada. Sus equipos siguen registrados en la sede."
     },
     "siteForm": {
       "createTitle": "Registrar sede",
-      "createDescription": "Agrega una instalación donde operan tus equipos de refrigeración.",
-      "editTitle": "Editar contacto de la sede",
-      "editDescription": "El nombre y la dirección de una sede no se pueden cambiar una vez registrada.",
-      "submit": "Guardar sede"
+      "createDescription": "Agrega una instalación donde operan tus equipos de refrigeración. Su dirección se verifica antes de guardarla.",
+      "editTitle": "Editar sede",
+      "editDescription": "Actualiza el nombre y el contacto de la sede.",
+      "submit": "Guardar sede",
+      "addressHint": "Para mover la sede, usa «Cambiar dirección» en la lista de sedes."
     },
     "equipmentList": {
       "title": "Equipos de refrigeración",
@@ -261,9 +273,11 @@
       "loading": "Cargando equipos…",
       "errorTitle": "No pudimos cargar tus equipos.",
       "emptyTitle": "Aún no hay equipos registrados",
-      "emptyMessage": "Los equipos de refrigeración de tus sedes aparecerán aquí una vez registrados.",
+      "emptyMessage": "Registra los equipos de refrigeración de tus sedes para empezar a monitorearlos.",
       "noMatchesTitle": "Ningún equipo coincide con los filtros",
-      "noMatchesMessage": "Prueba otra búsqueda o amplía los filtros de sede, tipo o estado."
+      "noMatchesMessage": "Prueba otra búsqueda o amplía los filtros de sede, tipo o estado.",
+      "register": "Registrar equipo",
+      "registered": "El equipo fue registrado."
     },
     "equipmentDetail": {
       "title": "Detalle del equipo",
@@ -276,7 +290,7 @@
       "readingAge": "Reportada {{age}}",
       "thresholdTitle": "Umbral de temperatura",
       "thresholdCurrent": "Rango seguro actual: {{min}} a {{max}}",
-      "thresholdSaved": "El umbral de temperatura fue guardado.",
+      "thresholdSaved": "El umbral de temperatura fue guardado. La pasarela de monitoreo lo aplica en su próxima sincronización.",
       "detailsTitle": "Información del equipo",
       "days": "Cada {{count}} días",
       "relatedTitle": "Información relacionada",
@@ -290,15 +304,81 @@
       "serviceTitle": "Historial de servicio",
       "serviceText": "Solicitudes de servicio e intervenciones de este equipo.",
       "serviceHistoryLink": "Ver historial de servicio",
-      "requestServiceLink": "Solicitar un servicio"
+      "requestServiceLink": "Solicitar un servicio",
+      "edit": "Editar",
+      "changeStatus": "Cambiar estado",
+      "updated": "El equipo fue actualizado.",
+      "statusChanged": "El estado del equipo fue cambiado."
     },
     "thresholdForm": {
-      "hint": "Valores en grados Celsius (°C). El mínimo debe ser menor que el máximo.",
+      "hint": "Valores en grados Celsius (°C), de {{min}} a {{max}}. El mínimo debe ser menor que el máximo.",
       "min": "Temperatura mínima (°C)",
       "max": "Temperatura máxima (°C)",
       "minBelowMax": "La temperatura mínima debe ser menor que la temperatura máxima.",
       "discard": "Descartar cambios",
-      "save": "Guardar umbral"
+      "save": "Guardar umbral",
+      "outOfRange": "Ingresa un valor de {{min}} a {{max}} °C."
+    },
+    "siteNumber": "Sede n.° {{id}}",
+    "coverageArea": {
+      "LIMA_METROPOLITANA": "Lima Metropolitana",
+      "CALLAO": "Callao"
+    },
+    "addressVerification": {
+      "verify": "Verificar dirección",
+      "verifying": "Verificando…",
+      "hint": "Verificamos la dirección dentro de Lima Metropolitana o el Callao antes de guardarla.",
+      "verified": "Dirección verificada",
+      "validity": "La verificación es válida por 15 minutos. Guarda la sede antes de que venza.",
+      "useAnother": "Usar otra dirección",
+      "candidates": "¿Quisiste decir alguna de estas direcciones?",
+      "required": "Verifica la dirección antes de guardar la sede."
+    },
+    "siteAddress": {
+      "title": "Cambiar la dirección de {{site}}",
+      "description": "Verifica la nueva dirección. La sede conserva sus equipos.",
+      "current": "Dirección actual",
+      "submit": "Guardar dirección"
+    },
+    "equipmentForm": {
+      "createTitle": "Registrar equipo",
+      "createDescription": "Agrega una unidad de refrigeración a una de tus sedes con su umbral de temperatura.",
+      "editTitle": "Editar equipo",
+      "editDescription": "Actualiza el nombre, el tipo y el recordatorio de mantenimiento. Su telemetría e historial de servicio se conservan.",
+      "noSites": "Registra una sede antes de agregar equipos.",
+      "goToSites": "Ir a sedes",
+      "chooseSite": "Elige una sede",
+      "chooseType": "Elige un tipo",
+      "codeHint": "El identificador propio de la unidad, único en IceTrack. Hasta {{max}} caracteres.",
+      "fixedHint": "El código del equipo y la sede no se pueden cambiar.",
+      "reminderHint": "Cada cuánto el equipo necesita mantenimiento preventivo.",
+      "register": "Registrar equipo",
+      "saveChanges": "Guardar cambios"
+    },
+    "statusForm": {
+      "title": "Cambiar el estado de {{equipment}}",
+      "description": "Solo se ofrecen los cambios permitidos desde el estado actual.",
+      "current": "Estado actual:",
+      "newStatus": "Nuevo estado",
+      "deactivateWarning": "Una unidad desactivada deja de mostrarse en línea. Debe reactivarse antes de pasar a otro estado.",
+      "submit": "Cambiar estado",
+      "confirmDeactivate": "Desactivar equipo"
+    },
+    "errors": {
+      "invalid": "Algunos datos fueron rechazados. Revisa los campos e inténtalo de nuevo.",
+      "invalidThreshold": "El umbral fue rechazado. Ambos límites deben estar entre 0 y 30 °C y el mínimo debe ser menor que el máximo.",
+      "notAllowed": "Tu cuenta no tiene permiso para hacer esto.",
+      "siteNotFound": "Esta sede no existe o no está registrada en tu cuenta.",
+      "equipmentNotFound": "Este equipo no existe o no está registrado en tu cuenta.",
+      "duplicateUid": "Otra unidad ya usa este código de equipo. Ingresa uno diferente.",
+      "statusNotAllowed": "Este cambio de estado no está permitido desde el estado actual. El equipo fue recargado.",
+      "concurrentChange": "Este equipo fue modificado al mismo tiempo. Revísalo e inténtalo de nuevo.",
+      "addressVerificationExpired": "La verificación de la dirección venció. Verifica la dirección de nuevo y guarda.",
+      "addressNotVerified": "No encontramos esa dirección como una ubicación única. Elige una sugerencia o precisa la dirección.",
+      "addressOutOfCoverage": "La dirección está fuera del área de servicio. IceTrack atiende solo Lima Metropolitana y el Callao.",
+      "tooManyVerifications": "Demasiadas verificaciones de dirección. Espera un minuto e inténtalo de nuevo.",
+      "verificationUnavailable": "El servicio de verificación de direcciones no está disponible. Inténtalo de nuevo en unos 30 segundos.",
+      "unexpected": "Algo salió mal. Inténtalo de nuevo en un momento."
     }
   },
   "devices": {
