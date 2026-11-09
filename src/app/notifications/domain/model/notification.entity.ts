@@ -3,13 +3,19 @@ import { NotificationType } from '@notifications/domain/value-objects/notificati
 import { NotificationSeverity } from '@notifications/domain/value-objects/notification-severity';
 
 /**
- * Notification entity class representing a notification in the system.
+ * Represents a notification in the inbox of the signed-in user.
+ *
+ * `equipment_id`, `device_id` and `source_alert_id` are null when the notification does not concern an
+ * equipment item, a device or an alert. `message` is composed by the backend in English. `read_at` is null
+ * while unread and `dismissed_at` while not dismissed; the active inbox holds only notifications that are
+ * not dismissed.
  */
 export class Notification implements BaseEntity {
   private _id: number;
-  private _equipment_id: number;
-  private _device_id: number;
-  private _source_alert_id: number;
+  private _recipient_user_id: number;
+  private _equipment_id: number | null;
+  private _device_id: number | null;
+  private _source_alert_id: number | null;
   private _message: string;
   private _type: NotificationType;
   private _severity: NotificationSeverity;
@@ -23,9 +29,10 @@ export class Notification implements BaseEntity {
    */
   constructor(notification: {
     id: number;
-    equipment_id: number;
-    device_id: number;
-    source_alert_id: number;
+    recipient_user_id: number;
+    equipment_id: number | null;
+    device_id: number | null;
+    source_alert_id: number | null;
     message: string;
     type: NotificationType;
     severity: NotificationSeverity;
@@ -34,6 +41,7 @@ export class Notification implements BaseEntity {
     dismissed_at: Date | null;
   }) {
     this._id = notification.id;
+    this._recipient_user_id = notification.recipient_user_id;
     this._equipment_id = notification.equipment_id;
     this._device_id = notification.device_id;
     this._source_alert_id = notification.source_alert_id;
@@ -48,61 +56,50 @@ export class Notification implements BaseEntity {
   get id(): number {
     return this._id;
   }
-  set id(id: number) {
-    this._id = id;
+  get recipient_user_id(): number {
+    return this._recipient_user_id;
   }
-  get equipment_id(): number {
+  get equipment_id(): number | null {
     return this._equipment_id;
   }
-  set equipment_id(equipment_id: number) {
-    this._equipment_id = equipment_id;
-  }
-  get device_id(): number {
+  get device_id(): number | null {
     return this._device_id;
   }
-  set device_id(device_id: number) {
-    this._device_id = device_id;
-  }
-  get source_alert_id(): number {
+  get source_alert_id(): number | null {
     return this._source_alert_id;
-  }
-  set source_alert_id(source_alert_id: number) {
-    this._source_alert_id = source_alert_id;
   }
   get message(): string {
     return this._message;
   }
-  set message(message: string) {
-    this._message = message;
-  }
   get type(): NotificationType {
     return this._type;
-  }
-  set type(type: NotificationType) {
-    this._type = type;
   }
   get severity(): NotificationSeverity {
     return this._severity;
   }
-  set severity(severity: NotificationSeverity) {
-    this._severity = severity;
-  }
   get is_read(): boolean {
     return this._is_read;
-  }
-  set is_read(is_read: boolean) {
-    this._is_read = is_read;
   }
   get read_at(): Date | null {
     return this._read_at;
   }
-  set read_at(read_at: Date | null) {
-    this._read_at = read_at;
-  }
   get dismissed_at(): Date | null {
     return this._dismissed_at;
   }
-  set dismissed_at(dismissed_at: Date | null) {
-    this._dismissed_at = dismissed_at;
+
+  /**
+   * Whether the notification can still be marked as read.
+   * @returns True while it is unread and not dismissed.
+   */
+  canBeMarkedAsRead(): boolean {
+    return !this._is_read && this._dismissed_at === null;
+  }
+
+  /**
+   * Whether the notification can still be dismissed from the active inbox.
+   * @returns True while it is not dismissed.
+   */
+  canBeDismissed(): boolean {
+    return this._dismissed_at === null;
   }
 }

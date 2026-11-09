@@ -1,24 +1,37 @@
-import { BaseResource, BaseResponse } from '@shared/infrastructure/api/base-response';
-
 /**
- * Interface representing the response structure for notifications.
+ * NotificationResource is returned by `PUT /notifications/{notificationId}/read` and `.../dismiss`, and is
+ * embedded in PagedNotificationResource. Nullable properties are written as `null`; they are typed
+ * optional as well so a missing one is read as null.
  */
-export interface NotificationResponse extends BaseResponse {
-  notifications: NotificationResource[];
-}
-
-/**
- * Interface representing the structure of a notification resource.
- */
-export interface NotificationResource extends BaseResource {
+export interface NotificationResource {
   id: number;
-  equipment_id: number;
-  device_id: number;
-  source_alert_id: number;
+  recipient_user_id: number;
+  equipment_id?: number | null;
+  device_id?: number | null;
+  source_alert_id?: number | null;
   message: string;
   type: string;
   severity: string;
   is_read: boolean;
-  read_at: Date | null;
-  dismissed_at: Date | null;
+  read_at?: string | null;
+  dismissed_at?: string | null;
+}
+
+/**
+ * PagedNotificationResource is returned by `GET /notifications`. Its items are named `items`, not
+ * `content` as in other paged lists.
+ */
+export interface PagedNotificationResource {
+  items: NotificationResource[];
+  page: number;
+  size: number;
+  total_elements: number;
+  total_pages: number;
+}
+
+/**
+ * UnreadNotificationCountResource is returned by `GET /notifications/unread-count`.
+ */
+export interface UnreadNotificationCountResource {
+  unread_count: number;
 }

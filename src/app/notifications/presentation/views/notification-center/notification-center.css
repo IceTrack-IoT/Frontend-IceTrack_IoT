@@ -1,5 +1,14 @@
-.notification-center__filters {
+.notification-center__feedback {
   margin-block-end: var(--space-2);
+}
+
+.notification-center__retry {
+  margin-inline-start: var(--space-1);
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
 }
 
 .notification-center__list {
