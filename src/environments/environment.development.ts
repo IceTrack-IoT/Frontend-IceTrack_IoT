@@ -24,6 +24,9 @@ export const environment = {
   iceTrackProviderUpdateDashboardDefaultsEndpointPath: '/profiles/dashboard-configs/user/{userId}/defaults',
   iceTrackProviderUpdateDashboardLayoutEndpointPath: '/profiles/dashboard-configs/user/{userId}/layout',
 
+  /** Assets endpoints */
+  iceTrackProviderSitesEndpointPath: '/assets/sites',
+
   /** Notification endpoints */
   iceTrackProviderNotificationsEndpointPath: '/notifications',
 
