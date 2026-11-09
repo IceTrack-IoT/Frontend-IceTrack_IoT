@@ -13,45 +13,65 @@
       <p class="pair-device__text">
         {{
           'devices.pairing.successMessage'
-            | translate: { id: done.deviceId, equipment: done.equipment.name }
+            | translate
+              : {
+                  uid: done.device.device_uid,
+                  equipment:
+                    done.equipment?.name ??
+                    ('devices.list.equipmentLabel'
+                      | translate: { id: done.device.paired_equipment_id }),
+                }
         }}
       </p>
       <dl class="ui-details">
         <div>
           <dt>{{ 'devices.fields.device' | translate }}</dt>
-          <dd>{{ 'devices.list.deviceLabel' | translate: { id: done.deviceId } }}</dd>
+          <dd class="telemetry">{{ done.device.device_uid }}</dd>
         </div>
         <div>
-          <dt>{{ 'devices.fields.equipment' | translate }}</dt>
-          <dd>{{ done.equipment.name }}</dd>
+          <dt>{{ 'devices.fields.boardModel' | translate }}</dt>
+          <dd>{{ done.device.board_model }}</dd>
         </div>
-        <div>
-          <dt>{{ 'devices.fields.site' | translate }}</dt>
-          <dd>{{ done.equipment.siteName }}</dd>
-        </div>
+        @if (done.equipment; as equipment) {
+          <div>
+            <dt>{{ 'devices.fields.equipment' | translate }}</dt>
+            <dd>{{ equipment.name }}</dd>
+          </div>
+          @if (equipment.siteName; as site) {
+            <div>
+              <dt>{{ 'devices.fields.site' | translate }}</dt>
+              <dd>{{ site }}</dd>
+            </div>
+          }
+        }
         <div>
           <dt>{{ 'devices.fields.status' | translate }}</dt>
-          <dd>{{ 'devices.status.PAIRED' | translate }}</dd>
+          <dd>{{ 'devices.status.' + done.device.status | translate }}</dd>
         </div>
       </dl>
-      <p class="ui-alert ui-alert--info">
-        <app-icon class="ui-alert__icon" name="key" />
-        {{ 'devices.pairing.credentialNext' | translate }}
-      </p>
-      <div class="ui-form__actions pair-device__actions">
-        <button class="ui-button ui-button--secondary" type="button" (click)="pairAnother()">
-          {{ 'devices.pairing.pairAnother' | translate }}
-        </button>
-        <a
-          class="ui-button ui-button--secondary"
-          [routerLink]="['/assets/equipment', done.equipment.id]"
-        >
-          {{ 'devices.pairing.viewEquipment' | translate }}
-        </a>
-        <a class="ui-button ui-button--primary" routerLink="/devices">
-          {{ 'devices.pairing.goToDevices' | translate }}
-        </a>
-      </div>
+
+      <app-issued-api-key [apiKey]="done.apiKey" (storedChange)="keyStored.set($event)" />
+
+      @if (keyStored()) {
+        <div class="ui-form__actions pair-device__actions">
+          <button class="ui-button ui-button--secondary" type="button" (click)="pairAnother()">
+            {{ 'devices.pairing.pairAnother' | translate }}
+          </button>
+          @if (done.device.paired_equipment_id; as equipmentId) {
+            <a
+              class="ui-button ui-button--secondary"
+              [routerLink]="['/assets/equipment', equipmentId]"
+            >
+              {{ 'devices.pairing.viewEquipment' | translate }}
+            </a>
+          }
+          <a class="ui-button ui-button--primary" routerLink="/devices">
+            {{ 'devices.pairing.goToDevices' | translate }}
+          </a>
+        </div>
+      } @else {
+        <p class="ui-field__hint">{{ 'devices.pairing.confirmStoredToContinue' | translate }}</p>
+      }
     </section>
   } @else {
     <header class="ui-page-header">
@@ -62,11 +82,8 @@
       </div>
     </header>
 
-    @switch (source.status()) {
-      @case ('loading') {
-        <app-state-panel kind="loading" [heading]="'devices.pairing.loading' | translate" />
-      }
-      @case ('error') {
+    @if (!store.loaded()) {
+      @if (store.failure()) {
         <app-state-panel
           kind="error"
           [heading]="'devices.pairing.errorTitle' | translate"
@@ -77,102 +94,158 @@
             {{ 'shared.actions.retry' | translate }}
           </button>
         </app-state-panel>
+      } @else {
+        <app-state-panel kind="loading" [heading]="'devices.pairing.loading' | translate" />
       }
-      @default {
-        @if (unpairedDevices().length === 0) {
-          <app-state-panel
-            kind="empty"
-            [heading]="'devices.pairing.noDevicesTitle' | translate"
-            [message]="'devices.pairing.noDevicesMessage' | translate"
-          />
-        } @else if (availableEquipment().length === 0) {
-          <app-state-panel
-            kind="empty"
-            [heading]="'devices.pairing.noEquipmentTitle' | translate"
-            [message]="'devices.pairing.noEquipmentMessage' | translate"
-          />
-        } @else {
-          <form class="ui-panel ui-form" novalidate [formGroup]="form" (ngSubmit)="submit()">
-            <div class="ui-field">
-              <label class="ui-field__label" for="pair-device">
-                {{ 'devices.pairing.device' | translate }}
-              </label>
-              <select
-                class="ui-field__control"
-                id="pair-device"
-                formControlName="deviceId"
-                [attr.aria-invalid]="showError('deviceId') || null"
-                [attr.aria-describedby]="
-                  showError('deviceId') ? 'pair-device-error' : 'pair-device-hint'
-                "
-              >
-                <option [ngValue]="null">{{ 'devices.pairing.selectDevice' | translate }}</option>
-                @for (device of unpairedDevices(); track device.id) {
-                  <option [ngValue]="device.id">
-                    {{ 'devices.list.deviceLabel' | translate: { id: device.id } }} ·
-                    {{ device.board_model }}
-                  </option>
-                }
-              </select>
-              <p class="ui-field__hint" id="pair-device-hint">
-                {{ 'devices.pairing.deviceHint' | translate }}
-              </p>
-              @if (showError('deviceId')) {
-                <p class="ui-field__error" id="pair-device-error">
-                  {{ 'devices.pairing.deviceRequired' | translate }}
-                </p>
-              }
-            </div>
-
-            <div class="ui-field">
-              <label class="ui-field__label" for="pair-equipment">
-                {{ 'devices.pairing.equipment' | translate }}
-              </label>
-              <select
-                class="ui-field__control"
-                id="pair-equipment"
-                formControlName="equipmentId"
-                [attr.aria-invalid]="showError('equipmentId') || null"
-                [attr.aria-describedby]="
-                  showError('equipmentId') ? 'pair-equipment-error' : 'pair-equipment-hint'
-                "
-              >
-                <option [ngValue]="null">
-                  {{ 'devices.pairing.selectEquipment' | translate }}
-                </option>
-                @for (item of availableEquipment(); track item.id) {
-                  <option [ngValue]="item.id">{{ item.name }} · {{ item.siteName }}</option>
-                }
-              </select>
-              <p class="ui-field__hint" id="pair-equipment-hint">
-                {{ 'devices.pairing.equipmentHint' | translate }}
-              </p>
-              @if (showError('equipmentId')) {
-                <p class="ui-field__error" id="pair-equipment-error">
-                  {{ 'devices.pairing.equipmentRequired' | translate }}
-                </p>
-              }
-            </div>
-
-            <div class="ui-form__actions">
-              <a class="ui-button ui-button--secondary" routerLink="/devices">
-                {{ 'shared.actions.cancel' | translate }}
-              </a>
-              <button
-                class="ui-button ui-button--primary"
-                type="submit"
-                [disabled]="source.pending()"
-              >
-                <app-icon class="ui-button__icon" name="link" />
-                {{
-                  (source.pending() ? 'devices.pairing.pending' : 'devices.pairing.confirm')
-                    | translate
-                }}
-              </button>
-            </div>
-          </form>
+    } @else if (store.equipment().length === 0) {
+      <app-state-panel
+        kind="empty"
+        [heading]="'devices.pairing.noEquipmentTitle' | translate"
+        [message]="'devices.pairing.noEquipmentMessage' | translate"
+      >
+        <a class="ui-button ui-button--primary" routerLink="/assets/equipment">
+          {{ 'devices.list.goToEquipment' | translate }}
+        </a>
+      </app-state-panel>
+    } @else if (store.pairableEquipment().length === 0) {
+      <app-state-panel
+        kind="empty"
+        [heading]="'devices.pairing.allPairedTitle' | translate"
+        [message]="'devices.pairing.allPairedMessage' | translate"
+      />
+    } @else {
+      <form class="ui-panel ui-form" novalidate [formGroup]="form" (ngSubmit)="submit()">
+        @if (errorKey(); as error) {
+          <p class="ui-alert ui-alert--critical" role="alert">
+            <app-icon class="ui-alert__icon" name="alert-triangle" />
+            {{ error | translate }}
+          </p>
         }
-      }
+
+        <div class="ui-field">
+          <label class="ui-field__label" for="pair-equipment">
+            {{ 'devices.pairing.equipment' | translate }}
+          </label>
+          <select
+            class="ui-field__control"
+            id="pair-equipment"
+            formControlName="equipmentId"
+            [attr.aria-invalid]="showError('equipmentId') || null"
+            [attr.aria-describedby]="
+              showError('equipmentId') ? 'pair-equipment-error' : 'pair-equipment-hint'
+            "
+          >
+            <option [ngValue]="null">{{ 'devices.pairing.selectEquipment' | translate }}</option>
+            @for (item of store.pairableEquipment(); track item.id) {
+              <option [ngValue]="item.id">
+                {{ item.name }}
+                @if (item.siteName; as site) {
+                  · {{ site }}
+                }
+              </option>
+            }
+          </select>
+          <p class="ui-field__hint" id="pair-equipment-hint">
+            {{ 'devices.pairing.equipmentHint' | translate }}
+          </p>
+          @if (showError('equipmentId')) {
+            <p class="ui-field__error" id="pair-equipment-error">
+              {{ 'devices.pairing.equipmentRequired' | translate }}
+            </p>
+          }
+        </div>
+
+        <div class="ui-field">
+          <label class="ui-field__label" for="pair-device-uid">
+            {{ 'devices.pairing.deviceUid' | translate }}
+          </label>
+          <input
+            class="ui-field__control telemetry"
+            id="pair-device-uid"
+            type="text"
+            autocomplete="off"
+            spellcheck="false"
+            formControlName="deviceUid"
+            [attr.maxlength]="maxLength"
+            [attr.aria-invalid]="showError('deviceUid') || null"
+            [attr.aria-describedby]="
+              showError('deviceUid') ? 'pair-device-uid-error' : 'pair-device-uid-hint'
+            "
+          />
+          <p class="ui-field__hint" id="pair-device-uid-hint">
+            {{ 'devices.pairing.deviceUidHint' | translate }}
+          </p>
+          @if (showError('deviceUid')) {
+            <p class="ui-field__error" id="pair-device-uid-error">
+              {{ textErrorKey('deviceUid') | translate: { max: maxLength } }}
+            </p>
+          }
+        </div>
+
+        <div class="ui-field">
+          <label class="ui-field__label" for="pair-board-model">
+            {{ 'devices.pairing.boardModel' | translate }}
+          </label>
+          <input
+            class="ui-field__control"
+            id="pair-board-model"
+            type="text"
+            autocomplete="off"
+            formControlName="boardModel"
+            [attr.maxlength]="maxLength"
+            [attr.aria-invalid]="showError('boardModel') || null"
+            [attr.aria-describedby]="showError('boardModel') ? 'pair-board-model-error' : null"
+          />
+          @if (showError('boardModel')) {
+            <p class="ui-field__error" id="pair-board-model-error">
+              {{ textErrorKey('boardModel') | translate: { max: maxLength } }}
+            </p>
+          }
+        </div>
+
+        <div class="ui-field">
+          <label class="ui-field__label" for="pair-firmware">
+            {{ 'devices.pairing.firmwareVersion' | translate }}
+          </label>
+          <input
+            class="ui-field__control"
+            id="pair-firmware"
+            type="text"
+            autocomplete="off"
+            formControlName="firmwareVersion"
+            [attr.maxlength]="maxLength"
+            [attr.aria-invalid]="showError('firmwareVersion') || null"
+            [attr.aria-describedby]="
+              showError('firmwareVersion') ? 'pair-firmware-error' : 'pair-firmware-hint'
+            "
+          />
+          <p class="ui-field__hint" id="pair-firmware-hint">
+            {{ 'devices.pairing.firmwareVersionHint' | translate }}
+          </p>
+          @if (showError('firmwareVersion')) {
+            <p class="ui-field__error" id="pair-firmware-error">
+              {{ 'devices.pairing.tooLong' | translate: { max: maxLength } }}
+            </p>
+          }
+        </div>
+
+        <div class="ui-form__actions">
+          <a class="ui-button ui-button--secondary" routerLink="/devices">
+            {{ 'shared.actions.cancel' | translate }}
+          </a>
+          <button
+            class="ui-button ui-button--primary"
+            type="submit"
+            [disabled]="store.actionPending()"
+          >
+            <app-icon class="ui-button__icon" name="link" />
+            {{
+              (store.actionPending() ? 'devices.pairing.pending' : 'devices.pairing.confirm')
+                | translate
+            }}
+          </button>
+        </div>
+      </form>
     }
   }
 </div>

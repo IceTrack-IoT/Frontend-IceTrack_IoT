@@ -2,20 +2,24 @@ import { BaseEntity } from '@shared/domain/model/base-entity';
 import { DeviceStatus } from '@device/domain/value-objects/device-status';
 
 /**
- * Represents a monitoring device that reports the telemetry of the equipment it is paired to.
+ * Represents an ESP32 monitoring board that reports the telemetry of the equipment it is paired with.
  *
- * `equipment_id` is null while the device is unpaired, `api_key_hash` is null when the device has no
- * active credential and `last_read` is null until the device reports its first reading. The plain API key
- * is never part of the model: only its hash is.
+ * `paired_equipment_id` is null while the device is unpaired, `firmware_version` is null when it was not
+ * declared, and `last_seen_at` is the arrival time of the device's latest reading batch (null until its
+ * first one). The API key is never part of the model: the backend returns it only once, when it is issued.
+ *
+ * Lifecycle: an UNPAIRED device is paired with a fresh key; a PAIRED device can be REVOKED (the key stops
+ * working but the device stays linked); rotating the key of a PAIRED or REVOKED device issues a new one
+ * and leaves it PAIRED; a PAIRED or REVOKED device can be unpaired.
  */
 export class Device implements BaseEntity {
   private _id: number;
-  private _equipment_id: number | null;
+  private _device_uid: string;
   private _board_model: string;
-  private _firmware_version: string;
-  private _api_key_hash: string | null;
+  private _firmware_version: string | null;
   private _status: DeviceStatus;
-  private _last_read: Date | null;
+  private _paired_equipment_id: number | null;
+  private _last_seen_at: Date | null;
 
   /**
    * Creates a new instance of the Device class.
@@ -24,62 +28,66 @@ export class Device implements BaseEntity {
    */
   public constructor(device: {
     id: number;
-    equipment_id: number | null;
+    device_uid: string;
     board_model: string;
-    firmware_version: string;
-    api_key_hash: string | null;
+    firmware_version: string | null;
     status: DeviceStatus;
-    last_read: Date | null;
+    paired_equipment_id: number | null;
+    last_seen_at: Date | null;
   }) {
     this._id = device.id;
-    this._equipment_id = device.equipment_id;
+    this._device_uid = device.device_uid;
     this._board_model = device.board_model;
     this._firmware_version = device.firmware_version;
-    this._api_key_hash = device.api_key_hash;
     this._status = device.status;
-    this._last_read = device.last_read;
+    this._paired_equipment_id = device.paired_equipment_id;
+    this._last_seen_at = device.last_seen_at;
   }
 
   get id(): number {
     return this._id;
   }
-  set id(id: number) {
-    this._id = id;
-  }
-  get equipment_id(): number | null {
-    return this._equipment_id;
-  }
-  set equipment_id(equipment_id: number | null) {
-    this._equipment_id = equipment_id;
+  get device_uid(): string {
+    return this._device_uid;
   }
   get board_model(): string {
     return this._board_model;
   }
-  set board_model(board_model: string) {
-    this._board_model = board_model;
-  }
-  get firmware_version(): string {
+  get firmware_version(): string | null {
     return this._firmware_version;
-  }
-  set firmware_version(firmware_version: string) {
-    this._firmware_version = firmware_version;
-  }
-  get api_key_hash(): string | null {
-    return this._api_key_hash;
-  }
-  set api_key_hash(api_key_hash: string | null) {
-    this._api_key_hash = api_key_hash;
   }
   get status(): DeviceStatus {
     return this._status;
   }
-  set status(status: DeviceStatus) {
-    this._status = status;
+  get paired_equipment_id(): number | null {
+    return this._paired_equipment_id;
   }
-  get last_read(): Date | null {
-    return this._last_read;
+  get last_seen_at(): Date | null {
+    return this._last_seen_at;
   }
-  set last_read(last_read: Date | null) {
-    this._last_read = last_read;
+
+  /**
+   * Whether the device's API key can be revoked: only a PAIRED device has a key in use.
+   * @returns True when the device is PAIRED.
+   */
+  canBeRevoked(): boolean {
+    return this._status === DeviceStatus.PAIRED;
+  }
+
+  /**
+   * Whether a new API key can be issued: rotating replaces the key of a PAIRED device and is the way a
+   * REVOKED device resumes.
+   * @returns True when the device is PAIRED or REVOKED.
+   */
+  canRotateApiKey(): boolean {
+    return this._status === DeviceStatus.PAIRED || this._status === DeviceStatus.REVOKED;
+  }
+
+  /**
+   * Whether the device can be unlinked from its equipment.
+   * @returns True when the device is PAIRED or REVOKED.
+   */
+  canBeUnpaired(): boolean {
+    return this._status === DeviceStatus.PAIRED || this._status === DeviceStatus.REVOKED;
   }
 }

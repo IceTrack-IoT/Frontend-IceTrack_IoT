@@ -2,117 +2,154 @@ import {
   afterRenderEffect,
   Component,
   computed,
+  DestroyRef,
+  effect,
   ElementRef,
   inject,
   signal,
+  untracked,
   viewChild,
 } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { Device } from '@device/domain/model/device.entity';
-import { DeviceStatus } from '@device/domain/value-objects/device-status';
-import {
-  createDevicesMock,
-  DEVICE_EQUIPMENT,
-  type PairableEquipment,
-} from '@device/presentation/mocks/devices.mock';
+import { DevicesStore } from '@device/application/devices-store';
+import { DEVICE_TEXT_MAX_LENGTH } from '@device/application/contracts/device-pairing';
+import { IssuedApiKey } from '@device/presentation/components/issued-api-key/issued-api-key';
+import { deviceActionErrorKey } from '@device/presentation/device-feedback';
 import { Icon } from '@shared/presentation/components/icon/icon';
 import { StatePanel } from '@shared/presentation/components/state-panel/state-panel';
-import { injectMockDataSource } from '@shared/presentation/mock/mock-data-source';
 
-/** The pairing just confirmed. */
-interface Pairing {
-  readonly deviceId: number;
-  readonly equipment: PairableEquipment;
-}
+/** A value with at least one non-blank character, as the backend's `@NotBlank` requires. */
+const NOT_BLANK = /\S/;
+
+type TextField = 'deviceUid' | 'boardModel' | 'firmwareVersion';
 
 /**
- * Pairs an unpaired monitoring device with an equipment item that has no device. The `deviceId` and
- * `equipmentId` query parameters preselect them. The credential of the device is issued afterwards from
- * the device list.
+ * Pairs a board with one of the owner's equipment items that has no paired device. The backend issues the
+ * device's API key in its answer, the only time it is ever shown: the confirmation displays it until the
+ * owner confirms having stored it, and it is dropped once the owner leaves or pairs another board. The
+ * `equipmentId` query parameter preselects the equipment.
  */
 @Component({
-  imports: [ReactiveFormsModule, RouterLink, TranslatePipe, Icon, StatePanel],
+  imports: [ReactiveFormsModule, RouterLink, TranslatePipe, Icon, IssuedApiKey, StatePanel],
   selector: 'app-pair-device',
   styleUrl: './pair-device.css',
   templateUrl: './pair-device.html',
 })
 export class PairDevice {
-  private readonly route = inject(ActivatedRoute);
-  protected readonly source = injectMockDataSource();
+  protected readonly store = inject(DevicesStore);
+  protected readonly maxLength = DEVICE_TEXT_MAX_LENGTH;
+  private readonly requestedEquipmentId = Number(
+    inject(ActivatedRoute).snapshot.queryParamMap.get('equipmentId'),
+  );
 
   protected readonly form = inject(NonNullableFormBuilder).group({
-    deviceId: [null as number | null, Validators.required],
     equipmentId: [null as number | null, Validators.required],
+    deviceUid: [
+      '',
+      [
+        Validators.required,
+        Validators.pattern(NOT_BLANK),
+        Validators.maxLength(DEVICE_TEXT_MAX_LENGTH),
+      ],
+    ],
+    boardModel: [
+      '',
+      [
+        Validators.required,
+        Validators.pattern(NOT_BLANK),
+        Validators.maxLength(DEVICE_TEXT_MAX_LENGTH),
+      ],
+    ],
+    firmwareVersion: ['', Validators.maxLength(DEVICE_TEXT_MAX_LENGTH)],
   });
 
-  private readonly devices = signal<Device[]>([]);
-  protected readonly pairing = signal<Pairing | null>(null);
+  /** Whether the owner confirmed having stored the issued key. */
+  protected readonly keyStored = signal(false);
   private readonly successHeading = viewChild<ElementRef<HTMLElement>>('successHeading');
 
-  protected readonly unpairedDevices = computed(() =>
-    this.devices().filter((device) => device.equipment_id === null),
-  );
-  protected readonly availableEquipment = computed(() => {
-    const paired = new Set(this.devices().map((device) => device.equipment_id));
-    return DEVICE_EQUIPMENT.filter((item) => !paired.has(item.id));
+  /** The pairing just confirmed, with the key issued for it. */
+  protected readonly pairing = computed(() => {
+    const state = this.store.actionState();
+    if (
+      state?.action !== 'pair' ||
+      state.status !== 'succeeded' ||
+      state.device === null ||
+      state.issuedApiKey === null
+    ) {
+      return null;
+    }
+    const equipmentId = state.device.paired_equipment_id;
+    return {
+      device: state.device,
+      apiKey: state.issuedApiKey,
+      equipment:
+        equipmentId === null ? null : (this.store.equipmentById().get(equipmentId) ?? null),
+    };
+  });
+  /** Why the last pairing failed. */
+  protected readonly errorKey = computed(() => {
+    const state = this.store.actionState();
+    return state?.action === 'pair' && state.status === 'failed'
+      ? deviceActionErrorKey('pair', state.failure)
+      : null;
   });
 
   constructor() {
+    this.store.attach(inject(DestroyRef));
+    this.store.clearAction();
+    this.load();
     // The form is replaced by the confirmation, so the focus moves to its heading.
     afterRenderEffect(() => this.successHeading()?.nativeElement.focus());
-    this.load();
+    // Preselects the requested equipment once the owner's equipment is known.
+    effect(() => {
+      const pairable = this.store.pairableEquipment();
+      untracked(() => {
+        const control = this.form.controls.equipmentId;
+        if (control.value === null && pairable.some(({ id }) => id === this.requestedEquipmentId)) {
+          control.setValue(this.requestedEquipmentId);
+        }
+      });
+    });
   }
 
   protected load(): void {
-    this.source.load((empty) => {
-      this.devices.set(empty ? [] : createDevicesMock());
-      this.preselect(
-        'deviceId',
-        this.unpairedDevices().map((device) => device.id),
-      );
-      this.preselect(
-        'equipmentId',
-        this.availableEquipment().map((item) => item.id),
-      );
-    });
+    this.store.loadInventory();
   }
 
   protected submit(): void {
-    if (this.source.pending()) {
+    if (this.store.actionPending()) {
       return;
     }
-    const { deviceId, equipmentId } = this.form.getRawValue();
-    const device = this.devices().find((candidate) => candidate.id === deviceId);
-    const equipment = DEVICE_EQUIPMENT.find((item) => item.id === equipmentId);
-    if (this.form.invalid || !device || !equipment) {
+    const { equipmentId, deviceUid, boardModel, firmwareVersion } = this.form.getRawValue();
+    if (this.form.invalid || equipmentId === null) {
       this.form.markAllAsTouched();
       return;
     }
-    // TODO: Delegate to the device store (pair device use case).
-    this.source.mutate(() => {
-      device.equipment_id = equipment.id;
-      device.status = DeviceStatus.PAIRED;
-      this.devices.update((devices) => [...devices]);
-      this.pairing.set({ deviceId: device.id, equipment });
-    });
+    this.store.pairDevice({ equipmentId, deviceUid, boardModel, firmwareVersion });
   }
 
+  /** Drops the issued key and starts a new pairing. */
   protected pairAnother(): void {
+    this.store.clearAction();
+    this.keyStored.set(false);
     this.form.reset();
-    this.pairing.set(null);
   }
 
-  protected showError(name: 'deviceId' | 'equipmentId'): boolean {
+  protected showError(name: 'equipmentId' | TextField): boolean {
     const control = this.form.controls[name];
     return control.touched && control.invalid;
   }
 
-  private preselect(name: 'deviceId' | 'equipmentId', candidates: number[]): void {
-    const id = Number(this.route.snapshot.queryParamMap.get(name));
-    if (candidates.includes(id)) {
-      this.form.controls[name].setValue(id);
+  /** The translation key of the validation error of a text field. */
+  protected textErrorKey(name: TextField): string {
+    const errors = this.form.controls[name].errors;
+    if (errors?.['maxlength']) {
+      return 'devices.pairing.tooLong';
     }
+    return name === 'deviceUid'
+      ? 'devices.pairing.deviceUidRequired'
+      : 'devices.pairing.boardModelRequired';
   }
 }

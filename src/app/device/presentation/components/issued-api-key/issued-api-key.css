@@ -1,0 +1,45 @@
+:host {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.ui-alert p {
+  margin: 0;
+}
+
+.issued-key__strong {
+  font-weight: 700;
+}
+
+.issued-key__key {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.issued-key__key .ui-field__control {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.875rem;
+}
+
+.issued-key__check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.issued-key__check input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--brand-600);
+}
+
+@media (max-width: 480px) {
+  .issued-key__key {
+    flex-direction: column;
+  }
+}

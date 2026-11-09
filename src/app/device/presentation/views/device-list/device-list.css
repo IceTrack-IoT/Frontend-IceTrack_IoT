@@ -2,10 +2,25 @@
   margin-inline-start: var(--space-1);
 }
 
+.device-list__retry {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
 .device-list__device {
   font-weight: 600;
   text-align: start;
   white-space: nowrap;
+}
+
+.device-list__related {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  font-size: 0.875rem;
 }
 
 .device-list__credential {
