@@ -54,3 +54,18 @@
 .assign-dialog__star {
   color: var(--tone-warning-fg);
 }
+
+.assign-dialog__candidate--unavailable {
+  border-style: dashed;
+  background-color: var(--canvas-bg);
+  cursor: not-allowed;
+}
+
+.assign-dialog__confirmation {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.assign-dialog__confirmation p {
+  margin: 0;
+}

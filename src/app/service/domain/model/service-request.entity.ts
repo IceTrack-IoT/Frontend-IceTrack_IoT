@@ -1,131 +1,199 @@
 import { BaseEntity } from '@shared/domain/model/base-entity';
-import { ServiceType } from '@service/domain/value-objects/service-type';
+import { Intervention } from '@service/domain/model/intervention.entity';
+import { MaintenanceWindowLink } from '@service/domain/value-objects/maintenance-window-link';
 import { ServicePriority } from '@service/domain/value-objects/service-priority';
 import { ServiceStatus } from '@service/domain/value-objects/service-status';
+import { ServiceType } from '@service/domain/value-objects/service-type';
+import {
+  StatusTransition,
+  transitionKindOf,
+} from '@service/domain/value-objects/status-transition';
+
+/** The statuses in which the owner may cancel a request or assign a technician to it. */
+const OPEN_STATUSES: ReadonlySet<ServiceStatus> = new Set([
+  ServiceStatus.PENDING,
+  ServiceStatus.ACCEPTED,
+]);
 
 /**
- * Represents a service request of an owner for an equipment item, assigned to a technician.
+ * Represents a maintenance or repair request of an owner for one of its equipment items.
  *
- * `technician_profile_id` is null until a technician is assigned; `completed_at` and `canceled_at` are null
- * until the request reaches those states.
+ * It starts PENDING without a technician. `technician_id` is null while none is assigned; the moments of
+ * each step are null until the request reaches it. The status history travels with the request, oldest
+ * first, starting with the creation.
  */
 export class ServiceRequest implements BaseEntity {
-  private _id: number;
-  private _owner_id: number;
-  private _requester_id: number;
-  private _site_id: number;
-  private _equipment_id: number;
-  private _technician_profile_id: number | null;
-  private _type: ServiceType;
-  private _priority: ServicePriority;
-  private _description: string;
-  private _status: ServiceStatus;
-  private _completed_at: Date | null;
-  private _canceled_at: Date | null;
+  private readonly _id: number;
+  private readonly _owner_id: number;
+  private readonly _equipment_id: number;
+  private readonly _site_id: number;
+  private readonly _technician_id: number | null;
+  private readonly _type: ServiceType;
+  private readonly _priority: ServicePriority;
+  private readonly _description: string;
+  private readonly _status: ServiceStatus;
+  private readonly _created_at: Date;
+  private readonly _assigned_at: Date | null;
+  private readonly _started_at: Date | null;
+  private readonly _completed_at: Date | null;
+  private readonly _canceled_at: Date | null;
+  private readonly _cancel_reason: string | null;
+  private readonly _history: readonly StatusTransition[];
+  private readonly _intervention: Intervention | null;
+  private readonly _maintenance_windows: readonly MaintenanceWindowLink[];
 
   /**
-   * Creates a new instance of the ServiceRequest class.
-   *
    * @param serviceRequest - An object containing the properties of the service request.
    */
   public constructor(serviceRequest: {
     id: number;
     owner_id: number;
-    requester_id: number;
-    site_id: number;
     equipment_id: number;
-    technician_profile_id: number | null;
+    site_id: number;
+    technician_id: number | null;
     type: ServiceType;
     priority: ServicePriority;
     description: string;
     status: ServiceStatus;
+    created_at: Date;
+    assigned_at: Date | null;
+    started_at: Date | null;
     completed_at: Date | null;
     canceled_at: Date | null;
+    cancel_reason: string | null;
+    history: readonly StatusTransition[];
+    intervention: Intervention | null;
+    maintenance_windows: readonly MaintenanceWindowLink[];
   }) {
     this._id = serviceRequest.id;
     this._owner_id = serviceRequest.owner_id;
-    this._requester_id = serviceRequest.requester_id;
-    this._site_id = serviceRequest.site_id;
     this._equipment_id = serviceRequest.equipment_id;
-    this._technician_profile_id = serviceRequest.technician_profile_id;
+    this._site_id = serviceRequest.site_id;
+    this._technician_id = serviceRequest.technician_id;
     this._type = serviceRequest.type;
     this._priority = serviceRequest.priority;
     this._description = serviceRequest.description;
     this._status = serviceRequest.status;
+    this._created_at = serviceRequest.created_at;
+    this._assigned_at = serviceRequest.assigned_at;
+    this._started_at = serviceRequest.started_at;
     this._completed_at = serviceRequest.completed_at;
     this._canceled_at = serviceRequest.canceled_at;
+    this._cancel_reason = serviceRequest.cancel_reason;
+    this._history = serviceRequest.history;
+    this._intervention = serviceRequest.intervention;
+    this._maintenance_windows = serviceRequest.maintenance_windows;
   }
 
   get id(): number {
     return this._id;
   }
-  set id(id: number) {
-    this._id = id;
-  }
+  /** The owner profile that created the request. */
   get owner_id(): number {
     return this._owner_id;
-  }
-  set owner_id(owner_id: number) {
-    this._owner_id = owner_id;
-  }
-  get requester_id(): number {
-    return this._requester_id;
-  }
-  set requester_id(requester_id: number) {
-    this._requester_id = requester_id;
-  }
-  get site_id(): number {
-    return this._site_id;
-  }
-  set site_id(site_id: number) {
-    this._site_id = site_id;
   }
   get equipment_id(): number {
     return this._equipment_id;
   }
-  set equipment_id(equipment_id: number) {
-    this._equipment_id = equipment_id;
+  /** The site the equipment is installed at. */
+  get site_id(): number {
+    return this._site_id;
   }
-  get technician_profile_id(): number | null {
-    return this._technician_profile_id;
-  }
-  set technician_profile_id(technician_profile_id: number | null) {
-    this._technician_profile_id = technician_profile_id;
+  /** The assigned technician profile, or null while none is assigned. */
+  get technician_id(): number | null {
+    return this._technician_id;
   }
   get type(): ServiceType {
     return this._type;
   }
-  set type(type: ServiceType) {
-    this._type = type;
-  }
   get priority(): ServicePriority {
     return this._priority;
-  }
-  set priority(priority: ServicePriority) {
-    this._priority = priority;
   }
   get description(): string {
     return this._description;
   }
-  set description(description: string) {
-    this._description = description;
-  }
   get status(): ServiceStatus {
     return this._status;
   }
-  set status(status: ServiceStatus) {
-    this._status = status;
+  get created_at(): Date {
+    return this._created_at;
+  }
+  /** When the current technician was assigned. */
+  get assigned_at(): Date | null {
+    return this._assigned_at;
+  }
+  get started_at(): Date | null {
+    return this._started_at;
   }
   get completed_at(): Date | null {
     return this._completed_at;
   }
-  set completed_at(completed_at: Date | null) {
-    this._completed_at = completed_at;
-  }
   get canceled_at(): Date | null {
     return this._canceled_at;
   }
-  set canceled_at(canceled_at: Date | null) {
-    this._canceled_at = canceled_at;
+  get cancel_reason(): string | null {
+    return this._cancel_reason;
+  }
+  /** The status history, oldest first; the first entry is the creation. */
+  get history(): readonly StatusTransition[] {
+    return this._history;
+  }
+  /** The intervention that completed the request, or null until it is completed. */
+  get intervention(): Intervention | null {
+    return this._intervention;
+  }
+  /** The maintenance windows opened on the equipment while the work was in progress, oldest first. */
+  get maintenance_windows(): readonly MaintenanceWindowLink[] {
+    return this._maintenance_windows;
+  }
+
+  /**
+   * Whether the owner may cancel the request: only while it is PENDING or ACCEPTED. The backend remains
+   * the authority and rejects other moves with `INVALID_STATUS_TRANSITION`.
+   */
+  canBeCanceled(): boolean {
+    return OPEN_STATUSES.has(this._status);
+  }
+
+  /**
+   * Whether the owner may assign (or replace) the technician: only while the request is PENDING or
+   * ACCEPTED. A new assignment sends the request back to PENDING until the technician accepts it.
+   */
+  canBeAssigned(): boolean {
+    return OPEN_STATUSES.has(this._status);
+  }
+
+  /** Whether the owner may review the technician: only once the request is COMPLETED. */
+  canBeReviewed(): boolean {
+    return this._status === ServiceStatus.COMPLETED;
+  }
+
+  /** Whether a technician is assigned and has not accepted the request yet. */
+  isAwaitingAcceptance(): boolean {
+    return this._status === ServiceStatus.PENDING && this._technician_id !== null;
+  }
+
+  /**
+   * Whether the last technician rejected the request, which stays PENDING without a technician until the
+   * owner assigns another one.
+   */
+  wasRejected(): boolean {
+    const last = this._history.at(-1);
+    return (
+      this._status === ServiceStatus.PENDING &&
+      this._technician_id === null &&
+      last !== undefined &&
+      transitionKindOf(last) === 'REJECTED'
+    );
+  }
+
+  /** When the request last reached a status, according to its history, or null if it never did. */
+  reachedAt(status: ServiceStatus): Date | null {
+    for (let index = this._history.length - 1; index >= 0; index--) {
+      if (this._history[index].to_status === status) {
+        return this._history[index].occurred_at;
+      }
+    }
+    return null;
   }
 }

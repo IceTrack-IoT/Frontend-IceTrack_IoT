@@ -611,13 +611,15 @@
     "eyebrow": "Service requests",
     "number": "Request #{{id}}",
     "unassigned": "Unassigned",
+    "equipmentNumber": "Equipment #{{id}}",
+    "siteNumber": "Site #{{id}}",
+    "technicianNumber": "Technician #{{id}}",
     "status": {
       "PENDING": "Pending",
       "ACCEPTED": "Accepted",
-      "REJECTED": "Rejected",
       "IN_PROGRESS": "In progress",
-      "CANCELED": "Canceled",
-      "COMPLETED": "Completed"
+      "COMPLETED": "Completed",
+      "CANCELED": "Canceled"
     },
     "priority": {
       "LOW": "Low",
@@ -626,20 +628,8 @@
       "URGENT": "Urgent"
     },
     "type": {
-      "REPAIR": "Repair",
       "PREVENTIVE_MAINTENANCE": "Preventive maintenance",
-      "INSTALLATION": "Installation",
-      "INSPECTION": "Inspection",
-      "OTHER": "Other"
-    },
-    "interventionStatus": {
-      "PENDING": "In progress",
-      "COMPLETED": "Completed"
-    },
-    "specialty": {
-      "REFRIGERATION": "Refrigeration",
-      "ELECTRICAL": "Electrical",
-      "GENERAL": "General"
+      "REPAIR": "Repair"
     },
     "fields": {
       "request": "Request",
@@ -650,6 +640,8 @@
       "status": "Status",
       "type": "Service type",
       "description": "Description",
+      "createdAt": "Created",
+      "startedAt": "Work started",
       "completedAt": "Completed",
       "canceledAt": "Canceled"
     },
@@ -658,28 +650,90 @@
       "assign": "Assign technician",
       "reassign": "Assign another technician",
       "review": "Rate service",
+      "editReview": "Edit review",
       "cancel": "Cancel request"
+    },
+    "errors": {
+      "invalid": "Some of the data was not accepted. Review it and try again.",
+      "notAllowed": "You aren't allowed to do this.",
+      "notFound": "This request doesn't exist or doesn't belong to your account.",
+      "equipmentNotFound": "The selected equipment doesn't exist or doesn't belong to your account.",
+      "cancelNotAllowed": "This request can no longer be canceled. We reloaded it so you can see its current status.",
+      "assignNotAllowed": "A technician can't be assigned to this request anymore. We reloaded it so you can see its current status.",
+      "staleState": "This request changed in the meantime. We reloaded it; check it and try again.",
+      "technicianNotEligible": "This technician can't be assigned. Choose another technician.",
+      "reviewNotAllowed": "This service can't be rated right now. We reloaded the request.",
+      "reviewEditExpired": "The edit period of this review has ended, so it can't be changed anymore.",
+      "alreadyReviewed": "This service was already rated. We reloaded the review.",
+      "concurrentChange": "Someone else changed this request at the same time. We reloaded it; try again.",
+      "unexpected": "We couldn't complete the action. Check your connection and try again."
     },
     "list": {
       "title": "Service requests",
       "subtitle": "Corrective and preventive services for your equipment.",
       "create": "New service request",
       "tableTitle": "Requests",
+      "total": "{{count}} requests",
       "statusFilter": "Filter by status",
       "allStatuses": "All",
-      "allPriorities": "All priorities",
-      "allTypes": "All types",
       "equipmentFilter": "Showing the service history of {{equipment}}.",
       "showAll": "Show all requests",
       "loading": "Loading service requests…",
       "errorTitle": "We couldn't load your service requests.",
       "emptyTitle": "No service requests yet",
       "emptyMessage": "Request a repair or a preventive maintenance for any of your equipment.",
-      "noMatchesTitle": "No requests match the filters",
-      "noMatchesMessage": "Try another status, priority or service type.",
+      "noMatchesTitle": "No requests match the filter",
+      "noMatchesMessage": "Try another status.",
       "assignFor": "Assign a technician to request #{{id}}",
-      "reviewFor": "Rate the service of request #{{id}}",
       "viewFor": "View request #{{id}}"
+    },
+    "interventions": {
+      "title": "Service history",
+      "subtitle": "Interventions that completed service requests on this equipment, most recent first.",
+      "panelTitle": "Interventions",
+      "viewEquipment": "View equipment",
+      "loading": "Loading the intervention history…",
+      "errorTitle": "We couldn't load the intervention history.",
+      "notFoundTitle": "Equipment not found",
+      "notFoundMessage": "This equipment doesn't exist or doesn't belong to your account.",
+      "emptyTitle": "No interventions yet",
+      "emptyMessage": "Interventions appear here once a technician completes a service on this equipment."
+    },
+    "intervention": {
+      "startedAt": "Started {{date}}",
+      "completedAt": "completed {{date}}",
+      "duration": "Duration {{hours}} h {{minutes}} min",
+      "diagnosis": "Diagnosis",
+      "actionsTaken": "Actions taken",
+      "spareParts": "Spare parts",
+      "photos": "Photo evidence",
+      "photo": "Photo {{number}}",
+      "photoUnavailable": "Photo {{number}} (link not available)",
+      "opensInNewTab": "(opens in a new tab)"
+    },
+    "history": {
+      "empty": "No status changes have been recorded yet.",
+      "byOwner": "by you",
+      "byTechnician": "by {{technician}}",
+      "reason": "Reason: {{reason}}",
+      "kind": {
+        "CREATED": "Request created",
+        "ASSIGNED": "Technician assigned",
+        "REJECTED": "Rejected by the technician",
+        "ACCEPTED": "Accepted by the technician",
+        "STARTED": "Work started",
+        "COMPLETED": "Service completed",
+        "CANCELED": "Request canceled"
+      }
+    },
+    "maintenanceWindow": {
+      "period": "{{start}} – {{end}}",
+      "open": "still open",
+      "origin": {
+        "APP": "Started from the mobile app",
+        "BUTTON": "Started with the device button",
+        "OTHER": "Started from another source"
+      }
     },
     "form": {
       "title": "New service request",
@@ -687,20 +741,25 @@
       "back": "Back to service requests",
       "fromAlert": "This draft comes from alert #{{id}}. Review the details and confirm to send it.",
       "viewAlert": "View alert",
+      "equipmentLoading": "Loading your equipment…",
+      "equipmentErrorTitle": "We couldn't load your equipment.",
+      "noEquipmentTitle": "You have no equipment yet",
+      "noEquipmentMessage": "Register an equipment item before requesting a service for it.",
+      "goToEquipment": "Go to equipment",
       "selectEquipment": "Select an equipment item",
       "siteHint": "The site is taken from the selected equipment.",
       "siteOf": "Site: {{site}}",
       "selectType": "Select a service type",
       "selectRequired": "Select an option.",
       "descriptionPlaceholder": "What is happening and since when?",
-      "descriptionHint": "{{count}} of {{max}} characters. Write at least 10.",
-      "descriptionTooShort": "Describe the issue in at least 10 characters.",
+      "descriptionHint": "{{count}} of {{max}} characters.",
       "submit": "Create request",
       "submitting": "Creating request…",
       "createdTitle": "Request #{{id}} created",
-      "createdMessage": "The request is pending. Assign a technician from the service request list.",
+      "createdMessage": "The request is pending. Open it to assign a technician.",
       "createAnother": "Create another request",
-      "goToList": "Go to service requests"
+      "goToList": "Go to service requests",
+      "viewRequest": "View request"
     },
     "detail": {
       "title": "Service request detail",
@@ -712,36 +771,48 @@
       "summaryTitle": "Request details",
       "equipmentHistory": "View the service history of this equipment",
       "progressTitle": "Progress",
+      "historyTitle": "Status history",
       "technicianTitle": "Assigned technician",
       "noTechnician": "No technician is assigned yet.",
+      "technicianLoading": "Loading the technician profile…",
+      "technicianUnavailable": "We couldn't load the technician profile.",
+      "assignedAt": "Assigned {{date}}",
       "awaitingAcceptance": "Waiting for the technician to accept the request.",
-      "interventionsTitle": "Interventions",
-      "noInterventions": "No interventions have started yet.",
-      "interventionOngoing": "The technician is working on this intervention.",
-      "startedAt": "Started {{date}}",
-      "endedAt": "ended {{date}}",
+      "rejected": "The assigned technician rejected this request. Assign another technician.",
+      "interventionTitle": "Intervention",
+      "noIntervention": "No intervention has been registered yet.",
+      "interventionOngoing": "The technician is working on this request. The intervention report appears here once the work is completed.",
+      "maintenanceWindowsTitle": "Maintenance windows",
       "reviewTitle": "Service review",
+      "reviewLoading": "Loading the review…",
+      "reviewErrorTitle": "We couldn't load the review.",
       "notReviewed": "You haven't rated this service yet.",
       "reviewAfterCompletion": "You can rate the service once it is completed.",
+      "reviewedAt": "Rated {{date}}",
+      "reviewEditableUntil": "You can edit it until {{date}}.",
+      "reviewEditClosed": "The edit period ended on {{date}}.",
       "dialogLabel": "Request #{{id}} · {{equipment}}",
       "reviewDialogLabel": "Request #{{id}} · {{technician}}",
       "assigned": "The technician was assigned and will be notified.",
       "canceled": "The request was canceled.",
-      "reviewed": "Thank you. Your review was saved."
+      "reviewed": "Thank you. Your review was saved.",
+      "reviewUpdated": "Your review was updated."
     },
     "progress": {
       "done": "completed",
       "current": "current step",
       "upcoming": "upcoming",
-      "offPath": {
-        "CANCELED": "This request was canceled.",
-        "REJECTED": "The assigned technician rejected this request. Assign another technician."
-      },
-      "canceledAt": "Canceled {{date}}."
+      "canceled": "This request was canceled.",
+      "canceledAt": "Canceled {{date}}.",
+      "cancelReason": "Reason: {{reason}}"
     },
     "assign": {
       "title": "Assign technician",
       "legend": "Technicians",
+      "loading": "Loading technicians…",
+      "errorTitle": "We couldn't load the technicians.",
+      "emptyTitle": "No technicians available",
+      "emptyMessage": "There are no registered technicians to assign yet.",
       "specialtyFilter": "Filter by specialty",
       "allSpecialties": "All specialties",
       "certification": "Certification {{number}}",
@@ -749,8 +820,14 @@
       "noRatings": "No ratings yet",
       "completedServices": "Completed services: {{count}}",
       "current": "Currently assigned",
+      "profileUnavailable": "This technician's profile couldn't be loaded, so they can't be assigned.",
       "noCandidates": "No technicians have this specialty.",
       "required": "Select a technician to assign.",
+      "continue": "Continue",
+      "back": "Back",
+      "confirmText": "Assign {{technician}} to this request?",
+      "replaceWarning": "The currently assigned technician will be replaced.",
+      "acceptanceNote": "The request stays pending until the technician accepts it.",
       "confirm": "Assign technician",
       "pending": "Assigning…"
     },
@@ -759,15 +836,16 @@
       "warning": "Canceling can't be undone. The assigned technician will be notified.",
       "reason": "Reason for canceling",
       "reasonPlaceholder": "Why is this service no longer needed?",
-      "reasonHint": "Write at least 10 characters.",
+      "reasonHint": "Required. Up to {{max}} characters.",
       "reasonRequired": "Give a reason to cancel the request.",
-      "reasonTooShort": "The reason must have at least 10 characters.",
       "keep": "Keep request",
       "confirm": "Cancel request",
       "pending": "Canceling…"
     },
     "review": {
       "title": "Rate service",
+      "editTitle": "Edit review",
+      "editableUntil": "You can edit this review until {{date}}.",
       "criteria": {
         "communication": "Communication",
         "efficacy": "Technical efficacy",
@@ -776,7 +854,7 @@
       "hints": {
         "communication": "Updates, punctuality and clarity.",
         "efficacy": "Diagnosis and quality of the fix.",
-        "performance": "Would you hire this technician again?"
+        "performance": "How well the work itself was carried out."
       },
       "scoreOption": "{{score}} of 5",
       "scoreOf": "{{score}} / 5",
@@ -794,7 +872,8 @@
       "commentPlaceholder": "Tell us more about the service",
       "later": "Later",
       "submit": "Submit review",
-      "pending": "Submitting…"
+      "save": "Save changes",
+      "pending": "Saving…"
     }
   },
   "notifications": {

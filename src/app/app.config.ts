@@ -15,6 +15,7 @@ import { authenticationInterceptor } from '@iam/infrastructure/http/authenticati
 import { provideIam } from '@iam/infrastructure/iam.providers';
 import { provideProfiles } from '@profiles/infrastructure/profiles.providers';
 import { provideAssets } from '@assets/infrastructure/assets.providers';
+import { provideServiceRequests } from '@service/infrastructure/service-requests.providers';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -22,6 +23,7 @@ export const appConfig: ApplicationConfig = {
     provideIam(),
     provideProfiles(),
     provideAssets(),
+    provideServiceRequests(),
     provideTranslateService({
       loader: provideTranslateHttpLoader({ prefix: './assets/i18n/', suffix: '.json' }),
       fallbackLang: 'en',

@@ -1,0 +1,84 @@
+@let item = intervention();
+<article class="intervention-summary">
+  <p class="intervention-summary__title">
+    @if (showRequestLink()) {
+      <a class="ui-link" [routerLink]="['/service-requests', item.service_request_id]">
+        {{ 'serviceRequests.number' | translate: { id: item.service_request_id } }}
+      </a>
+      ·
+    }
+    {{
+      technicianName() ??
+        ('serviceRequests.technicianNumber' | translate: { id: item.technician_id })
+    }}
+  </p>
+  <p class="intervention-summary__meta">
+    @if (item.started_at) {
+      {{
+        'serviceRequests.intervention.startedAt'
+          | translate: { date: (item.started_at | localizedDate) }
+      }}
+    }
+    @if (item.completed_at) {
+      @if (item.started_at) {
+        ·
+      }
+      {{
+        'serviceRequests.intervention.completedAt'
+          | translate: { date: (item.completed_at | localizedDate) }
+      }}
+    }
+    @if (duration(); as length) {
+      ·
+      {{ 'serviceRequests.intervention.duration' | translate: length }}
+    }
+  </p>
+  <dl class="intervention-summary__details">
+    <div>
+      <dt>{{ 'serviceRequests.intervention.diagnosis' | translate }}</dt>
+      <dd>{{ item.diagnosis }}</dd>
+    </div>
+    <div>
+      <dt>{{ 'serviceRequests.intervention.actionsTaken' | translate }}</dt>
+      <dd>{{ item.actions_taken }}</dd>
+    </div>
+    @if (item.spare_parts.length > 0) {
+      <div>
+        <dt>{{ 'serviceRequests.intervention.spareParts' | translate }}</dt>
+        <dd>
+          <ul class="intervention-summary__list">
+            @for (part of item.spare_parts; track $index) {
+              <li>{{ part }}</li>
+            }
+          </ul>
+        </dd>
+      </div>
+    }
+    @if (photos().length > 0) {
+      <div>
+        <dt>{{ 'serviceRequests.intervention.photos' | translate }}</dt>
+        <dd>
+          <ul class="intervention-summary__list intervention-summary__list--inline">
+            @for (photo of photos(); track photo.key) {
+              <li>
+                @if (photo.url) {
+                  <a class="ui-link" [href]="photo.url" target="_blank" rel="noopener noreferrer">
+                    {{ 'serviceRequests.intervention.photo' | translate: { number: photo.number } }}
+                    <span class="visually-hidden">{{
+                      'serviceRequests.intervention.opensInNewTab' | translate
+                    }}</span>
+                  </a>
+                } @else {
+                  {{
+                    'serviceRequests.intervention.photoUnavailable'
+                      | translate: { number: photo.number }
+                  }}
+                }
+              </li>
+            }
+          </ul>
+        </dd>
+      </div>
+    }
+  </dl>
+</article>

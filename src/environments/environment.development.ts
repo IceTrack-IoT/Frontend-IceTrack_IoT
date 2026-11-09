@@ -26,6 +26,17 @@ export const environment = {
 
   /** Assets endpoints */
   iceTrackProviderSitesEndpointPath: '/assets/sites',
+  iceTrackProviderEquipmentEndpointPath: '/assets/equipments',
+
+  /** Service request endpoints */
+  iceTrackProviderServiceRequestsEndpointPath: '/service-requests',
+  iceTrackProviderServiceRequestByIdEndpointPath: '/service-requests/{serviceRequestId}',
+  iceTrackProviderAssignTechnicianEndpointPath: '/service-requests/{serviceRequestId}/assign',
+  iceTrackProviderCancelServiceRequestEndpointPath: '/service-requests/{serviceRequestId}/cancel',
+  iceTrackProviderServiceRequestReviewEndpointPath: '/service-requests/{serviceRequestId}/review',
+  iceTrackProviderReviewsEndpointPath: '/reviews',
+  iceTrackProviderReviewByIdEndpointPath: '/reviews/{reviewId}',
+  iceTrackProviderEquipmentInterventionsEndpointPath: '/assets/equipments/{equipmentId}/interventions',
 
   /** Notification endpoints */
   iceTrackProviderNotificationsEndpointPath: '/notifications',

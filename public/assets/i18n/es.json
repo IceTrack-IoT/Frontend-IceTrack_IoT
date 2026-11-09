@@ -611,13 +611,15 @@
     "eyebrow": "Solicitudes de servicio",
     "number": "Solicitud #{{id}}",
     "unassigned": "Sin asignar",
+    "equipmentNumber": "Equipo #{{id}}",
+    "siteNumber": "Sede #{{id}}",
+    "technicianNumber": "Técnico #{{id}}",
     "status": {
       "PENDING": "Pendiente",
       "ACCEPTED": "Aceptada",
-      "REJECTED": "Rechazada",
       "IN_PROGRESS": "En curso",
-      "CANCELED": "Cancelada",
-      "COMPLETED": "Completada"
+      "COMPLETED": "Completada",
+      "CANCELED": "Cancelada"
     },
     "priority": {
       "LOW": "Baja",
@@ -626,20 +628,8 @@
       "URGENT": "Urgente"
     },
     "type": {
-      "REPAIR": "Reparación",
       "PREVENTIVE_MAINTENANCE": "Mantenimiento preventivo",
-      "INSTALLATION": "Instalación",
-      "INSPECTION": "Inspección",
-      "OTHER": "Otro"
-    },
-    "interventionStatus": {
-      "PENDING": "En curso",
-      "COMPLETED": "Completada"
-    },
-    "specialty": {
-      "REFRIGERATION": "Refrigeración",
-      "ELECTRICAL": "Electricidad",
-      "GENERAL": "General"
+      "REPAIR": "Reparación"
     },
     "fields": {
       "request": "Solicitud",
@@ -650,6 +640,8 @@
       "status": "Estado",
       "type": "Tipo de servicio",
       "description": "Descripción",
+      "createdAt": "Creada",
+      "startedAt": "Inicio del trabajo",
       "completedAt": "Completada",
       "canceledAt": "Cancelada"
     },
@@ -658,28 +650,90 @@
       "assign": "Asignar técnico",
       "reassign": "Asignar otro técnico",
       "review": "Calificar servicio",
+      "editReview": "Editar calificación",
       "cancel": "Cancelar solicitud"
+    },
+    "errors": {
+      "invalid": "Algunos datos no fueron aceptados. Revísalos e inténtalo de nuevo.",
+      "notAllowed": "No tienes permiso para realizar esta acción.",
+      "notFound": "Esta solicitud no existe o no pertenece a tu cuenta.",
+      "equipmentNotFound": "El equipo seleccionado no existe o no pertenece a tu cuenta.",
+      "cancelNotAllowed": "Esta solicitud ya no se puede cancelar. La recargamos para que veas su estado actual.",
+      "assignNotAllowed": "Ya no se puede asignar un técnico a esta solicitud. La recargamos para que veas su estado actual.",
+      "staleState": "Esta solicitud cambió mientras tanto. La recargamos; revísala e inténtalo de nuevo.",
+      "technicianNotEligible": "Este técnico no se puede asignar. Elige otro técnico.",
+      "reviewNotAllowed": "Este servicio no se puede calificar ahora. Recargamos la solicitud.",
+      "reviewEditExpired": "El plazo de edición de esta calificación terminó, por lo que ya no se puede cambiar.",
+      "alreadyReviewed": "Este servicio ya fue calificado. Recargamos la calificación.",
+      "concurrentChange": "Otra persona cambió esta solicitud al mismo tiempo. La recargamos; inténtalo de nuevo.",
+      "unexpected": "No pudimos completar la acción. Revisa tu conexión e inténtalo de nuevo."
     },
     "list": {
       "title": "Solicitudes de servicio",
       "subtitle": "Servicios correctivos y preventivos para tus equipos.",
       "create": "Nueva solicitud de servicio",
       "tableTitle": "Solicitudes",
+      "total": "{{count}} solicitudes",
       "statusFilter": "Filtrar por estado",
       "allStatuses": "Todas",
-      "allPriorities": "Todas las prioridades",
-      "allTypes": "Todos los tipos",
       "equipmentFilter": "Mostrando el historial de servicio de {{equipment}}.",
       "showAll": "Mostrar todas las solicitudes",
       "loading": "Cargando solicitudes de servicio…",
       "errorTitle": "No pudimos cargar tus solicitudes de servicio.",
       "emptyTitle": "Aún no hay solicitudes de servicio",
       "emptyMessage": "Solicita una reparación o un mantenimiento preventivo para cualquiera de tus equipos.",
-      "noMatchesTitle": "Ninguna solicitud coincide con los filtros",
-      "noMatchesMessage": "Prueba otro estado, prioridad o tipo de servicio.",
+      "noMatchesTitle": "Ninguna solicitud coincide con el filtro",
+      "noMatchesMessage": "Prueba con otro estado.",
       "assignFor": "Asignar un técnico a la solicitud #{{id}}",
-      "reviewFor": "Calificar el servicio de la solicitud #{{id}}",
       "viewFor": "Ver la solicitud #{{id}}"
+    },
+    "interventions": {
+      "title": "Historial de servicio",
+      "subtitle": "Intervenciones que completaron solicitudes de servicio en este equipo, de la más reciente a la más antigua.",
+      "panelTitle": "Intervenciones",
+      "viewEquipment": "Ver equipo",
+      "loading": "Cargando el historial de intervenciones…",
+      "errorTitle": "No pudimos cargar el historial de intervenciones.",
+      "notFoundTitle": "Equipo no encontrado",
+      "notFoundMessage": "Este equipo no existe o no pertenece a tu cuenta.",
+      "emptyTitle": "Aún no hay intervenciones",
+      "emptyMessage": "Las intervenciones aparecen aquí cuando un técnico completa un servicio en este equipo."
+    },
+    "intervention": {
+      "startedAt": "Iniciada {{date}}",
+      "completedAt": "completada {{date}}",
+      "duration": "Duración {{hours}} h {{minutes}} min",
+      "diagnosis": "Diagnóstico",
+      "actionsTaken": "Acciones realizadas",
+      "spareParts": "Repuestos",
+      "photos": "Evidencia fotográfica",
+      "photo": "Foto {{number}}",
+      "photoUnavailable": "Foto {{number}} (enlace no disponible)",
+      "opensInNewTab": "(se abre en una pestaña nueva)"
+    },
+    "history": {
+      "empty": "Aún no se registraron cambios de estado.",
+      "byOwner": "por ti",
+      "byTechnician": "por {{technician}}",
+      "reason": "Motivo: {{reason}}",
+      "kind": {
+        "CREATED": "Solicitud creada",
+        "ASSIGNED": "Técnico asignado",
+        "REJECTED": "Rechazada por el técnico",
+        "ACCEPTED": "Aceptada por el técnico",
+        "STARTED": "Trabajo iniciado",
+        "COMPLETED": "Servicio completado",
+        "CANCELED": "Solicitud cancelada"
+      }
+    },
+    "maintenanceWindow": {
+      "period": "{{start}} – {{end}}",
+      "open": "aún abierta",
+      "origin": {
+        "APP": "Iniciada desde la aplicación móvil",
+        "BUTTON": "Iniciada con el botón del dispositivo",
+        "OTHER": "Iniciada desde otro origen"
+      }
     },
     "form": {
       "title": "Nueva solicitud de servicio",
@@ -687,20 +741,25 @@
       "back": "Volver a solicitudes de servicio",
       "fromAlert": "Este borrador proviene de la alerta #{{id}}. Revisa los datos y confirma para enviarlo.",
       "viewAlert": "Ver alerta",
+      "equipmentLoading": "Cargando tus equipos…",
+      "equipmentErrorTitle": "No pudimos cargar tus equipos.",
+      "noEquipmentTitle": "Aún no tienes equipos",
+      "noEquipmentMessage": "Registra un equipo antes de solicitar un servicio para él.",
+      "goToEquipment": "Ir a equipos",
       "selectEquipment": "Selecciona un equipo",
       "siteHint": "La sede se toma del equipo seleccionado.",
       "siteOf": "Sede: {{site}}",
       "selectType": "Selecciona un tipo de servicio",
       "selectRequired": "Selecciona una opción.",
       "descriptionPlaceholder": "¿Qué está pasando y desde cuándo?",
-      "descriptionHint": "{{count}} de {{max}} caracteres. Escribe al menos 10.",
-      "descriptionTooShort": "Describe el problema en al menos 10 caracteres.",
+      "descriptionHint": "{{count}} de {{max}} caracteres.",
       "submit": "Crear solicitud",
       "submitting": "Creando solicitud…",
       "createdTitle": "Solicitud #{{id}} creada",
-      "createdMessage": "La solicitud está pendiente. Asigna un técnico desde la lista de solicitudes de servicio.",
+      "createdMessage": "La solicitud está pendiente. Ábrela para asignar un técnico.",
       "createAnother": "Crear otra solicitud",
-      "goToList": "Ir a solicitudes de servicio"
+      "goToList": "Ir a solicitudes de servicio",
+      "viewRequest": "Ver solicitud"
     },
     "detail": {
       "title": "Detalle de la solicitud de servicio",
@@ -712,36 +771,48 @@
       "summaryTitle": "Datos de la solicitud",
       "equipmentHistory": "Ver el historial de servicio de este equipo",
       "progressTitle": "Progreso",
+      "historyTitle": "Historial de estados",
       "technicianTitle": "Técnico asignado",
       "noTechnician": "Aún no hay un técnico asignado.",
+      "technicianLoading": "Cargando el perfil del técnico…",
+      "technicianUnavailable": "No pudimos cargar el perfil del técnico.",
+      "assignedAt": "Asignado {{date}}",
       "awaitingAcceptance": "Esperando que el técnico acepte la solicitud.",
-      "interventionsTitle": "Intervenciones",
-      "noInterventions": "Aún no ha comenzado ninguna intervención.",
-      "interventionOngoing": "El técnico está trabajando en esta intervención.",
-      "startedAt": "Iniciada {{date}}",
-      "endedAt": "finalizada {{date}}",
+      "rejected": "El técnico asignado rechazó esta solicitud. Asigna otro técnico.",
+      "interventionTitle": "Intervención",
+      "noIntervention": "Aún no se registró ninguna intervención.",
+      "interventionOngoing": "El técnico está trabajando en esta solicitud. El informe de la intervención aparecerá aquí cuando se complete el trabajo.",
+      "maintenanceWindowsTitle": "Ventanas de mantenimiento",
       "reviewTitle": "Calificación del servicio",
+      "reviewLoading": "Cargando la calificación…",
+      "reviewErrorTitle": "No pudimos cargar la calificación.",
       "notReviewed": "Aún no calificaste este servicio.",
       "reviewAfterCompletion": "Podrás calificar el servicio una vez completado.",
+      "reviewedAt": "Calificado {{date}}",
+      "reviewEditableUntil": "Puedes editarla hasta {{date}}.",
+      "reviewEditClosed": "El plazo de edición terminó el {{date}}.",
       "dialogLabel": "Solicitud #{{id}} · {{equipment}}",
       "reviewDialogLabel": "Solicitud #{{id}} · {{technician}}",
       "assigned": "El técnico fue asignado y será notificado.",
       "canceled": "La solicitud fue cancelada.",
-      "reviewed": "Gracias. Tu calificación fue guardada."
+      "reviewed": "Gracias. Tu calificación fue guardada.",
+      "reviewUpdated": "Tu calificación fue actualizada."
     },
     "progress": {
       "done": "completado",
       "current": "paso actual",
       "upcoming": "pendiente",
-      "offPath": {
-        "CANCELED": "Esta solicitud fue cancelada.",
-        "REJECTED": "El técnico asignado rechazó esta solicitud. Asigna otro técnico."
-      },
-      "canceledAt": "Cancelada {{date}}."
+      "canceled": "Esta solicitud fue cancelada.",
+      "canceledAt": "Cancelada {{date}}.",
+      "cancelReason": "Motivo: {{reason}}"
     },
     "assign": {
       "title": "Asignar técnico",
       "legend": "Técnicos",
+      "loading": "Cargando técnicos…",
+      "errorTitle": "No pudimos cargar los técnicos.",
+      "emptyTitle": "No hay técnicos disponibles",
+      "emptyMessage": "Aún no hay técnicos registrados para asignar.",
       "specialtyFilter": "Filtrar por especialidad",
       "allSpecialties": "Todas las especialidades",
       "certification": "Certificación {{number}}",
@@ -749,8 +820,14 @@
       "noRatings": "Aún sin calificaciones",
       "completedServices": "Servicios completados: {{count}}",
       "current": "Asignado actualmente",
+      "profileUnavailable": "No se pudo cargar el perfil de este técnico, así que no se puede asignar.",
       "noCandidates": "Ningún técnico tiene esta especialidad.",
       "required": "Selecciona un técnico para asignar.",
+      "continue": "Continuar",
+      "back": "Volver",
+      "confirmText": "¿Asignar a {{technician}} a esta solicitud?",
+      "replaceWarning": "Se reemplazará al técnico asignado actualmente.",
+      "acceptanceNote": "La solicitud seguirá pendiente hasta que el técnico la acepte.",
       "confirm": "Asignar técnico",
       "pending": "Asignando…"
     },
@@ -759,15 +836,16 @@
       "warning": "La cancelación no se puede deshacer. El técnico asignado será notificado.",
       "reason": "Motivo de la cancelación",
       "reasonPlaceholder": "¿Por qué ya no se necesita este servicio?",
-      "reasonHint": "Escribe al menos 10 caracteres.",
+      "reasonHint": "Obligatorio. Hasta {{max}} caracteres.",
       "reasonRequired": "Indica un motivo para cancelar la solicitud.",
-      "reasonTooShort": "El motivo debe tener al menos 10 caracteres.",
       "keep": "Mantener solicitud",
       "confirm": "Cancelar solicitud",
       "pending": "Cancelando…"
     },
     "review": {
       "title": "Calificar servicio",
+      "editTitle": "Editar calificación",
+      "editableUntil": "Puedes editar esta calificación hasta {{date}}.",
       "criteria": {
         "communication": "Comunicación",
         "efficacy": "Eficacia técnica",
@@ -776,7 +854,7 @@
       "hints": {
         "communication": "Avisos, puntualidad y claridad.",
         "efficacy": "Diagnóstico y calidad de la reparación.",
-        "performance": "¿Volverías a contratar a este técnico?"
+        "performance": "Qué tan bien se realizó el trabajo."
       },
       "scoreOption": "{{score}} de 5",
       "scoreOf": "{{score}} / 5",
@@ -794,7 +872,8 @@
       "commentPlaceholder": "Cuéntanos más sobre el servicio",
       "later": "Más tarde",
       "submit": "Enviar calificación",
-      "pending": "Enviando…"
+      "save": "Guardar cambios",
+      "pending": "Guardando…"
     }
   },
   "notifications": {

@@ -1,0 +1,35 @@
+@if (entries().length === 0) {
+  <p class="status-history__empty">{{ 'serviceRequests.history.empty' | translate }}</p>
+} @else {
+  <ol class="status-history">
+    @for (entry of entries(); track entry.key) {
+      @let technicianLabel =
+        entry.technicianName ??
+        ('serviceRequests.technicianNumber' | translate: { id: entry.technicianId ?? '?' });
+      <li class="status-history__entry">
+        <p class="status-history__title">
+          {{ 'serviceRequests.history.kind.' + entry.kind | translate }}
+          @if (entry.kind === 'ASSIGNED' && entry.technicianId !== null) {
+            · {{ technicianLabel }}
+          }
+        </p>
+        <p class="status-history__meta">
+          <time [attr.datetime]="entry.occurredAt.toISOString()">{{
+            entry.occurredAt | localizedDate
+          }}</time>
+          ·
+          {{
+            entry.byTechnician
+              ? ('serviceRequests.history.byTechnician' | translate: { technician: technicianLabel })
+              : ('serviceRequests.history.byOwner' | translate)
+          }}
+        </p>
+        @if (entry.reason) {
+          <p class="status-history__reason">
+            {{ 'serviceRequests.history.reason' | translate: { reason: entry.reason } }}
+          </p>
+        }
+      </li>
+    }
+  </ol>
+}
