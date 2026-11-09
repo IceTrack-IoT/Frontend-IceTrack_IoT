@@ -34,6 +34,12 @@ export const environment = {
   iceTrackProviderEquipmentThresholdEndpointPath: '/assets/equipments/{equipmentId}/threshold',
   iceTrackProviderEquipmentStatusEndpointPath: '/assets/equipments/{equipmentId}/status',
 
+  /** Device management endpoints */
+  iceTrackProviderDevicesEndpointPath: '/devices',
+  iceTrackProviderUnpairDeviceEndpointPath: '/devices/{deviceId}/unpair',
+  iceTrackProviderRotateDeviceApiKeyEndpointPath: '/devices/{deviceId}/rotate-api-key',
+  iceTrackProviderDeviceStatusEndpointPath: '/devices/{deviceId}/status',
+
   /** Service request endpoints */
   iceTrackProviderServiceRequestsEndpointPath: '/service-requests',
   iceTrackProviderServiceRequestByIdEndpointPath: '/service-requests/{serviceRequestId}',
@@ -46,6 +52,24 @@ export const environment = {
 
   /** Notification endpoints */
   iceTrackProviderNotificationsEndpointPath: '/notifications',
+  iceTrackProviderUnreadNotificationCountEndpointPath: '/notifications/unread-count',
+  iceTrackProviderMarkNotificationAsReadEndpointPath: '/notifications/{notificationId}/read',
+  iceTrackProviderDismissNotificationEndpointPath: '/notifications/{notificationId}/dismiss',
+
+  /** Reporting endpoints */
+  iceTrackProviderReportsEndpointPath: '/reports',
+  iceTrackProviderReportByIdEndpointPath: '/reports/{reportId}',
+
+  /** Monitoring and alerting endpoints */
+  iceTrackProviderAlertByIdEndpointPath: '/alerts/{alertId}',
+  iceTrackProviderActiveAlertsByEquipmentEndpointPath: '/alerts/equipment/{equipmentId}/open',
+  iceTrackProviderAcknowledgeAlertEndpointPath: '/alerts/{alertId}/acknowledge',
+  iceTrackProviderResolveAlertEndpointPath: '/alerts/{alertId}/resolve',
+  iceTrackProviderDismissAlertEndpointPath: '/alerts/{alertId}/dismiss',
+  iceTrackProviderAlertPolicyByEquipmentEndpointPath: '/alert-policies/equipment/{equipmentId}',
+  iceTrackProviderReadingHistoryEndpointPath: '/telemetry/equipment/{equipmentId}',
+  iceTrackProviderTelemetryStreamTicketEndpointPath: '/telemetry/stream-ticket',
+  iceTrackProviderTelemetryStreamEndpointPath: '/telemetry/stream',
 
   /** Google Identity Services */
   googleClientId: '',
