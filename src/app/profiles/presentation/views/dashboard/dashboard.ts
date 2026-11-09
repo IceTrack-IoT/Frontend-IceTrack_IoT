@@ -3,7 +3,6 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { CardType } from '@profiles/domain/value-objects/card-type';
 import { DashboardConfigStore } from '@profiles/application/dashboard-config-store';
 import type { DashboardConfigChange } from '@profiles/application/contracts/dashboard-config-change';
 import { DashboardCardShell } from '@profiles/presentation/components/dashboard-card-shell/dashboard-card-shell';
@@ -52,7 +51,6 @@ export class Dashboard {
   protected readonly store = inject(DashboardConfigStore);
   private readonly account = inject(SIGNED_IN_ACCOUNT);
 
-  protected readonly cardTypes = CardType;
   protected readonly today = new Date();
 
   /** The site the dashboard is scoped to, or null for every site. */

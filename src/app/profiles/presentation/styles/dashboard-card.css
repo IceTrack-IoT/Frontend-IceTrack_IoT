@@ -38,6 +38,7 @@
 
 .dashboard-card__description,
 .dashboard-card__empty {
+  max-width: 72ch;
   margin: 0;
 }
 

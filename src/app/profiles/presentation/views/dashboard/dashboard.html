@@ -154,10 +154,7 @@
         } @else {
           <div class="dashboard__grid">
             @for (card of visibleCards(); track card.card_id) {
-              <app-dashboard-card-shell
-                [class.dashboard__wide]="card.card_type === cardTypes.EQUIPMENT_STATUS"
-                [cardType]="card.card_type"
-              />
+              <app-dashboard-card-shell [cardType]="card.card_type" />
             }
           </div>
         }
