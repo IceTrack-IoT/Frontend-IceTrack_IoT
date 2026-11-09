@@ -10,6 +10,7 @@ import {
 } from '@assets/application/contracts/site-registration';
 import type { AddressVerificationState } from '@assets/application/assets-store';
 import { SiteAddressVerification } from '@assets/presentation/components/site-address-verification/site-address-verification';
+import { SiteMap } from '@assets/presentation/components/site-map/site-map';
 import { Dialog } from '@shared/presentation/components/dialog/dialog';
 import { Icon } from '@shared/presentation/components/icon/icon';
 
@@ -20,7 +21,7 @@ type SiteFormControl = keyof SiteDetails;
  * The address of an existing site only changes through its own verified-address dialog.
  */
 @Component({
-  imports: [ReactiveFormsModule, TranslatePipe, Dialog, Icon, SiteAddressVerification],
+  imports: [ReactiveFormsModule, TranslatePipe, Dialog, Icon, SiteAddressVerification, SiteMap],
   selector: 'app-site-form-dialog',
   templateUrl: './site-form-dialog.html',
 })

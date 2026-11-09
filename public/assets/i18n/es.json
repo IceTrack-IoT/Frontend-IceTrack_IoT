@@ -328,6 +328,7 @@
       "verify": "Verificar dirección",
       "verifying": "Verificando…",
       "hint": "Verificamos la dirección dentro de Lima Metropolitana o el Callao antes de guardarla.",
+      "suggestions": "Direcciones sugeridas",
       "verified": "Dirección verificada",
       "validity": "La verificación es válida por 15 minutos. Guarda la sede antes de que venza.",
       "useAnother": "Usar otra dirección",
@@ -339,6 +340,11 @@
       "description": "Verifica la nueva dirección. La sede conserva sus equipos.",
       "current": "Dirección actual",
       "submit": "Guardar dirección"
+    },
+    "map": {
+      "label": "Mapa de {{place}}",
+      "loading": "Cargando mapa…",
+      "unavailable": "No se pudo cargar el mapa. La dirección sigue verificada."
     },
     "equipmentForm": {
       "createTitle": "Registrar equipo",

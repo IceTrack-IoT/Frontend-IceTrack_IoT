@@ -328,6 +328,7 @@
       "verify": "Verify address",
       "verifying": "Verifying…",
       "hint": "We verify the address within Metropolitan Lima or Callao before saving it.",
+      "suggestions": "Suggested addresses",
       "verified": "Verified address",
       "validity": "The verification is valid for 15 minutes. Save the site before it expires.",
       "useAnother": "Use another address",
@@ -339,6 +340,11 @@
       "description": "Verify the new address. The site keeps its equipment.",
       "current": "Current address",
       "submit": "Save address"
+    },
+    "map": {
+      "label": "Map of {{place}}",
+      "loading": "Loading map…",
+      "unavailable": "The map couldn't be loaded. The address is still verified."
     },
     "equipmentForm": {
       "createTitle": "Register equipment",

@@ -78,4 +78,10 @@ export const environment = {
 
   /** Google Identity Services */
   googleClientId: '',
+
+  /**
+   * Google Maps JavaScript API key, restricted to the web origins of the platform. The site maps are
+   * hidden while it is empty.
+   */
+  googleMapsApiKey: '',
 };

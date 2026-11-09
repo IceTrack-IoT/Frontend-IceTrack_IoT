@@ -41,6 +41,13 @@
             <dd>{{ existing.address }}</dd>
           </div>
         </dl>
+        @if (existing.location; as location) {
+          <app-site-map
+            [latitude]="location.latitude"
+            [longitude]="location.longitude"
+            [label]="existing.name"
+          />
+        }
         <p class="ui-field__hint">{{ 'assets.siteForm.addressHint' | translate }}</p>
       </div>
     } @else {

@@ -1,0 +1,26 @@
+@if (status() === 'ready') {
+  <div
+    class="site-map__frame"
+    role="img"
+    [attr.aria-label]="'assets.map.label' | translate: { place: label() }"
+  >
+    <google-map
+      height="100%"
+      width="100%"
+      [center]="center()"
+      [zoom]="zoom"
+      [options]="options"
+      (authFailure)="fail()"
+    >
+      <map-marker [position]="center()" [title]="label()" />
+    </google-map>
+  </div>
+} @else if (status() === 'loading') {
+  <div class="site-map__frame site-map__frame--loading" aria-hidden="true"></div>
+  <p class="visually-hidden" role="status">{{ 'assets.map.loading' | translate }}</p>
+} @else if (status() === 'failed') {
+  <p class="site-map__notice">
+    <app-icon name="info-circle" />
+    {{ 'assets.map.unavailable' | translate }}
+  </p>
+}

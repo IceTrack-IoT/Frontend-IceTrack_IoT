@@ -38,8 +38,45 @@
   font-weight: 600;
 }
 
+.address-verification__result app-site-map {
+  margin-block: var(--space-1);
+}
+
 .address-verification__change {
   justify-self: start;
+}
+
+.address-verification__suggestions {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  list-style: none;
+  border: 1px solid var(--border-control);
+  border-radius: var(--radius-control);
+  background-color: var(--surface-card);
+}
+
+.address-verification__suggestion {
+  display: grid;
+  gap: 2px;
+  padding: var(--space-1) var(--space-2);
+  cursor: pointer;
+}
+
+.address-verification__suggestion:hover,
+.address-verification__suggestion[aria-selected='true'] {
+  background-color: var(--tone-neutral-bg);
+}
+
+.address-verification__suggestion-main {
+  font-weight: 500;
+}
+
+.address-verification__suggestion-secondary {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
 }
 
 .address-verification__candidate-list {

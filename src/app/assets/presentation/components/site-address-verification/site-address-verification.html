@@ -5,6 +5,11 @@
       {{ 'assets.addressVerification.verified' | translate }}
     </p>
     <p class="address-verification__formatted">{{ verified.formattedAddress }}</p>
+    <app-site-map
+      [latitude]="verified.latitude"
+      [longitude]="verified.longitude"
+      [label]="verified.formattedAddress"
+    />
     <p class="ui-field__hint">
       @if (verified.district) {
         {{ verified.district }} ·
@@ -16,7 +21,7 @@
       class="ui-button ui-button--ghost ui-button--small address-verification__change"
       type="button"
       [disabled]="disabled()"
-      (click)="reset.emit()"
+      (click)="restart()"
     >
       <app-icon class="ui-button__icon" name="pencil" />
       {{ 'assets.addressVerification.useAnother' | translate }}
@@ -30,13 +35,19 @@
       <input
         class="ui-field__control"
         autocomplete="street-address"
+        role="combobox"
+        aria-autocomplete="list"
         [id]="id"
         [formControl]="address"
         [attr.maxlength]="maxLength"
         [placeholder]="'assets.placeholders.address' | translate"
+        [attr.aria-expanded]="open()"
+        [attr.aria-controls]="open() ? suggestionsId : null"
+        [attr.aria-activedescendant]="activeOptionId()"
         [attr.aria-invalid]="fieldError ? true : null"
         [attr.aria-describedby]="fieldError ? id + '-hint ' + id + '-error' : id + '-hint'"
-        (keydown.enter)="$event.preventDefault(); submit()"
+        (keydown)="onInputKeydown($event)"
+        (blur)="onInputBlur()"
       />
       <button
         class="ui-button ui-button--secondary"
@@ -53,6 +64,34 @@
         }}
       </button>
     </div>
+
+    @if (open()) {
+      <ul
+        class="address-verification__suggestions"
+        role="listbox"
+        [id]="suggestionsId"
+        [attr.aria-label]="'assets.addressVerification.suggestions' | translate"
+      >
+        @for (suggestion of suggestions(); track suggestion.placeId; let index = $index) {
+          <li
+            class="address-verification__suggestion"
+            role="option"
+            [id]="suggestionsId + '-' + index"
+            [attr.aria-selected]="index === activeIndex()"
+            (mousedown)="$event.preventDefault()"
+            (click)="pickSuggestion(suggestion)"
+          >
+            <span class="address-verification__suggestion-main">{{ suggestion.mainText }}</span>
+            @if (suggestion.secondaryText) {
+              <span class="address-verification__suggestion-secondary">
+                {{ suggestion.secondaryText }}
+              </span>
+            }
+          </li>
+        }
+      </ul>
+    }
+
     <p class="ui-field__hint" [id]="id + '-hint'">
       {{ 'assets.addressVerification.hint' | translate }}
     </p>
