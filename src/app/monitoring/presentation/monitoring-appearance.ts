@@ -14,25 +14,13 @@ export const ALERT_SEVERITY_APPEARANCE: Readonly<Record<AlertSeverity, StatusApp
 /** How each alert status is shown, together with its translated label. */
 export const ALERT_STATUS_APPEARANCE: Readonly<Record<AlertStatus, StatusAppearance>> = {
   [AlertStatus.OPEN]: { tone: 'critical', icon: 'bell-ringing' },
+  [AlertStatus.ACKNOWLEDGED]: { tone: 'info', icon: 'check' },
   [AlertStatus.RESOLVED]: { tone: 'success', icon: 'circle-check' },
   [AlertStatus.DISMISSED]: { tone: 'neutral', icon: 'bell-off' },
 };
-
-/** How an alert acknowledged by the owner is shown. */
-export const ACKNOWLEDGED_APPEARANCE: StatusAppearance = { tone: 'info', icon: 'check' };
 
 /** The icon of each alert type, so thermal and connectivity alerts are told apart. */
 export const ALERT_TYPE_ICONS: Readonly<Record<AlertType, IconName>> = {
   [AlertType.TEMPERATURE_EXCURSION]: 'temperature',
   [AlertType.DEVICE_OFFLINE]: 'wifi-off',
 };
-
-/** The reasons an owner can give to dismiss an alert as a false alarm. */
-export const DISMISS_REASONS = [
-  'DEFROST_CYCLE',
-  'LOADING_DOOR_OPEN',
-  'SENSOR_RELOCATION',
-  'OTHER',
-] as const;
-
-export type DismissReason = (typeof DISMISS_REASONS)[number];

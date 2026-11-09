@@ -18,6 +18,12 @@
     <span class="temperature-chart__key temperature-chart__key--outside"></span
     >{{ 'monitoring.chart.outside' | translate }}
   </li>
+  @if (chart.excursionAreas.length > 0) {
+    <li>
+      <span class="temperature-chart__key temperature-chart__key--excursion"></span
+      >{{ 'monitoring.chart.excursion' | translate }}
+    </li>
+  }
 </ul>
 
 <div
@@ -34,7 +40,7 @@
         | translate
           : {
               time: (active.reading.recorded_at | localizedDate: 'dateTime'),
-              temperature: (active.reading.average_temperature | temperature),
+              temperature: (active.reading.avg_temperature | temperature),
             })
       : ('monitoring.chart.sliderHint' | translate)
   "
@@ -51,6 +57,17 @@
     (pointermove)="track($event)"
     (pointerleave)="activeIndex.set(null)"
   >
+    <defs>
+      <pattern
+        id="temperature-chart-excursion"
+        width="8"
+        height="8"
+        patternUnits="userSpaceOnUse"
+        patternTransform="rotate(45)"
+      >
+        <line class="temperature-chart__hatch" x1="0" y1="0" x2="0" y2="8" />
+      </pattern>
+    </defs>
     <text
       class="temperature-chart__axis"
       [attr.x]="chart.left - 8"
@@ -59,6 +76,15 @@
     >
       °C
     </text>
+    @for (area of chart.excursionAreas; track area.x) {
+      <rect
+        class="temperature-chart__excursion"
+        [attr.x]="area.x"
+        [attr.y]="chart.top"
+        [attr.width]="area.width"
+        [attr.height]="chart.bottom - chart.top"
+      />
+    }
     @for (tick of chart.yTicks; track tick.value) {
       <line
         class="temperature-chart__grid"
@@ -125,7 +151,7 @@
     @for (line of chart.lines; track $index) {
       <path class="temperature-chart__line" [attr.d]="line" />
     }
-    @for (point of chart.points; track point.reading.id) {
+    @for (point of chart.points; track point.reading.reading_uid) {
       @if (point.outside) {
         <circle
           class="temperature-chart__outside"
@@ -163,7 +189,7 @@
       [style.left.px]="active.x"
     >
       <span class="temperature-chart__tooltip-value telemetry">{{
-        active.reading.average_temperature | temperature
+        active.reading.avg_temperature | temperature
       }}</span>
       <span>{{ active.reading.recorded_at | localizedDate: 'dateTime' }}</span>
       <span>
@@ -181,6 +207,14 @@
         <span class="temperature-chart__tooltip-outside">{{
           'monitoring.chart.outside' | translate
         }}</span>
+      }
+      @if (active.inExcursion) {
+        <span class="temperature-chart__tooltip-outside">{{
+          'monitoring.chart.excursion' | translate
+        }}</span>
+      }
+      @if (active.reading.under_maintenance) {
+        <span>{{ 'monitoring.chart.underMaintenance' | translate }}</span>
       }
     </div>
   }

@@ -1,0 +1,28 @@
+<app-dialog
+  [heading]="'monitoring.resolve.title' | translate"
+  [description]="alertLabel()"
+  (closed)="closed.emit()"
+>
+  <p class="ui-field__hint">{{ 'monitoring.resolve.explanation' | translate }}</p>
+
+  @if (errorKey(); as key) {
+    <p class="ui-alert ui-alert--critical" role="alert">
+      <app-icon class="ui-alert__icon" name="alert-triangle" />
+      {{ key | translate }}
+    </p>
+  }
+
+  <div dialogActions class="ui-form__actions">
+    <button class="ui-button ui-button--secondary" type="button" (click)="closed.emit()">
+      {{ 'monitoring.resolve.keepOpen' | translate }}
+    </button>
+    <button
+      class="ui-button ui-button--primary"
+      type="button"
+      [disabled]="pending()"
+      (click)="confirmed.emit()"
+    >
+      {{ (pending() ? 'monitoring.resolve.pending' : 'monitoring.resolve.confirm') | translate }}
+    </button>
+  </div>
+</app-dialog>

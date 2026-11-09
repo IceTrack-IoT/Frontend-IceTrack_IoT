@@ -94,3 +94,23 @@
   font-size: 0.75rem;
   color: var(--tone-critical-fg);
 }
+
+.telemetry-view__maintenance {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.telemetry-view__live {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.telemetry-view__live--on {
+  color: var(--tone-success-fg);
+}

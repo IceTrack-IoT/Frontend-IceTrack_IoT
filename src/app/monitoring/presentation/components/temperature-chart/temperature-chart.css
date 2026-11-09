@@ -46,6 +46,16 @@
   background-color: var(--tone-critical-fg);
 }
 
+.temperature-chart__key--excursion {
+  height: 10px;
+  border: 1px solid var(--tone-critical-fg);
+  background-image: repeating-linear-gradient(
+    45deg,
+    var(--tone-critical-fg) 0 1px,
+    transparent 1px 5px
+  );
+}
+
 .temperature-chart__plot {
   position: relative;
   overflow: hidden;
@@ -76,6 +86,16 @@
 
 .temperature-chart__band {
   fill: rgb(0 74 173 / 0.12);
+}
+
+.temperature-chart__excursion {
+  fill: url(#temperature-chart-excursion);
+  opacity: 0.35;
+}
+
+.temperature-chart__hatch {
+  stroke: var(--tone-critical-fg);
+  stroke-width: 2;
 }
 
 .temperature-chart__threshold {

@@ -6,20 +6,26 @@
       <p class="ui-page-header__subtitle">{{ 'monitoring.dashboard.subtitle' | translate }}</p>
     </div>
     <div class="ui-page-header__actions dashboard__refresh">
-      <p class="dashboard__updated" role="status">
-        @if (source.status() === 'loading') {
-          {{ 'monitoring.dashboard.refreshing' | translate }}
-        } @else if (updatedAt(); as updated) {
-          {{
-            'monitoring.dashboard.updatedAt'
-              | translate: { time: (updated | localizedDate: 'time') }
-          }}
-        }
-      </p>
+      <div class="dashboard__status" role="status">
+        <p class="dashboard__live" [class.dashboard__live--on]="store.liveStatus() === 'live'">
+          <app-icon [name]="store.liveStatus() === 'live' ? 'activity' : 'wifi-off'" />
+          {{ liveStatusKeys[store.liveStatus()] | translate }}
+        </p>
+        <p class="dashboard__updated">
+          @if (store.overviewLoading()) {
+            {{ 'monitoring.dashboard.refreshing' | translate }}
+          } @else if (store.overviewUpdatedAt(); as updated) {
+            {{
+              'monitoring.dashboard.updatedAt'
+                | translate: { time: (updated | localizedDate: 'time') }
+            }}
+          }
+        </p>
+      </div>
       <button
         class="ui-button ui-button--secondary"
         type="button"
-        [disabled]="source.status() === 'loading'"
+        [disabled]="store.overviewLoading()"
         (click)="load()"
       >
         <app-icon class="ui-button__icon" name="refresh" />
@@ -28,7 +34,7 @@
     </div>
   </header>
 
-  @switch (source.status()) {
+  @switch (status()) {
     @case ('loading') {
       <app-state-panel kind="loading" [heading]="'monitoring.dashboard.loading' | translate" />
     }
@@ -45,6 +51,12 @@
       </app-state-panel>
     }
     @default {
+      @if (store.overviewFailure() !== null) {
+        <p class="ui-alert ui-alert--warning" role="alert">
+          <app-icon class="ui-alert__icon" name="alert-triangle" />
+          {{ 'monitoring.dashboard.refreshFailed' | translate }}
+        </p>
+      }
       @if (temperatures().length === 0) {
         <app-state-panel
           kind="empty"
@@ -68,7 +80,7 @@
                     'monitoring.dashboard.sites' | translate
                   }}</span
                 >
-                <span class="dashboard__tile-value">{{ counts.sites }}</span>
+                <span class="dashboard__tile-value">{{ store.siteCount() }}</span>
               </a>
             </li>
             <li>
@@ -78,7 +90,7 @@
                     'monitoring.dashboard.monitoredEquipment' | translate
                   }}</span
                 >
-                <span class="dashboard__tile-value">{{ monitoredCount() }}</span>
+                <span class="dashboard__tile-value">{{ reportingCount() }}</span>
                 <span class="dashboard__tile-detail">
                   {{
                     'monitoring.dashboard.ofEquipment' | translate: { total: temperatures().length }
@@ -93,7 +105,7 @@
                     'monitoring.dashboard.openAlerts' | translate
                   }}</span
                 >
-                <span class="dashboard__tile-value">{{ openAlerts().length }}</span>
+                <span class="dashboard__tile-value">{{ store.activeAlerts().length }}</span>
                 <span
                   class="dashboard__tile-detail"
                   [class.dashboard__tile-detail--critical]="criticalCount() > 0"
@@ -111,7 +123,14 @@
                     'monitoring.dashboard.activeServiceRequests' | translate
                   }}</span
                 >
-                <span class="dashboard__tile-value">{{ counts.activeServiceRequests }}</span>
+                @if (store.activeServiceRequests() !== null) {
+                  <span class="dashboard__tile-value">{{ store.activeServiceRequests() }}</span>
+                } @else {
+                  <span class="dashboard__tile-value" aria-hidden="true">—</span>
+                  <span class="dashboard__tile-detail">
+                    {{ 'monitoring.dashboard.countUnavailable' | translate }}
+                  </span>
+                }
               </a>
             </li>
           </ul>
@@ -144,9 +163,12 @@
                     </a>
                   </h3>
                   <p class="dashboard__temperature-site">{{ item.equipment.siteName }}</p>
-                  @if (item.reading; as reading) {
-                    <p class="telemetry dashboard__temperature-value">
-                      {{ reading.average_temperature | temperature }}
+                  @if (item.equipment.lastKnownTemperature !== null) {
+                    <p
+                      class="telemetry dashboard__temperature-value"
+                      [class.dashboard__temperature-value--stale]="item.state === 'offline'"
+                    >
+                      {{ item.equipment.lastKnownTemperature | temperature }}
                     </p>
                   } @else {
                     <p
@@ -182,12 +204,12 @@
                               max: (item.equipment.maxCelsius | temperature),
                             }
                     }}
-                    @if (item.reading; as reading) {
+                    @if (item.equipment.lastReadingAt; as recordedAt) {
                       <br />
-                      <time [attr.datetime]="reading.recorded_at.toISOString()">
+                      <time [attr.datetime]="recordedAt.toISOString()">
                         {{
                           'monitoring.dashboard.readingAge'
-                            | translate: { age: (reading.recorded_at | relativeTime) }
+                            | translate: { age: (recordedAt | relativeTime) }
                         }}
                       </time>
                     }
@@ -219,14 +241,18 @@
                     <div>
                       <a class="ui-link" [routerLink]="['/monitoring/alerts', alert.id]">
                         {{ 'monitoring.alertType.' + alert.type | translate }} ·
-                        {{ equipmentById().get(alert.equipment_id)?.name }}
+                        {{
+                          store.equipmentById().get(alert.equipment_id)?.name ??
+                            ('monitoring.alerts.unknownEquipment' | translate)
+                        }}
                       </a>
                       <p class="dashboard__alert-meta">
                         <app-status-tag
                           [label]="'monitoring.severity.' + alert.severity | translate"
                           [appearance]="severityAppearance[alert.severity]"
                         />
-                        {{ alert.opened_at | relativeTime }}
+                        <span>{{ 'monitoring.alertStatus.' + alert.status | translate }}</span>
+                        · {{ alert.opened_at | relativeTime }}
                       </p>
                     </div>
                   </li>

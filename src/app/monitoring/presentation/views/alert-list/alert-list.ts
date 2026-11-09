@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -8,16 +8,15 @@ import { Alert } from '@monitoring/domain/model/alert.entity';
 import { AlertSeverity } from '@monitoring/domain/value-objects/alert-severity';
 import { AlertStatus } from '@monitoring/domain/value-objects/alert-status';
 import { AlertType } from '@monitoring/domain/value-objects/alert-type';
+import { MonitoringStore } from '@monitoring/application/monitoring-store';
+import type { AlertDismissal } from '@monitoring/application/contracts/alert-dismissal';
 import { AlertCard } from '@monitoring/presentation/components/alert-card/alert-card';
+import { DismissAlertDialog } from '@monitoring/presentation/components/dismiss-alert-dialog/dismiss-alert-dialog';
+import { ResolveAlertDialog } from '@monitoring/presentation/components/resolve-alert-dialog/resolve-alert-dialog';
 import {
-  type AlertDismissal,
-  DismissAlertDialog,
-} from '@monitoring/presentation/components/dismiss-alert-dialog/dismiss-alert-dialog';
-import {
-  createAlertsMock,
-  dismissAlertMock,
-  MONITORED_EQUIPMENT,
-} from '@monitoring/presentation/mocks/monitoring.mock';
+  ALERT_ACTION_SUCCESS_KEYS,
+  alertActionErrorKey,
+} from '@monitoring/presentation/monitoring-feedback';
 import { Icon } from '@shared/presentation/components/icon/icon';
 import {
   pageCountOf,
@@ -25,16 +24,17 @@ import {
   Pagination,
 } from '@shared/presentation/components/pagination/pagination';
 import { StatePanel } from '@shared/presentation/components/state-panel/state-panel';
-import { injectMockDataSource } from '@shared/presentation/mock/mock-data-source';
 
 const PAGE_SIZE = 5;
 
-type StatusFilter = AlertStatus | 'ALL';
+type StatusFilter = AlertStatus.OPEN | AlertStatus.ACKNOWLEDGED | 'ALL';
 
 /**
- * Thermal and connectivity alerts of the owner, filtered by status, severity and type. The `equipmentId`
- * query parameter shows the alerts of one equipment item. Open alerts can be acknowledged, dismissed with
- * a reason, or turned into a corrective service request draft.
+ * Active (OPEN and ACKNOWLEDGED) thermal and connectivity alerts of the owner, filtered by status,
+ * severity and type. The backend lists only active alerts, so resolved and dismissed alerts leave this
+ * list; each one stays reachable from its detail. The `equipmentId` query parameter shows the alerts of one
+ * equipment item. Alerts can be acknowledged, resolved or dismissed with a reason, or turned into a
+ * corrective service request draft.
  */
 @Component({
   imports: [
@@ -43,6 +43,7 @@ type StatusFilter = AlertStatus | 'ALL';
     TranslatePipe,
     AlertCard,
     DismissAlertDialog,
+    ResolveAlertDialog,
     Icon,
     Pagination,
     StatePanel,
@@ -52,17 +53,14 @@ type StatusFilter = AlertStatus | 'ALL';
   templateUrl: './alert-list.html',
 })
 export class AlertList {
-  protected readonly source = injectMockDataSource();
+  protected readonly store = inject(MonitoringStore);
   protected readonly statusFilters: StatusFilter[] = [
-    AlertStatus.OPEN,
-    AlertStatus.RESOLVED,
-    AlertStatus.DISMISSED,
     'ALL',
+    AlertStatus.OPEN,
+    AlertStatus.ACKNOWLEDGED,
   ];
-  protected readonly openStatus = AlertStatus.OPEN;
   protected readonly severities = Object.values(AlertSeverity);
   protected readonly types = Object.values(AlertType);
-  protected readonly equipmentById = new Map(MONITORED_EQUIPMENT.map((item) => [item.id, item]));
   protected readonly equipmentFilter = this.equipmentIdParam();
 
   protected readonly filters = inject(NonNullableFormBuilder).group({
@@ -74,28 +72,33 @@ export class AlertList {
     { initialValue: this.filters.getRawValue() },
   );
 
-  private readonly alerts = signal<Alert[]>([]);
-  /**
-   * When the owner acknowledged each alert, by alert identifier. The class diagram has no acknowledged
-   * state, so the acknowledgement is kept in the view and the alert stays open.
-   * TODO: Delegate to the monitoring store once the backend contract defines acknowledgement.
-   */
-  protected readonly acknowledgements = signal<ReadonlyMap<number, Date>>(new Map());
-  protected readonly statusFilter = signal<StatusFilter>(AlertStatus.OPEN);
+  protected readonly statusFilter = signal<StatusFilter>('ALL');
   protected readonly page = signal(1);
-  protected readonly dismissTarget = signal<Alert | null>(null);
-  /** The translation key of the outcome of the last action, announced to assistive technologies. */
-  protected readonly announcement = signal<string | null>(null);
+  /** The alert whose resolution or dismissal is being confirmed. */
+  protected readonly confirmation = signal<{
+    readonly alert: Alert;
+    readonly action: 'resolve' | 'dismiss';
+  } | null>(null);
 
+  protected readonly status = computed<'loading' | 'error' | 'ready'>(() => {
+    if (this.store.overviewLoaded()) {
+      return 'ready';
+    }
+    return this.store.overviewFailure() !== null ? 'error' : 'loading';
+  });
   private readonly scoped = computed(() =>
-    this.alerts().filter(
-      (alert) => this.equipmentFilter === null || alert.equipment_id === this.equipmentFilter,
-    ),
+    this.store
+      .activeAlerts()
+      .filter(
+        (alert) => this.equipmentFilter === null || alert.equipment_id === this.equipmentFilter,
+      ),
   );
   protected readonly statusCounts = computed(() => {
     const counts = new Map<StatusFilter, number>([['ALL', this.scoped().length]]);
     for (const alert of this.scoped()) {
-      counts.set(alert.status, (counts.get(alert.status) ?? 0) + 1);
+      if (alert.status === AlertStatus.OPEN || alert.status === AlertStatus.ACKNOWLEDGED) {
+        counts.set(alert.status, (counts.get(alert.status) ?? 0) + 1);
+      }
     }
     return counts;
   });
@@ -109,16 +112,56 @@ export class AlertList {
         (type === 'ALL' || alert.type === type),
     );
   });
+  protected readonly anyFilter = computed(() => {
+    const { severity, type } = this.filterValue();
+    return this.statusFilter() !== 'ALL' || severity !== 'ALL' || type !== 'ALL';
+  });
   protected readonly pageCount = computed(() => pageCountOf(this.filtered().length, PAGE_SIZE));
-  protected readonly visible = computed(() => pageOf(this.filtered(), this.page(), PAGE_SIZE));
+  /** The page shown, which moves back when closed alerts leave the last page. */
+  protected readonly currentPage = computed(() => Math.min(this.page(), this.pageCount()));
+  protected readonly visible = computed(() =>
+    pageOf(this.filtered(), this.currentPage(), PAGE_SIZE),
+  );
+
+  /** The confirmation announced after the last successful action. */
+  protected readonly announcement = computed(() => {
+    const state = this.store.alertActionState();
+    return state?.status === 'succeeded' ? ALERT_ACTION_SUCCESS_KEYS[state.action] : null;
+  });
+  /** Why the last action failed, outside a confirmation dialog. */
+  protected readonly actionErrorKey = computed(() => {
+    const state = this.store.alertActionState();
+    return state?.status === 'failed' && this.confirmation() === null
+      ? alertActionErrorKey(state.failure)
+      : null;
+  });
+  /** Why the action being confirmed failed. */
+  protected readonly dialogErrorKey = computed(() => {
+    const state = this.store.alertActionState();
+    return state?.status === 'failed' && this.confirmation() !== null
+      ? alertActionErrorKey(state.failure)
+      : null;
+  });
 
   constructor() {
+    this.store.clearAlertAction();
+    this.store.connectLiveUpdates(inject(DestroyRef));
     this.filters.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.page.set(1));
     this.load();
+    // A successful resolution or dismissal closes its dialog.
+    effect(() => {
+      if (this.store.alertActionState()?.status === 'succeeded') {
+        this.confirmation.set(null);
+      }
+    });
   }
 
   protected load(): void {
-    this.source.load((empty) => this.alerts.set(empty ? [] : createAlertsMock()));
+    this.store.loadOverview();
+  }
+
+  protected equipmentName(alert: Alert): string | number {
+    return this.store.equipmentById().get(alert.equipment_id)?.name ?? alert.equipment_id;
   }
 
   protected setStatusFilter(status: StatusFilter): void {
@@ -132,35 +175,31 @@ export class AlertList {
   }
 
   protected acknowledge(alert: Alert): void {
-    this.acknowledgements.update((acknowledgements) =>
-      new Map(acknowledgements).set(alert.id, new Date()),
-    );
-    this.announcement.set('monitoring.alerts.acknowledgedMessage');
+    this.store.acknowledgeAlert(alert);
   }
 
-  protected openDismiss(alert: Alert): void {
-    this.announcement.set(null);
-    this.dismissTarget.set(alert);
+  protected confirm(alert: Alert, action: 'resolve' | 'dismiss'): void {
+    this.store.clearAlertAction();
+    this.confirmation.set({ alert, action });
   }
 
-  /**
-   * TODO: Delegate to the monitoring store (dismiss alert use case). The class diagram has no field for
-   * the dismissal reason and notes, so they are collected but not kept yet.
-   */
-  protected dismiss(dismissal: AlertDismissal): void {
-    const target = this.dismissTarget();
-    if (!target || !dismissal.reason) {
-      return;
+  protected closeConfirmation(): void {
+    this.store.clearAlertAction();
+    this.confirmation.set(null);
+  }
+
+  protected resolve(): void {
+    const target = this.confirmation();
+    if (target !== null) {
+      this.store.resolveAlert(target.alert);
     }
-    this.source.mutate(() => {
-      const dismissed = dismissAlertMock(target);
-      this.alerts.update((alerts) =>
-        alerts.map((alert) => (alert.id === dismissed.id ? dismissed : alert)),
-      );
-      this.page.update((page) => Math.min(page, this.pageCount()));
-      this.dismissTarget.set(null);
-      this.announcement.set('monitoring.alerts.dismissedMessage');
-    });
+  }
+
+  protected dismiss(dismissal: AlertDismissal): void {
+    const target = this.confirmation();
+    if (target !== null) {
+      this.store.dismissAlert(target.alert, dismissal);
+    }
   }
 
   private equipmentIdParam(): number | null {

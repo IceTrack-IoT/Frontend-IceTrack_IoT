@@ -1,18 +1,16 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { Alert } from '@monitoring/domain/model/alert.entity';
-import { SensorReading } from '@monitoring/domain/model/sensor-reading.entity';
-import { AlertSeverity } from '@monitoring/domain/value-objects/alert-severity';
-import { AlertStatus } from '@monitoring/domain/value-objects/alert-status';
+import { interval, map } from 'rxjs';
 import {
-  createAlertsMock,
-  createLatestReadingsMock,
-  DASHBOARD_COUNTS,
-  MONITORED_EQUIPMENT,
-  type MonitoredEquipment,
-  STALE_READING_SECONDS,
-} from '@monitoring/presentation/mocks/monitoring.mock';
+  DEFAULT_MISSED_SYNC_WINDOWS_FOR_OFFLINE,
+  offlineAfterSeconds,
+} from '@monitoring/domain/model/alert-policy.entity';
+import { AlertSeverity } from '@monitoring/domain/value-objects/alert-severity';
+import { MonitoringStore } from '@monitoring/application/monitoring-store';
+import type { MonitoredEquipment } from '@monitoring/application/contracts/monitored-equipment';
+import { LIVE_STATUS_KEYS } from '@monitoring/presentation/monitoring-feedback';
 import {
   ALERT_SEVERITY_APPEARANCE,
   ALERT_TYPE_ICONS,
@@ -20,12 +18,17 @@ import {
 import { Icon } from '@shared/presentation/components/icon/icon';
 import { StatePanel } from '@shared/presentation/components/state-panel/state-panel';
 import { StatusTag } from '@shared/presentation/components/status-tag/status-tag';
-import { injectMockDataSource } from '@shared/presentation/mock/mock-data-source';
 import { LocalizedDatePipe } from '@shared/presentation/pipes/localized-date.pipe';
 import { RelativeTimePipe } from '@shared/presentation/pipes/relative-time.pipe';
 import { TemperaturePipe } from '@shared/presentation/pipes/temperature.pipe';
 
-/** The condition of the current temperature of an equipment item, most urgent first. */
+/**
+ * The condition of the last known temperature of an equipment item, most urgent first:
+ * - `outside`: the last reading is recent and outside the configured threshold.
+ * - `offline`: no reading arrived within the offline window of the equipment's alert policy.
+ * - `within`: the last reading is recent and within the threshold.
+ * - `none`: the equipment has never reported.
+ */
 type TemperatureState = 'outside' | 'offline' | 'within' | 'none';
 
 const STATE_ORDER: Readonly<Record<TemperatureState, number>> = {
@@ -37,15 +40,17 @@ const STATE_ORDER: Readonly<Record<TemperatureState, number>> = {
 
 interface CurrentTemperature {
   readonly equipment: MonitoredEquipment;
-  readonly reading: SensorReading | null;
   readonly state: TemperatureState;
 }
 
 const MAX_RECENT_ALERTS = 4;
+/** How often the freshness of the last readings is re-evaluated. */
+const CLOCK_TICK_MS = 15_000;
 
 /**
- * Monitoring overview of the owner: summary counters, the current temperature of each equipment item
- * with its freshness, most urgent first, and the open alerts. The owner refreshes it manually.
+ * Monitoring overview of the owner: summary counters, the last known temperature of each monitored
+ * equipment item with its freshness, most urgent first, and the active alerts. Readings and alert changes
+ * arrive live; the owner can also reload the overview from the backend.
  */
 @Component({
   imports: [
@@ -63,62 +68,66 @@ const MAX_RECENT_ALERTS = 4;
   templateUrl: './monitoring-dashboard.html',
 })
 export class MonitoringDashboard {
-  protected readonly source = injectMockDataSource();
-  protected readonly counts = DASHBOARD_COUNTS;
+  protected readonly store = inject(MonitoringStore);
   protected readonly severityAppearance = ALERT_SEVERITY_APPEARANCE;
   protected readonly typeIcons = ALERT_TYPE_ICONS;
+  protected readonly liveStatusKeys = LIVE_STATUS_KEYS;
 
-  private readonly equipment = signal<readonly MonitoredEquipment[]>([]);
-  private readonly readings = signal<SensorReading[]>([]);
-  private readonly alerts = signal<Alert[]>([]);
-  protected readonly updatedAt = signal<Date | null>(null);
+  private readonly now = toSignal(interval(CLOCK_TICK_MS).pipe(map(() => Date.now())), {
+    initialValue: Date.now(),
+  });
 
-  protected readonly monitoredCount = computed(
-    () => this.equipment().filter((item) => item.deviceId !== null).length,
+  protected readonly status = computed<'loading' | 'error' | 'ready'>(() => {
+    if (this.store.overviewLoaded()) {
+      return 'ready';
+    }
+    return this.store.overviewFailure() !== null ? 'error' : 'loading';
+  });
+  /** Deactivated equipment is not monitored. */
+  private readonly monitored = computed(() =>
+    this.store.equipment().filter((item) => item.status !== 'DEACTIVATED'),
   );
-  protected readonly openAlerts = computed(() =>
-    this.alerts().filter((alert) => alert.status === AlertStatus.OPEN),
+  /** The monitored equipment that has reported telemetry at least once. */
+  protected readonly reportingCount = computed(
+    () => this.monitored().filter((item) => item.lastReadingAt !== null).length,
   );
   protected readonly criticalCount = computed(
-    () => this.openAlerts().filter((alert) => alert.severity === AlertSeverity.CRITICAL).length,
+    () =>
+      this.store.activeAlerts().filter((alert) => alert.severity === AlertSeverity.CRITICAL).length,
   );
-  protected readonly recentAlerts = computed(() => this.openAlerts().slice(0, MAX_RECENT_ALERTS));
-  protected readonly equipmentById = computed(
-    () => new Map(this.equipment().map((item) => [item.id, item])),
+  protected readonly recentAlerts = computed(() =>
+    this.store.activeAlerts().slice(0, MAX_RECENT_ALERTS),
   );
   protected readonly temperatures = computed<CurrentTemperature[]>(() =>
-    this.equipment()
-      .map((equipment) => {
-        const reading =
-          this.readings().find((candidate) => candidate.equipment_id === equipment.id) ?? null;
-        return { equipment, reading, state: this.stateOf(equipment, reading) };
-      })
+    this.monitored()
+      .map((equipment) => ({ equipment, state: this.stateOf(equipment) }))
       .sort((first, second) => STATE_ORDER[first.state] - STATE_ORDER[second.state]),
   );
 
   constructor() {
+    this.store.connectLiveUpdates(inject(DestroyRef));
     this.load();
   }
 
-  /** Loads the snapshot again; the dashboard has no live stream yet. */
+  /** Reads the overview again from the backend. */
   protected load(): void {
-    // TODO: Load the dashboard snapshot through the monitoring store and subscribe to live updates.
-    this.source.load((empty) => {
-      this.equipment.set(empty ? [] : MONITORED_EQUIPMENT);
-      this.readings.set(empty ? [] : createLatestReadingsMock());
-      this.alerts.set(empty ? [] : createAlertsMock());
-      this.updatedAt.set(new Date());
-    });
+    this.store.loadOverview();
   }
 
-  private stateOf(equipment: MonitoredEquipment, reading: SensorReading | null): TemperatureState {
-    if (reading === null) {
+  private stateOf(equipment: MonitoredEquipment): TemperatureState {
+    const { lastReadingAt, lastKnownTemperature } = equipment;
+    if (lastReadingAt === null || lastKnownTemperature === null) {
       return 'none';
     }
-    if (Date.now() - reading.recorded_at.getTime() > STALE_READING_SECONDS * 1000) {
+    const windows =
+      this.store.policies().get(equipment.id)?.missed_sync_windows_for_offline ??
+      DEFAULT_MISSED_SYNC_WINDOWS_FOR_OFFLINE;
+    if (this.now() - lastReadingAt.getTime() > offlineAfterSeconds(windows) * 1000) {
       return 'offline';
     }
-    const value = reading.average_temperature;
-    return value < equipment.minCelsius || value > equipment.maxCelsius ? 'outside' : 'within';
+    return lastKnownTemperature < equipment.minCelsius ||
+      lastKnownTemperature > equipment.maxCelsius
+      ? 'outside'
+      : 'within';
   }
 }

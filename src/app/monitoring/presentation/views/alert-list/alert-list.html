@@ -19,7 +19,10 @@
       <span>
         {{
           'monitoring.alerts.equipmentFilter'
-            | translate: { equipment: equipmentById.get(equipmentFilter)?.name ?? equipmentFilter }
+            | translate
+              : {
+                  equipment: store.equipmentById().get(equipmentFilter)?.name ?? equipmentFilter,
+                }
         }}
         <a class="ui-link" routerLink="/monitoring/alerts">{{
           'monitoring.alerts.showAll' | translate
@@ -33,6 +36,12 @@
       {{ key | translate }}
     }
   </p>
+  @if (actionErrorKey(); as key) {
+    <p class="ui-alert ui-alert--critical" role="alert">
+      <app-icon class="ui-alert__icon" name="alert-triangle" />
+      {{ key | translate }}
+    </p>
+  }
 
   <section class="ui-panel" aria-labelledby="alert-filters-title">
     <h2 class="visually-hidden" id="alert-filters-title">
@@ -44,21 +53,21 @@
         role="group"
         [attr.aria-label]="'monitoring.alerts.statusFilter' | translate"
       >
-        @for (status of statusFilters; track status) {
+        @for (option of statusFilters; track option) {
           <button
             class="ui-segmented__option"
             type="button"
-            [attr.aria-pressed]="statusFilter() === status"
-            (click)="setStatusFilter(status)"
+            [attr.aria-pressed]="statusFilter() === option"
+            (click)="setStatusFilter(option)"
           >
             {{
-              (status === 'ALL'
+              (option === 'ALL'
                 ? 'monitoring.alerts.allStatuses'
-                : 'monitoring.alertStatus.' + status
+                : 'monitoring.alertStatus.' + option
               ) | translate
             }}
-            @if (source.status() === 'ready') {
-              <span class="ui-segmented__count">{{ statusCounts().get(status) ?? 0 }}</span>
+            @if (status() === 'ready') {
+              <span class="ui-segmented__count">{{ statusCounts().get(option) ?? 0 }}</span>
             }
           </button>
         }
@@ -93,7 +102,7 @@
     </div>
   </section>
 
-  @switch (source.status()) {
+  @switch (status()) {
     @case ('loading') {
       <app-state-panel kind="loading" [heading]="'monitoring.alerts.loading' | translate" />
     }
@@ -111,52 +120,71 @@
     }
     @default {
       @if (filtered().length === 0) {
-        <app-state-panel
-          kind="empty"
-          [heading]="
-            (statusFilter() === openStatus
-              ? 'monitoring.alerts.noOpenTitle'
-              : 'monitoring.alerts.noMatchesTitle'
-            ) | translate
-          "
-          [message]="'monitoring.alerts.noMatchesMessage' | translate"
-        >
-          <button class="ui-button ui-button--secondary" type="button" (click)="clearFilters()">
-            {{ 'shared.actions.clearFilters' | translate }}
-          </button>
-        </app-state-panel>
+        @if (anyFilter()) {
+          <app-state-panel
+            kind="empty"
+            [heading]="'monitoring.alerts.noMatchesTitle' | translate"
+            [message]="'monitoring.alerts.noMatchesMessage' | translate"
+          >
+            <button class="ui-button ui-button--secondary" type="button" (click)="clearFilters()">
+              {{ 'shared.actions.clearFilters' | translate }}
+            </button>
+          </app-state-panel>
+        } @else {
+          <app-state-panel
+            kind="empty"
+            [heading]="'monitoring.alerts.noActiveTitle' | translate"
+            [message]="'monitoring.alerts.noActiveMessage' | translate"
+          />
+        }
       } @else {
         <ul class="alert-list">
           @for (alert of visible(); track alert.id) {
             <li>
               <app-alert-card
                 [alert]="alert"
-                [equipment]="equipmentById.get(alert.equipment_id) ?? null"
-                [acknowledgedAt]="acknowledgements().get(alert.id) ?? null"
+                [equipment]="store.equipmentById().get(alert.equipment_id) ?? null"
+                [pending]="store.alertActionPending()"
                 (acknowledged)="acknowledge($event)"
-                (dismissRequested)="openDismiss($event)"
+                (resolveRequested)="confirm($event, 'resolve')"
+                (dismissRequested)="confirm($event, 'dismiss')"
               />
             </li>
           }
         </ul>
-        <app-pagination [page]="page()" [pageCount]="pageCount()" (pageChange)="page.set($event)" />
+        <app-pagination
+          [page]="currentPage()"
+          [pageCount]="pageCount()"
+          (pageChange)="page.set($event)"
+        />
       }
     }
   }
 </div>
 
-@if (dismissTarget(); as alert) {
-  <app-dismiss-alert-dialog
-    [alertLabel]="
-      'monitoring.alerts.alertLabel'
-        | translate
-          : {
-              type: ('monitoring.alertType.' + alert.type | translate),
-              equipment: equipmentById.get(alert.equipment_id)?.name ?? alert.equipment_id,
-            }
-    "
-    [pending]="source.pending()"
-    (dismissed)="dismiss($event)"
-    (closed)="dismissTarget.set(null)"
-  />
+@if (confirmation(); as target) {
+  @let label =
+    'monitoring.alerts.alertLabel'
+      | translate
+        : {
+            type: ('monitoring.alertType.' + target.alert.type | translate),
+            equipment: equipmentName(target.alert),
+          };
+  @if (target.action === 'resolve') {
+    <app-resolve-alert-dialog
+      [alertLabel]="label"
+      [pending]="store.alertActionPending()"
+      [errorKey]="dialogErrorKey()"
+      (confirmed)="resolve()"
+      (closed)="closeConfirmation()"
+    />
+  } @else {
+    <app-dismiss-alert-dialog
+      [alertLabel]="label"
+      [pending]="store.alertActionPending()"
+      [errorKey]="dialogErrorKey()"
+      (dismissed)="dismiss($event)"
+      (closed)="closeConfirmation()"
+    />
+  }
 }
