@@ -8,6 +8,8 @@ const completeGoogleRegistration = () =>
   import('./views/complete-google-registration/complete-google-registration').then(
     m => m.CompleteGoogleRegistration,
   );
+const linkGoogleAccount = () =>
+  import('./views/link-google-account/link-google-account').then(m => m.LinkGoogleAccount);
 const technicianRedirect = () =>
   import('./views/technician-redirect/technician-redirect').then(m => m.TechnicianRedirect);
 const unauthorized = () => import('./views/unauthorized/unauthorized').then(m => m.Unauthorized);
@@ -20,6 +22,7 @@ export const IamRoutes: Routes = [
     canActivate: [publicIamGuard],
     loadComponent: completeGoogleRegistration,
   },
+  { path: 'link-google-account', canActivate: [publicIamGuard], loadComponent: linkGoogleAccount },
   {
     path: 'technician-redirect',
     canActivate: [technicianRedirectGuard],

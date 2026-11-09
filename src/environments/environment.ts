@@ -2,14 +2,12 @@ export const environment = {
   production: true,
   iceTrackProviderApiBaseUrl: 'http://localhost:8080/api/v1',
 
-  /** User endpoint */
-  iceTrackProviderUsersEndpointPath: '/users',
-
   /** Authentication endpoints */
   iceTrackProviderMeEndpointPath: '/authentication/me',
   iceTrackProviderAuthenticationLocalEndpointPath: '/authentication/sign-in/local',
   iceTrackProviderSignUpOwnerEndpointPath: '/authentication/sign-up/owner',
   iceTrackProviderAuthenticationGoogleVerifyEndpointPath: '/authentication/google/verify',
+  iceTrackProviderLinkGoogleAccountEndpointPath: '/authentication/google/link',
   iceTrackProviderCompleteRegistrationOwnerEndpointPath:
     '/authentication/google/complete-registration/owner',
   iceTrackProviderRefreshTokensEndpointPath: '/authentication/refresh-token',

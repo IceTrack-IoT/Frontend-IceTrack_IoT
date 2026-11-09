@@ -58,6 +58,7 @@
   "iam": {
     "fields": {
       "username": "Username",
+      "usernameOrEmail": "Username or email",
       "password": "Password",
       "confirmPassword": "Confirm password",
       "fullName": "Full name",
@@ -72,8 +73,9 @@
     },
     "placeholders": {
       "username": "e.g. roberto_morales",
+      "usernameOrEmail": "e.g. roberto_morales or contact@company.com",
       "password": "Enter your password",
-      "newPassword": "At least 8 characters",
+      "newPassword": "8 to 64 characters",
       "confirmPassword": "Repeat the password",
       "fullName": "e.g. Roberto Morales",
       "email": "contact@company.com",
@@ -86,7 +88,7 @@
       "country": "e.g. Peru"
     },
     "hints": {
-      "password": "Use at least 8 characters.",
+      "password": "Use 8 to 64 characters, with at least one uppercase letter, one lowercase letter and one digit.",
       "ruc": "11 digits, numbers only."
     },
     "sections": {
@@ -97,16 +99,21 @@
       "email": "Enter a valid email address, for example name@company.com.",
       "phone": "Enter a valid phone number: digits, spaces, hyphens or parentheses, with an optional leading +.",
       "ruc": "The RUC must have exactly 11 digits.",
-      "passwordLength": "The password must have at least 8 characters.",
+      "passwordLength": "The password must have 8 to 64 characters.",
+      "passwordComposition": "The password must include at least one uppercase letter, one lowercase letter and one digit.",
+      "passwordTooLong": "The password is too long.",
       "passwordMismatch": "The passwords don't match."
     },
     "errors": {
       "invalidCredentials": "We couldn't sign you in. Check your username and password and try again.",
-      "federatedAccount": "This account signs in with Google. Use Continue with Google to access it.",
+      "tooManyAttempts": "Too many failed attempts. Wait a few minutes and try again.",
       "googleSignInFailed": "We couldn't continue with Google. Try again, or use the form below.",
       "googleUnavailable": "Google sign-in is unavailable right now. You can continue with the form below.",
       "invalidRegistration": "Some of your details were rejected. Review them and try again.",
-      "registrationRejected": "We couldn't create your account. Your username, email or RUC may already be registered. Review your details and try again."
+      "accountAlreadyRegistered": "Your username, email or RUC is already registered. Change it and try again.",
+      "registrationRejected": "We couldn't create your account. Review your details and try again.",
+      "invalidLinkPassword": "We couldn't link your Google account. Check the password and try again.",
+      "googleAccountLinkFailed": "We couldn't link your Google account. Try again, or sign in with your username and password."
     },
     "actions": {
       "signOut": "Sign out",
@@ -143,6 +150,16 @@
       "expiredTitle": "Continue with Google again",
       "expiredMessage": "To complete your registration, return to sign in and select Continue with Google again.",
       "completed": "Your account is ready. Signing you in…"
+    },
+    "linkGoogleAccount": {
+      "title": "Link your Google account",
+      "subtitle": "An IceTrack account already uses the email of this Google account.",
+      "notice": "Enter the password of that account to link it. Afterwards, you can sign in with Google or with your password.",
+      "submit": "Link and sign in",
+      "submitting": "Linking account…",
+      "expiredTitle": "Continue with Google again",
+      "expiredMessage": "To link your Google account, return to sign in and select Continue with Google again.",
+      "completed": "Your Google account is linked. Signing you in…"
     },
     "technicianRedirect": {
       "title": "The web platform is for business owners",

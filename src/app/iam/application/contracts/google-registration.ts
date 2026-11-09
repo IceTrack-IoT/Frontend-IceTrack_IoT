@@ -1,6 +1,7 @@
 /**
  * GoogleRegistrationProfile contains the onboarding data a Google user provides to complete the
- * registration. The username and email come from the Google account.
+ * registration. The backend takes the full name and email from the Google ID token; the username is
+ * chosen by the user and is never derived from the Google email.
  */
 export interface GoogleRegistrationProfile {
   readonly username: string;

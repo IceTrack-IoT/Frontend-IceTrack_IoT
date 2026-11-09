@@ -1,12 +1,16 @@
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { IamStore } from '@iam/application/iam-store';
 import type { GoogleCredential } from '@iam/application/contracts/google-credential';
 import { GoogleSignInButton } from '@iam/presentation/components/google-sign-in-button/google-sign-in-button';
 import {
-  GOOGLE_SIGN_IN_ERROR_KEY,
+  authenticationContinuationUrl,
+  followAuthenticationContinuation,
+} from '@iam/presentation/authentication-continuation';
+import {
+  googleSignInErrorKey,
   localSignInErrorKey,
 } from '@iam/presentation/authentication-feedback';
 import { Icon } from '@shared/presentation/components/icon/icon';
@@ -22,7 +26,6 @@ type LoginControl = 'username' | 'password';
 })
 export class Login {
   protected readonly iamStore = inject(IamStore);
-  private readonly router = inject(Router);
 
   protected readonly form = inject(NonNullableFormBuilder).group({
     username: ['', Validators.required],
@@ -33,27 +36,22 @@ export class Login {
   private readonly signInMethod = signal<'local' | 'google'>('local');
 
   /**
-   * The translation key of the sign-in failure. An unregistered Google account is not a failure here:
-   * it continues to the Google registration.
+   * The translation key of the sign-in failure. Outcomes that continue elsewhere (Google onboarding,
+   * an account that must use the mobile application) are not failures here.
    */
   protected readonly errorKey = computed(() => {
-    if (this.iamStore.error() === null || this.iamStore.googleRegistrationRequired()) {
+    if (this.iamStore.error() === null || authenticationContinuationUrl(this.iamStore) !== null) {
       return null;
     }
+    const code = this.iamStore.errorCode();
     return this.signInMethod() === 'google'
-      ? GOOGLE_SIGN_IN_ERROR_KEY
-      : localSignInErrorKey(this.iamStore.errorCode());
+      ? googleSignInErrorKey(code)
+      : localSignInErrorKey(code);
   });
 
   constructor() {
     this.iamStore.clearFeedback();
-    effect(() => {
-      if (this.iamStore.isAuthenticated()) {
-        void this.router.navigateByUrl('/');
-      } else if (this.iamStore.googleRegistrationRequired()) {
-        void this.router.navigateByUrl('/iam/complete-google-registration');
-      }
-    });
+    followAuthenticationContinuation('/iam/login');
   }
 
   protected submit(): void {
