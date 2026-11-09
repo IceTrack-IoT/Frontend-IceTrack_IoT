@@ -386,52 +386,70 @@
     "status": {
       "UNPAIRED": "Unpaired",
       "PAIRED": "Paired",
-      "ONLINE": "Online",
-      "OFFLINE": "Offline"
+      "REVOKED": "Key revoked"
     },
     "fields": {
       "device": "Device",
+      "boardModel": "Board model",
       "status": "Status",
       "equipment": "Equipment",
       "site": "Site",
-      "credential": "Credential",
-      "lastRead": "Last reading"
+      "credential": "API key",
+      "lastSeen": "Last seen"
     },
     "list": {
       "title": "Monitoring devices",
-      "subtitle": "Pair devices with your equipment and manage their credentials.",
+      "subtitle": "Pair devices with your equipment and manage their API keys.",
       "pair": "Pair a device",
       "tableTitle": "Devices",
-      "pairingFilter": "Filter by pairing",
+      "statusFilter": "Filter by status",
       "all": "All",
-      "paired": "Paired",
-      "unpaired": "The device was unpaired.",
-      "equipmentFilter": "Showing the device of {{equipment}}.",
+      "equipmentFilter": "Showing the devices of {{equipment}}.",
       "showAll": "Show all devices",
       "loading": "Loading devices…",
       "errorTitle": "We couldn't load your devices.",
+      "refreshFailed": "We couldn't refresh your devices. The list may be out of date.",
+      "noEquipmentTitle": "You have no equipment yet",
+      "noEquipmentMessage": "Register an equipment item first; then pair a device with it.",
+      "goToEquipment": "Go to equipment",
       "emptyTitle": "No devices to show",
-      "noDeviceForEquipment": "No device is paired with this equipment",
+      "noDeviceForEquipment": "No device is linked to this equipment",
       "emptyMessage": "Pair a monitoring device so its equipment starts reporting telemetry.",
-      "deviceLabel": "Device #{{id}}",
-      "deviceOfEquipment": "Device #{{id}} · {{equipment}}",
+      "noMatchTitle": "No devices match this filter",
+      "noMatchMessage": "Choose another status to see the rest of your devices.",
+      "deviceLabel": "Device {{uid}}",
+      "deviceOfEquipment": "Device {{uid}} · {{equipment}}",
+      "equipmentLabel": "Equipment #{{id}}",
       "firmware": "Firmware {{version}}",
       "notPaired": "Not paired",
+      "telemetry": "Telemetry",
+      "alerts": "Alerts",
       "credentialActive": "Active",
-      "noCredential": "No active credential",
-      "never": "Never",
-      "pairShort": "Pair",
-      "pairDevice": "Pair device #{{id}}",
+      "credentialRevoked": "Revoked",
+      "noReadings": "No readings yet",
       "rotate": "Rotate key",
-      "rotateFor": "Rotate the key of device #{{id}}",
-      "issue": "Issue key",
-      "issueFor": "Issue a key for device #{{id}}",
+      "rotateFor": "Rotate the key of device {{uid}}",
+      "reissue": "Issue new key",
+      "reissueFor": "Issue a new key for device {{uid}}",
       "revoke": "Revoke key",
-      "revokeFor": "Revoke the key of device #{{id}}",
+      "revokeFor": "Revoke the key of device {{uid}}",
       "unpair": "Unpair",
-      "unpairFor": "Unpair device #{{id}}",
-      "rotated": "The device key was replaced.",
+      "unpairFor": "Unpair device {{uid}}"
+    },
+    "feedback": {
+      "paired": "The device was paired.",
+      "unpaired": "The device was unpaired and its key no longer works.",
+      "rotated": "The device received a new key.",
       "revoked": "The device key was revoked."
+    },
+    "errors": {
+      "pairingConflict": "This board is already paired, or the equipment already has a paired device. The list was refreshed.",
+      "equipmentNotFound": "The equipment doesn't exist or isn't yours. The list was refreshed.",
+      "deviceChanged": "This device changed in the meantime. The list was refreshed; close this and try again if needed.",
+      "deviceNotFound": "The device doesn't exist or isn't linked to your equipment anymore. The list was refreshed.",
+      "invalidPairing": "Check the device data and try again.",
+      "accessDenied": "You aren't allowed to do this.",
+      "unexpected": "We couldn't complete the action. Check your connection and try again."
     },
     "credential": {
       "rotate": {
@@ -440,9 +458,15 @@
         "confirm": "Rotate key",
         "pending": "Rotating…"
       },
+      "reissue": {
+        "title": "Issue a new device key",
+        "warning": "A new key will be issued and the device will be paired again. Load the new key on the device so it resumes sending telemetry.",
+        "confirm": "Issue new key",
+        "pending": "Issuing…"
+      },
       "revoke": {
         "title": "Revoke device key",
-        "warning": "The device will stop sending telemetry until you issue a new key. Its equipment will appear offline meanwhile.",
+        "warning": "The key stops working at once and the device can no longer send telemetry. The device stays linked to its equipment; issue a new key to resume.",
         "acknowledgement": "I understand the device will stop sending telemetry.",
         "acknowledgementRequired": "Confirm that you understand the consequence before revoking the key.",
         "confirm": "Revoke key",
@@ -451,7 +475,7 @@
       },
       "storeNow": "Store this key now. It won't be shown again.",
       "hashOnly": "IceTrack only keeps a fingerprint of the key. If you lose it, rotate the key again.",
-      "newKey": "New device key",
+      "newKey": "Device API key",
       "copy": "Copy",
       "copied": "Copied",
       "copyFailed": "We couldn't copy the key. Select it and copy it manually.",
@@ -459,34 +483,39 @@
       "done": "Done"
     },
     "unpair": {
-      "title": "Unpair device #{{id}}?",
-      "message": "{{equipment}} will stop reporting telemetry until another device is paired with it.",
+      "title": "Unpair device {{uid}}?",
+      "message": "{{equipment}} will stop reporting telemetry until another device is paired with it. The device key stops working at once.",
+      "messageUnknown": "Its equipment will stop reporting telemetry until another device is paired with it. The device key stops working at once.",
       "confirm": "Unpair device",
       "pending": "Unpairing…"
     },
     "pairing": {
       "title": "Pair a device",
-      "subtitle": "Link an unpaired monitoring device with an equipment item that has no device.",
+      "subtitle": "Link a monitoring board with an equipment item that has no paired device. Its API key is issued right away.",
       "back": "Back to devices",
-      "loading": "Loading devices and equipment…",
-      "errorTitle": "We couldn't load the devices available for pairing.",
-      "noDevicesTitle": "No unpaired devices",
-      "noDevicesMessage": "All your devices are already paired. Unpair a device to link it with other equipment.",
-      "noEquipmentTitle": "All your equipment already has a device",
-      "noEquipmentMessage": "Unpair a device from its equipment, or register new equipment, to pair another device.",
-      "device": "Device",
-      "deviceHint": "Only unpaired devices are listed.",
-      "selectDevice": "Select a device",
-      "deviceRequired": "Select the device to pair.",
+      "loading": "Loading your equipment and devices…",
+      "errorTitle": "We couldn't load the equipment available for pairing.",
+      "noEquipmentTitle": "You have no equipment yet",
+      "noEquipmentMessage": "Register an equipment item first; then pair a device with it.",
+      "allPairedTitle": "All your equipment already has a device",
+      "allPairedMessage": "Unpair a device from its equipment, or register new equipment, to pair another device.",
       "equipment": "Equipment",
-      "equipmentHint": "Only equipment without a device is listed.",
+      "equipmentHint": "Only equipment without a paired device is listed.",
       "selectEquipment": "Select an equipment item",
       "equipmentRequired": "Select the equipment to pair the device with.",
+      "deviceUid": "Device UID",
+      "deviceUidHint": "The unique identifier of the board. A board unpaired earlier can be paired again with the same UID.",
+      "deviceUidRequired": "Enter the device UID.",
+      "boardModel": "Board model",
+      "boardModelRequired": "Enter the board model.",
+      "firmwareVersion": "Firmware version (optional)",
+      "firmwareVersionHint": "The firmware version currently running on the board.",
+      "tooLong": "Use {{max}} characters or fewer.",
       "confirm": "Pair device",
       "pending": "Pairing…",
       "successTitle": "Device paired",
-      "successMessage": "Device #{{id}} is now paired with {{equipment}}.",
-      "credentialNext": "Issue a key for the device from the device list so it can start sending telemetry.",
+      "successMessage": "Device {{uid}} is now paired with {{equipment}}. Load this key on the device so it can send telemetry.",
+      "confirmStoredToContinue": "Confirm that you stored the key to continue.",
       "pairAnother": "Pair another device",
       "viewEquipment": "View equipment",
       "goToDevices": "Go to devices"
@@ -504,7 +533,8 @@
     "alertStatus": {
       "OPEN": "Open",
       "RESOLVED": "Resolved",
-      "DISMISSED": "Dismissed"
+      "DISMISSED": "Dismissed",
+      "ACKNOWLEDGED": "Acknowledged"
     },
     "alertType": {
       "TEMPERATURE_EXCURSION": "Temperature excursion",
@@ -522,15 +552,18 @@
       "severity": "Severity",
       "type": "Type",
       "openedAt": "Opened",
-      "closedAt": "Closed",
       "peakTemperature": "Peak temperature",
-      "excursionDuration": "Excursion duration",
       "threshold": "Threshold",
       "recordedAt": "Recorded",
       "averageTemperature": "Average temperature",
       "temperatureRange": "Min – max",
       "humidity": "Humidity",
-      "device": "Device"
+      "device": "Device",
+      "triggeringTemperature": "Triggering temperature",
+      "alertDuration": "Duration",
+      "dismissReason": "Dismissal reason",
+      "dismissEvidence": "Evidence",
+      "maintenance": "Maintenance"
     },
     "dashboard": {
       "title": "Monitoring overview",
@@ -551,40 +584,42 @@
       "criticalAlerts": "Critical: {{count}}",
       "activeServiceRequests": "Active service requests",
       "currentTitle": "Current temperatures",
-      "currentSubtitle": "Last reading of each equipment item. Open one to see its history.",
+      "currentSubtitle": "Last known reading of each equipment item. Open one to see its history.",
       "thresholdShort": "Safe range {{min}} to {{max}}",
       "readingAge": "Reported {{age}}",
       "alertsTitle": "Open alerts",
       "viewAllAlerts": "View all alerts",
-      "noOpenAlerts": "No open alerts"
+      "noOpenAlerts": "No open alerts",
+      "refreshFailed": "We couldn't refresh the overview. The data shown may be out of date.",
+      "countUnavailable": "Not available right now"
     },
     "alerts": {
       "title": "Alerts",
-      "subtitle": "Temperature excursions and offline devices across your equipment.",
+      "subtitle": "Active temperature excursions and offline devices across your equipment.",
       "backToOverview": "Monitoring overview",
       "filters": "Alert filters",
       "statusFilter": "Filter by status",
-      "allStatuses": "All",
+      "allStatuses": "All active",
       "allSeverities": "All severities",
       "allTypes": "All types",
       "equipmentFilter": "Showing the alerts of {{equipment}}.",
       "showAll": "Show all alerts",
       "loading": "Loading alerts…",
       "errorTitle": "We couldn't load your alerts.",
-      "noOpenTitle": "No open alerts",
       "noMatchesTitle": "No alerts match the filters",
       "noMatchesMessage": "Try another status, severity or type.",
       "unknownEquipment": "Unknown equipment",
       "openedAt": "Opened {{date}}",
-      "closedAt": "closed {{date}}",
       "viewDetails": "View details",
       "acknowledge": "Acknowledge",
-      "acknowledged": "Acknowledged",
-      "acknowledgedMessage": "You acknowledged the alert. It stays open until the condition clears.",
       "dismiss": "Dismiss",
-      "dismissedMessage": "The alert was dismissed.",
       "requestService": "Request service",
-      "alertLabel": "{{type}} · {{equipment}}"
+      "alertLabel": "{{type}} · {{equipment}}",
+      "noActiveTitle": "No active alerts",
+      "noActiveMessage": "Resolved and dismissed alerts leave this list. Open an alert from its notification to see its history.",
+      "acknowledgedAt": "acknowledged {{date}}",
+      "acknowledging": "Acknowledging…",
+      "resolve": "Resolve"
     },
     "alertDetail": {
       "title": "Alert detail",
@@ -595,35 +630,32 @@
       "notFoundTitle": "Alert not found",
       "notFoundMessage": "This alert doesn't exist or doesn't belong to your equipment.",
       "factsTitle": "What happened",
-      "stillOpen": "Still open",
       "explanation": {
         "TEMPERATURE_EXCURSION": "The temperature of the equipment stayed outside its threshold longer than its alert policy allows.",
         "DEVICE_OFFLINE": "The monitoring device of the equipment stopped sending readings."
       },
       "actionsTitle": "Actions",
-      "acknowledgedNote": "You acknowledged this alert at {{date}}. It stays open until the condition clears.",
       "requestServiceHint": "The request form opens prefilled with this equipment. You confirm it before it is sent.",
       "closedNote": "This alert is closed. No further actions are available.",
       "viewTelemetry": "View equipment telemetry",
-      "triggerTitle": "Reading that triggered the alert"
+      "lifecycleTitle": "Lifecycle",
+      "triggerTitle": {
+        "TEMPERATURE_EXCURSION": "Reading that triggered the alert",
+        "DEVICE_OFFLINE": "Last reading before the device went offline"
+      }
     },
     "dismiss": {
       "title": "Dismiss alert",
-      "explanation": "Dismissed alerts stay in the history with the reason you give.",
+      "explanation": "Dismiss the alert only if it is a false alarm, such as a planned defrost cycle. The reason is recorded, and dismissed alerts are excluded from thermal excursion reports.",
       "reason": "Reason",
-      "selectReason": "Select a reason",
-      "reasonRequired": "Select why you are dismissing the alert.",
-      "reasons": {
-        "DEFROST_CYCLE": "Defrost cycle",
-        "LOADING_DOOR_OPEN": "Loading door open",
-        "SENSOR_RELOCATION": "Sensor relocation",
-        "OTHER": "Other"
-      },
-      "notes": "Notes",
-      "notesPlaceholder": "Add details for the history",
-      "keepOpen": "Keep open",
+      "reasonRequired": "Enter why you are dismissing the alert.",
+      "keepOpen": "Keep active",
       "confirm": "Dismiss alert",
-      "pending": "Dismissing…"
+      "pending": "Dismissing…",
+      "reasonPlaceholder": "Why this alert is not an actual fault",
+      "reasonHint": "Required. Up to {{max}} characters.",
+      "evidence": "Evidence",
+      "evidencePlaceholder": "A note or a link to a maintenance record"
     },
     "telemetry": {
       "title": "Equipment telemetry",
@@ -637,13 +669,11 @@
       "viewEquipment": "Equipment detail",
       "viewAlerts": "Alerts",
       "currentTitle": "Current reading",
-      "staleNotice": "No readings since {{age}}. The value shown is the last known reading.",
+      "staleNotice": "No readings since {{age}}. The value shown is the last known reading, not a current one.",
       "noTelemetryTitle": "No telemetry yet",
-      "noTelemetryMessage": "This equipment has not reported any reading yet.",
-      "noDeviceMessage": "Pair a monitoring device with this equipment to receive its readings.",
+      "noTelemetryMessage": "This equipment has not reported any reading yet. Pair a monitoring device with it if it has none.",
       "pairDevice": "Pair a device",
       "historyTitle": "Temperature history",
-      "interval": "Readings aggregated every {{minutes}} minutes",
       "rangeLabel": "Period",
       "ranges": {
         "2H": "2 hours",
@@ -662,7 +692,12 @@
       "tableLabel": "Temperature readings",
       "noHistoryTitle": "No readings in this period",
       "noHistoryMessage": "Choose a longer period, or check that the device is reporting.",
-      "policyTitle": "Alert policy"
+      "policyTitle": "Alert policy",
+      "historySubtitle": "Each point is one reading batch. The line breaks where readings are missing.",
+      "historyLoading": "Loading readings…",
+      "historyErrorTitle": "We couldn't load the readings of this period.",
+      "underMaintenance": "Under maintenance",
+      "excursionSince": "A temperature excursion alert has been active since {{date}} (hatched area)."
     },
     "policy": {
       "state": "State",
@@ -671,7 +706,12 @@
       "sustainedExcursion": "Excursion time before alerting",
       "hysteresis": "Hysteresis margin",
       "offlineAfter": "Offline after",
-      "missedWindows": "{{count}} missed reporting windows"
+      "missedWindows": "{{count}} missed reporting windows",
+      "scope": "Applies",
+      "platformDefault": "Platform default policy",
+      "equipmentSpecific": "Specific to this equipment",
+      "loading": "Loading the alert policy…",
+      "unavailable": "The alert policy of this equipment couldn't be read."
     },
     "chart": {
       "average": "Average temperature",
@@ -684,7 +724,45 @@
       "sliderHint": "Use the arrow keys to read each reading.",
       "valueText": "{{time}}: {{temperature}}",
       "rangeValue": "Min {{min}} · max {{max}}",
-      "humidity": "Humidity {{value}} %"
+      "humidity": "Humidity {{value}} %",
+      "excursion": "Active excursion alert",
+      "underMaintenance": "Under maintenance"
+    },
+    "actions": {
+      "acknowledged": "You acknowledged the alert. It stays active until it is resolved or dismissed.",
+      "resolved": "The alert was resolved.",
+      "dismissed": "The alert was dismissed."
+    },
+    "errors": {
+      "alertChanged": "Someone already changed this alert. It now shows its current status.",
+      "alertNotFound": "This alert is no longer available.",
+      "invalidDismissal": "Check the reason and evidence, then try again.",
+      "accessDenied": "Your account can't change this alert.",
+      "unexpected": "We couldn't update the alert. Try again."
+    },
+    "live": {
+      "connecting": "Connecting to live updates…",
+      "live": "Live updates on",
+      "reconnecting": "Reconnecting live updates…",
+      "unavailable": "Live updates unavailable. Refresh to see the latest data."
+    },
+    "lifecycle": {
+      "opened": "Opened",
+      "acknowledged": "Acknowledged",
+      "resolved": "Resolved",
+      "dismissed": "Dismissed"
+    },
+    "actor": {
+      "you": "by you",
+      "user": "by user #{{id}}",
+      "automatic": "automatically by the platform"
+    },
+    "resolve": {
+      "title": "Resolve alert",
+      "explanation": "Resolve the alert once its condition has been corrected. The alert closes and records that you resolved it.",
+      "keepOpen": "Keep active",
+      "confirm": "Resolve alert",
+      "pending": "Resolving…"
     }
   },
   "serviceRequests": {
@@ -964,11 +1042,13 @@
     },
     "types": {
       "MAINTENANCE_REMINDER": "Maintenance reminder",
+      "TEMPERATURE_EXCURSION": "Temperature excursion",
       "DEVICE_OFFLINE": "Device offline",
       "LOW_BATTERY": "Low battery",
       "SENSOR_FAILURE": "Sensor failure",
       "SERVICE_REQUEST_UPDATE": "Service request update",
-      "OUT_OF_RANGER_TEMPERATURE": "Temperature out of range"
+      "MAINTENANCE_WINDOW": "Maintenance window",
+      "UNLINKED_MAINTENANCE_WINDOW": "Maintenance without a service request"
     },
     "bell": {
       "label": "Notifications",
@@ -978,21 +1058,14 @@
       "eyebrow": "Notification center",
       "title": "Notifications",
       "unreadSummary": "Unread notifications: {{count}}",
-      "markAllAsRead": "Mark all as read",
       "listTitle": "Active notifications",
       "readFilter": "Filter by read state",
       "all": "All",
       "unreadOnly": "Unread",
-      "severityFilter": "Severity",
-      "allSeverities": "All severities",
-      "typeFilter": "Type",
-      "allTypes": "All types",
       "loading": "Loading notifications…",
       "errorTitle": "We couldn't load your notifications.",
       "emptyTitle": "You're all caught up",
       "emptyMessage": "New alerts and service updates will appear here.",
-      "noMatchesTitle": "No notifications match the filters",
-      "noMatchesMessage": "Try another read state, severity or type.",
       "read": "Read",
       "unread": "Unread",
       "readAt": "read {{date}}",
@@ -1002,8 +1075,16 @@
       "markAsRead": "Mark as read",
       "dismiss": "Dismiss",
       "markedAsRead": "The notification was marked as read.",
-      "allMarkedAsRead": "All notifications were marked as read.",
-      "dismissed": "The notification was dismissed."
+      "dismissed": "The notification was dismissed.",
+      "refreshFailed": "We couldn't refresh your notifications. The list may be out of date.",
+      "noUnreadTitle": "No unread notifications",
+      "noUnreadMessage": "You've read every active notification.",
+      "showAll": "Show all notifications"
+    },
+    "errors": {
+      "notificationChanged": "This notification is no longer available or already changed. The list was refreshed.",
+      "accessDenied": "You aren't allowed to do this.",
+      "unexpected": "We couldn't complete the action. Check your connection and try again."
     }
   },
   "reporting": {
@@ -1022,12 +1103,11 @@
     },
     "format": {
       "PDF": "PDF",
-      "EXCEL": "Excel",
+      "XLSX": "Excel (XLSX)",
       "CSV": "CSV"
     },
     "fields": {
       "report": "Report",
-      "title": "Report title",
       "type": "Report type",
       "status": "Status",
       "format": "Format",
@@ -1035,7 +1115,8 @@
       "equipment": "Equipment",
       "dateRange": "Period",
       "requestedAt": "Requested",
-      "completedAt": "Completed"
+      "completedAt": "Completed",
+      "name": "Report name"
     },
     "actions": {
       "view": "View",
@@ -1045,7 +1126,11 @@
       "invalidRange": "The start date must be on or before the end date."
     },
     "download": {
-      "simulated": "The download will start once the reporting service is connected."
+      "open": "Open {{format}} file",
+      "openFor": "Open the {{format}} file of {{name}}",
+      "prepareFor": "Get the download link of {{name}}",
+      "preparing": "Preparing…",
+      "linkValidity": "The link is valid for 15 minutes."
     },
     "list": {
       "title": "Reports",
@@ -1054,7 +1139,7 @@
       "archiveTitle": "Report archive",
       "showing": "Showing {{shown}} of {{total}} reports",
       "search": "Search",
-      "searchPlaceholder": "Report title",
+      "searchPlaceholder": "Report name",
       "allTypes": "All types",
       "allStatuses": "All statuses",
       "requestedFrom": "Requested from",
@@ -1066,13 +1151,15 @@
       "noMatchesTitle": "No reports match the filters",
       "noMatchesMessage": "Try another search, type, status or period.",
       "downloadFor": "Download {{title}}",
-      "viewFor": "View {{title}}"
+      "viewFor": "View {{title}}",
+      "refresh": "Refresh",
+      "refreshing": "Refreshing…",
+      "refreshFailed": "We couldn't refresh your reports. The list may be out of date."
     },
     "form": {
       "title": "Generate report",
       "subtitle": "Choose what to analyze and the period to cover.",
       "back": "Back to reports",
-      "titlePlaceholder": "e.g. Cold-chain compliance · October 2026",
       "selectType": "Select a report type",
       "typeHint": "Each type computes different indicators.",
       "typeRequired": "Select the report type.",
@@ -1086,7 +1173,10 @@
       "requestedTitle": "Report requested",
       "requestedMessage": "The report is being prepared. It will be available to download once it is completed.",
       "requestAnother": "Request another report",
-      "goToReports": "Go to reports"
+      "goToReports": "Go to reports",
+      "namePlaceholder": "e.g. Cold-chain compliance · October 2026",
+      "followReport": "Follow the report",
+      "scopeUnavailable": "We couldn't load your sites and equipment, so the report can only cover all of them."
     },
     "detail": {
       "title": "Report detail",
@@ -1104,15 +1194,25 @@
       "generatingHint": "Generation runs in the background. Check the status again in a few moments.",
       "checkStatus": "Check status",
       "checking": "Checking…",
-      "stillGenerating": "The report is still being generated.",
-      "nowCompleted": "The report is ready to download.",
       "failedTitle": "The report couldn't be generated.",
       "failedMessage": "Request it again. If the problem continues, try a shorter period.",
       "requestAgain": "Request again",
       "completedMessage": "Generated on {{date}}.",
       "notCompleted": "Not completed yet",
       "kpisTitle": "Key indicators",
-      "noKpis": "This report has no indicators to show."
+      "noKpis": "This report has no indicators to show.",
+      "watchingHint": "The status updates automatically while the report is generated.",
+      "refreshFailed": "We couldn't check the report status. The information shown may be out of date.",
+      "failureReason": "Reason:",
+      "period": "{{from}} – {{to}}"
+    },
+    "errors": {
+      "invalidRequest": "Check the report data: it needs a name, a type and a valid period.",
+      "scopeNotFound": "The selected site or equipment doesn't exist or isn't yours.",
+      "reportNotFound": "This report doesn't exist or doesn't belong to your account.",
+      "accessDenied": "You aren't allowed to do this.",
+      "downloadUnavailable": "We couldn't get the download link. Try again in a moment.",
+      "unexpected": "We couldn't complete the request. Check your connection and try again."
     }
   },
   "profiles": {

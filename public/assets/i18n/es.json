@@ -386,52 +386,70 @@
     "status": {
       "UNPAIRED": "Sin vincular",
       "PAIRED": "Vinculado",
-      "ONLINE": "En línea",
-      "OFFLINE": "Sin conexión"
+      "REVOKED": "Clave revocada"
     },
     "fields": {
       "device": "Dispositivo",
+      "boardModel": "Modelo de placa",
       "status": "Estado",
       "equipment": "Equipo",
       "site": "Sede",
-      "credential": "Credencial",
-      "lastRead": "Última lectura"
+      "credential": "Clave API",
+      "lastSeen": "Última actividad"
     },
     "list": {
       "title": "Dispositivos de monitoreo",
-      "subtitle": "Vincula dispositivos con tus equipos y gestiona sus credenciales.",
+      "subtitle": "Vincula dispositivos con tus equipos y gestiona sus claves API.",
       "pair": "Vincular un dispositivo",
       "tableTitle": "Dispositivos",
-      "pairingFilter": "Filtrar por vinculación",
+      "statusFilter": "Filtrar por estado",
       "all": "Todos",
-      "paired": "Vinculados",
-      "unpaired": "El dispositivo fue desvinculado.",
-      "equipmentFilter": "Mostrando el dispositivo de {{equipment}}.",
+      "equipmentFilter": "Mostrando los dispositivos de {{equipment}}.",
       "showAll": "Mostrar todos los dispositivos",
       "loading": "Cargando dispositivos…",
       "errorTitle": "No pudimos cargar tus dispositivos.",
+      "refreshFailed": "No pudimos actualizar tus dispositivos. La lista podría estar desactualizada.",
+      "noEquipmentTitle": "Aún no tienes equipos",
+      "noEquipmentMessage": "Primero registra un equipo; luego vincula un dispositivo con él.",
+      "goToEquipment": "Ir a equipos",
       "emptyTitle": "No hay dispositivos para mostrar",
-      "noDeviceForEquipment": "Ningún dispositivo está vinculado a este equipo",
+      "noDeviceForEquipment": "Ningún dispositivo está asociado a este equipo",
       "emptyMessage": "Vincula un dispositivo de monitoreo para que su equipo empiece a reportar telemetría.",
-      "deviceLabel": "Dispositivo #{{id}}",
-      "deviceOfEquipment": "Dispositivo #{{id}} · {{equipment}}",
+      "noMatchTitle": "Ningún dispositivo coincide con este filtro",
+      "noMatchMessage": "Elige otro estado para ver el resto de tus dispositivos.",
+      "deviceLabel": "Dispositivo {{uid}}",
+      "deviceOfEquipment": "Dispositivo {{uid}} · {{equipment}}",
+      "equipmentLabel": "Equipo #{{id}}",
       "firmware": "Firmware {{version}}",
       "notPaired": "Sin vincular",
+      "telemetry": "Telemetría",
+      "alerts": "Alertas",
       "credentialActive": "Activa",
-      "noCredential": "Sin credencial activa",
-      "never": "Nunca",
-      "pairShort": "Vincular",
-      "pairDevice": "Vincular el dispositivo #{{id}}",
+      "credentialRevoked": "Revocada",
+      "noReadings": "Sin lecturas aún",
       "rotate": "Rotar clave",
-      "rotateFor": "Rotar la clave del dispositivo #{{id}}",
-      "issue": "Emitir clave",
-      "issueFor": "Emitir una clave para el dispositivo #{{id}}",
+      "rotateFor": "Rotar la clave del dispositivo {{uid}}",
+      "reissue": "Emitir clave nueva",
+      "reissueFor": "Emitir una clave nueva para el dispositivo {{uid}}",
       "revoke": "Revocar clave",
-      "revokeFor": "Revocar la clave del dispositivo #{{id}}",
+      "revokeFor": "Revocar la clave del dispositivo {{uid}}",
       "unpair": "Desvincular",
-      "unpairFor": "Desvincular el dispositivo #{{id}}",
-      "rotated": "La clave del dispositivo fue reemplazada.",
+      "unpairFor": "Desvincular el dispositivo {{uid}}"
+    },
+    "feedback": {
+      "paired": "El dispositivo fue vinculado.",
+      "unpaired": "El dispositivo fue desvinculado y su clave ya no funciona.",
+      "rotated": "El dispositivo recibió una clave nueva.",
       "revoked": "La clave del dispositivo fue revocada."
+    },
+    "errors": {
+      "pairingConflict": "Esta placa ya está vinculada, o el equipo ya tiene un dispositivo vinculado. La lista se actualizó.",
+      "equipmentNotFound": "El equipo no existe o no es tuyo. La lista se actualizó.",
+      "deviceChanged": "Este dispositivo cambió mientras tanto. La lista se actualizó; cierra esto y vuelve a intentarlo si es necesario.",
+      "deviceNotFound": "El dispositivo no existe o ya no está asociado a tus equipos. La lista se actualizó.",
+      "invalidPairing": "Revisa los datos del dispositivo e inténtalo de nuevo.",
+      "accessDenied": "No tienes permiso para hacer esto.",
+      "unexpected": "No pudimos completar la acción. Revisa tu conexión e inténtalo de nuevo."
     },
     "credential": {
       "rotate": {
@@ -440,9 +458,15 @@
         "confirm": "Rotar clave",
         "pending": "Rotando…"
       },
+      "reissue": {
+        "title": "Emitir una clave nueva",
+        "warning": "Se emitirá una clave nueva y el dispositivo volverá a quedar vinculado. Carga la clave nueva en el dispositivo para que vuelva a enviar telemetría.",
+        "confirm": "Emitir clave nueva",
+        "pending": "Emitiendo…"
+      },
       "revoke": {
         "title": "Revocar la clave del dispositivo",
-        "warning": "El dispositivo dejará de enviar telemetría hasta que emitas una clave nueva. Mientras tanto, su equipo aparecerá sin conexión.",
+        "warning": "La clave deja de funcionar de inmediato y el dispositivo ya no podrá enviar telemetría. El dispositivo sigue asociado a su equipo; emite una clave nueva para reanudarlo.",
         "acknowledgement": "Entiendo que el dispositivo dejará de enviar telemetría.",
         "acknowledgementRequired": "Confirma que entiendes la consecuencia antes de revocar la clave.",
         "confirm": "Revocar clave",
@@ -451,7 +475,7 @@
       },
       "storeNow": "Guarda esta clave ahora. No se volverá a mostrar.",
       "hashOnly": "IceTrack solo conserva una huella de la clave. Si la pierdes, vuelve a rotarla.",
-      "newKey": "Nueva clave del dispositivo",
+      "newKey": "Clave API del dispositivo",
       "copy": "Copiar",
       "copied": "Copiada",
       "copyFailed": "No pudimos copiar la clave. Selecciónala y cópiala manualmente.",
@@ -459,34 +483,39 @@
       "done": "Listo"
     },
     "unpair": {
-      "title": "¿Desvincular el dispositivo #{{id}}?",
-      "message": "{{equipment}} dejará de reportar telemetría hasta que se le vincule otro dispositivo.",
+      "title": "¿Desvincular el dispositivo {{uid}}?",
+      "message": "{{equipment}} dejará de reportar telemetría hasta que se le vincule otro dispositivo. La clave del dispositivo deja de funcionar de inmediato.",
+      "messageUnknown": "Su equipo dejará de reportar telemetría hasta que se le vincule otro dispositivo. La clave del dispositivo deja de funcionar de inmediato.",
       "confirm": "Desvincular dispositivo",
       "pending": "Desvinculando…"
     },
     "pairing": {
       "title": "Vincular un dispositivo",
-      "subtitle": "Asocia un dispositivo de monitoreo sin vincular con un equipo que no tenga dispositivo.",
+      "subtitle": "Asocia una placa de monitoreo con un equipo que no tenga un dispositivo vinculado. Su clave API se emite en el acto.",
       "back": "Volver a dispositivos",
-      "loading": "Cargando dispositivos y equipos…",
-      "errorTitle": "No pudimos cargar los dispositivos disponibles para vincular.",
-      "noDevicesTitle": "No hay dispositivos sin vincular",
-      "noDevicesMessage": "Todos tus dispositivos ya están vinculados. Desvincula uno para asociarlo con otro equipo.",
-      "noEquipmentTitle": "Todos tus equipos ya tienen un dispositivo",
-      "noEquipmentMessage": "Desvincula un dispositivo de su equipo, o registra un equipo nuevo, para vincular otro dispositivo.",
-      "device": "Dispositivo",
-      "deviceHint": "Solo se muestran los dispositivos sin vincular.",
-      "selectDevice": "Selecciona un dispositivo",
-      "deviceRequired": "Selecciona el dispositivo a vincular.",
+      "loading": "Cargando tus equipos y dispositivos…",
+      "errorTitle": "No pudimos cargar los equipos disponibles para vincular.",
+      "noEquipmentTitle": "Aún no tienes equipos",
+      "noEquipmentMessage": "Primero registra un equipo; luego vincula un dispositivo con él.",
+      "allPairedTitle": "Todos tus equipos ya tienen un dispositivo",
+      "allPairedMessage": "Desvincula un dispositivo de su equipo, o registra un equipo nuevo, para vincular otro dispositivo.",
       "equipment": "Equipo",
-      "equipmentHint": "Solo se muestran los equipos sin dispositivo.",
+      "equipmentHint": "Solo se muestran los equipos sin dispositivo vinculado.",
       "selectEquipment": "Selecciona un equipo",
       "equipmentRequired": "Selecciona el equipo al que vincular el dispositivo.",
+      "deviceUid": "UID del dispositivo",
+      "deviceUidHint": "El identificador único de la placa. Una placa desvinculada antes puede volver a vincularse con el mismo UID.",
+      "deviceUidRequired": "Ingresa el UID del dispositivo.",
+      "boardModel": "Modelo de placa",
+      "boardModelRequired": "Ingresa el modelo de la placa.",
+      "firmwareVersion": "Versión de firmware (opcional)",
+      "firmwareVersionHint": "La versión de firmware que ejecuta la placa actualmente.",
+      "tooLong": "Usa {{max}} caracteres o menos.",
       "confirm": "Vincular dispositivo",
       "pending": "Vinculando…",
       "successTitle": "Dispositivo vinculado",
-      "successMessage": "El dispositivo #{{id}} ahora está vinculado a {{equipment}}.",
-      "credentialNext": "Emite una clave para el dispositivo desde la lista de dispositivos para que empiece a enviar telemetría.",
+      "successMessage": "El dispositivo {{uid}} ahora está vinculado a {{equipment}}. Carga esta clave en el dispositivo para que pueda enviar telemetría.",
+      "confirmStoredToContinue": "Confirma que guardaste la clave para continuar.",
       "pairAnother": "Vincular otro dispositivo",
       "viewEquipment": "Ver equipo",
       "goToDevices": "Ir a dispositivos"
@@ -504,7 +533,8 @@
     "alertStatus": {
       "OPEN": "Abierta",
       "RESOLVED": "Resuelta",
-      "DISMISSED": "Descartada"
+      "DISMISSED": "Descartada",
+      "ACKNOWLEDGED": "Reconocida"
     },
     "alertType": {
       "TEMPERATURE_EXCURSION": "Excursión de temperatura",
@@ -522,15 +552,18 @@
       "severity": "Severidad",
       "type": "Tipo",
       "openedAt": "Abierta",
-      "closedAt": "Cerrada",
       "peakTemperature": "Temperatura máxima alcanzada",
-      "excursionDuration": "Duración de la excursión",
       "threshold": "Umbral",
       "recordedAt": "Registrada",
       "averageTemperature": "Temperatura promedio",
       "temperatureRange": "Mín. – máx.",
       "humidity": "Humedad",
-      "device": "Dispositivo"
+      "device": "Dispositivo",
+      "triggeringTemperature": "Temperatura que la activó",
+      "alertDuration": "Duración",
+      "dismissReason": "Motivo del descarte",
+      "dismissEvidence": "Evidencia",
+      "maintenance": "Mantenimiento"
     },
     "dashboard": {
       "title": "Resumen de monitoreo",
@@ -551,40 +584,42 @@
       "criticalAlerts": "Críticas: {{count}}",
       "activeServiceRequests": "Solicitudes de servicio activas",
       "currentTitle": "Temperaturas actuales",
-      "currentSubtitle": "Última lectura de cada equipo. Abre uno para ver su historial.",
+      "currentSubtitle": "Última lectura conocida de cada equipo. Abre uno para ver su historial.",
       "thresholdShort": "Rango seguro {{min}} a {{max}}",
       "readingAge": "Reportada {{age}}",
       "alertsTitle": "Alertas abiertas",
       "viewAllAlerts": "Ver todas las alertas",
-      "noOpenAlerts": "No hay alertas abiertas"
+      "noOpenAlerts": "No hay alertas abiertas",
+      "refreshFailed": "No pudimos actualizar el resumen. Los datos mostrados pueden estar desactualizados.",
+      "countUnavailable": "No disponible por ahora"
     },
     "alerts": {
       "title": "Alertas",
-      "subtitle": "Excursiones de temperatura y dispositivos sin conexión en tus equipos.",
+      "subtitle": "Excursiones de temperatura y dispositivos sin conexión activos en tus equipos.",
       "backToOverview": "Resumen de monitoreo",
       "filters": "Filtros de alertas",
       "statusFilter": "Filtrar por estado",
-      "allStatuses": "Todas",
+      "allStatuses": "Todas las activas",
       "allSeverities": "Todas las severidades",
       "allTypes": "Todos los tipos",
       "equipmentFilter": "Mostrando las alertas de {{equipment}}.",
       "showAll": "Mostrar todas las alertas",
       "loading": "Cargando alertas…",
       "errorTitle": "No pudimos cargar tus alertas.",
-      "noOpenTitle": "No hay alertas abiertas",
       "noMatchesTitle": "Ninguna alerta coincide con los filtros",
       "noMatchesMessage": "Prueba otro estado, severidad o tipo.",
       "unknownEquipment": "Equipo desconocido",
       "openedAt": "Abierta {{date}}",
-      "closedAt": "cerrada {{date}}",
       "viewDetails": "Ver detalle",
       "acknowledge": "Reconocer",
-      "acknowledged": "Reconocida",
-      "acknowledgedMessage": "Reconociste la alerta. Seguirá abierta hasta que la condición se resuelva.",
       "dismiss": "Descartar",
-      "dismissedMessage": "La alerta fue descartada.",
       "requestService": "Solicitar servicio",
-      "alertLabel": "{{type}} · {{equipment}}"
+      "alertLabel": "{{type}} · {{equipment}}",
+      "noActiveTitle": "No hay alertas activas",
+      "noActiveMessage": "Las alertas resueltas y descartadas salen de esta lista. Abre una alerta desde su notificación para ver su historial.",
+      "acknowledgedAt": "reconocida {{date}}",
+      "acknowledging": "Reconociendo…",
+      "resolve": "Resolver"
     },
     "alertDetail": {
       "title": "Detalle de la alerta",
@@ -595,35 +630,32 @@
       "notFoundTitle": "Alerta no encontrada",
       "notFoundMessage": "Esta alerta no existe o no pertenece a tus equipos.",
       "factsTitle": "Qué pasó",
-      "stillOpen": "Sigue abierta",
       "explanation": {
         "TEMPERATURE_EXCURSION": "La temperatura del equipo permaneció fuera de su umbral más tiempo del que permite su política de alertas.",
         "DEVICE_OFFLINE": "El dispositivo de monitoreo del equipo dejó de enviar lecturas."
       },
       "actionsTitle": "Acciones",
-      "acknowledgedNote": "Reconociste esta alerta a las {{date}}. Seguirá abierta hasta que la condición se resuelva.",
       "requestServiceHint": "El formulario de solicitud se abre con este equipo ya completado. Lo confirmas antes de enviarlo.",
       "closedNote": "Esta alerta está cerrada. No hay más acciones disponibles.",
       "viewTelemetry": "Ver la telemetría del equipo",
-      "triggerTitle": "Lectura que generó la alerta"
+      "lifecycleTitle": "Ciclo de vida",
+      "triggerTitle": {
+        "TEMPERATURE_EXCURSION": "Lectura que activó la alerta",
+        "DEVICE_OFFLINE": "Última lectura antes de que el dispositivo se desconectara"
+      }
     },
     "dismiss": {
       "title": "Descartar alerta",
-      "explanation": "Las alertas descartadas quedan en el historial con el motivo que indiques.",
+      "explanation": "Descarta la alerta solo si es una falsa alarma, como un ciclo de descongelamiento planificado. El motivo queda registrado y las alertas descartadas se excluyen de los reportes de excursiones térmicas.",
       "reason": "Motivo",
-      "selectReason": "Selecciona un motivo",
-      "reasonRequired": "Selecciona por qué descartas la alerta.",
-      "reasons": {
-        "DEFROST_CYCLE": "Ciclo de descongelamiento",
-        "LOADING_DOOR_OPEN": "Puerta de carga abierta",
-        "SENSOR_RELOCATION": "Reubicación del sensor",
-        "OTHER": "Otro"
-      },
-      "notes": "Notas",
-      "notesPlaceholder": "Agrega detalles para el historial",
-      "keepOpen": "Mantener abierta",
+      "reasonRequired": "Indica por qué descartas la alerta.",
+      "keepOpen": "Mantener activa",
       "confirm": "Descartar alerta",
-      "pending": "Descartando…"
+      "pending": "Descartando…",
+      "reasonPlaceholder": "Por qué esta alerta no es una falla real",
+      "reasonHint": "Obligatorio. Hasta {{max}} caracteres.",
+      "evidence": "Evidencia",
+      "evidencePlaceholder": "Una nota o un enlace a un registro de mantenimiento"
     },
     "telemetry": {
       "title": "Telemetría del equipo",
@@ -637,13 +669,11 @@
       "viewEquipment": "Detalle del equipo",
       "viewAlerts": "Alertas",
       "currentTitle": "Lectura actual",
-      "staleNotice": "Sin lecturas desde {{age}}. El valor mostrado es la última lectura conocida.",
+      "staleNotice": "Sin lecturas desde {{age}}. El valor mostrado es la última lectura conocida, no una actual.",
       "noTelemetryTitle": "Aún sin telemetría",
-      "noTelemetryMessage": "Este equipo todavía no ha reportado ninguna lectura.",
-      "noDeviceMessage": "Vincula un dispositivo de monitoreo con este equipo para recibir sus lecturas.",
+      "noTelemetryMessage": "Este equipo aún no ha reportado lecturas. Vincula un dispositivo de monitoreo si no tiene uno.",
       "pairDevice": "Vincular un dispositivo",
       "historyTitle": "Historial de temperatura",
-      "interval": "Lecturas agregadas cada {{minutes}} minutos",
       "rangeLabel": "Periodo",
       "ranges": {
         "2H": "2 horas",
@@ -662,7 +692,12 @@
       "tableLabel": "Lecturas de temperatura",
       "noHistoryTitle": "No hay lecturas en este periodo",
       "noHistoryMessage": "Elige un periodo más largo o verifica que el dispositivo esté reportando.",
-      "policyTitle": "Política de alertas"
+      "policyTitle": "Política de alertas",
+      "historySubtitle": "Cada punto es un lote de lecturas. La línea se corta donde faltan lecturas.",
+      "historyLoading": "Cargando lecturas…",
+      "historyErrorTitle": "No pudimos cargar las lecturas de este periodo.",
+      "underMaintenance": "En mantenimiento",
+      "excursionSince": "Hay una alerta de excursión de temperatura activa desde {{date}} (área rayada)."
     },
     "policy": {
       "state": "Estado",
@@ -671,7 +706,12 @@
       "sustainedExcursion": "Tiempo de excursión antes de alertar",
       "hysteresis": "Margen de histéresis",
       "offlineAfter": "Sin conexión después de",
-      "missedWindows": "{{count}} ventanas de reporte perdidas"
+      "missedWindows": "{{count}} ventanas de reporte perdidas",
+      "scope": "Aplica",
+      "platformDefault": "Política predeterminada de la plataforma",
+      "equipmentSpecific": "Específica de este equipo",
+      "loading": "Cargando la política de alertas…",
+      "unavailable": "No se pudo leer la política de alertas de este equipo."
     },
     "chart": {
       "average": "Temperatura promedio",
@@ -684,7 +724,45 @@
       "sliderHint": "Usa las flechas del teclado para leer cada lectura.",
       "valueText": "{{time}}: {{temperature}}",
       "rangeValue": "Mín. {{min}} · máx. {{max}}",
-      "humidity": "Humedad {{value}} %"
+      "humidity": "Humedad {{value}} %",
+      "excursion": "Alerta de excursión activa",
+      "underMaintenance": "En mantenimiento"
+    },
+    "actions": {
+      "acknowledged": "Reconociste la alerta. Seguirá activa hasta que se resuelva o se descarte.",
+      "resolved": "La alerta fue resuelta.",
+      "dismissed": "La alerta fue descartada."
+    },
+    "errors": {
+      "alertChanged": "Alguien ya cambió esta alerta. Ahora se muestra su estado actual.",
+      "alertNotFound": "Esta alerta ya no está disponible.",
+      "invalidDismissal": "Revisa el motivo y la evidencia, y vuelve a intentarlo.",
+      "accessDenied": "Tu cuenta no puede cambiar esta alerta.",
+      "unexpected": "No pudimos actualizar la alerta. Vuelve a intentarlo."
+    },
+    "live": {
+      "connecting": "Conectando las actualizaciones en vivo…",
+      "live": "Actualizaciones en vivo activas",
+      "reconnecting": "Reconectando las actualizaciones en vivo…",
+      "unavailable": "Actualizaciones en vivo no disponibles. Actualiza para ver los datos más recientes."
+    },
+    "lifecycle": {
+      "opened": "Abierta",
+      "acknowledged": "Reconocida",
+      "resolved": "Resuelta",
+      "dismissed": "Descartada"
+    },
+    "actor": {
+      "you": "por ti",
+      "user": "por el usuario #{{id}}",
+      "automatic": "automáticamente por la plataforma"
+    },
+    "resolve": {
+      "title": "Resolver alerta",
+      "explanation": "Resuelve la alerta cuando su condición se haya corregido. La alerta se cierra y registra que tú la resolviste.",
+      "keepOpen": "Mantener activa",
+      "confirm": "Resolver alerta",
+      "pending": "Resolviendo…"
     }
   },
   "serviceRequests": {
@@ -964,11 +1042,13 @@
     },
     "types": {
       "MAINTENANCE_REMINDER": "Recordatorio de mantenimiento",
+      "TEMPERATURE_EXCURSION": "Excursión de temperatura",
       "DEVICE_OFFLINE": "Dispositivo sin conexión",
       "LOW_BATTERY": "Batería baja",
       "SENSOR_FAILURE": "Falla del sensor",
       "SERVICE_REQUEST_UPDATE": "Actualización de solicitud de servicio",
-      "OUT_OF_RANGER_TEMPERATURE": "Temperatura fuera de rango"
+      "MAINTENANCE_WINDOW": "Ventana de mantenimiento",
+      "UNLINKED_MAINTENANCE_WINDOW": "Mantenimiento sin solicitud de servicio"
     },
     "bell": {
       "label": "Notificaciones",
@@ -978,21 +1058,14 @@
       "eyebrow": "Centro de notificaciones",
       "title": "Notificaciones",
       "unreadSummary": "Notificaciones sin leer: {{count}}",
-      "markAllAsRead": "Marcar todas como leídas",
       "listTitle": "Notificaciones activas",
       "readFilter": "Filtrar por estado de lectura",
       "all": "Todas",
       "unreadOnly": "Sin leer",
-      "severityFilter": "Severidad",
-      "allSeverities": "Todas las severidades",
-      "typeFilter": "Tipo",
-      "allTypes": "Todos los tipos",
       "loading": "Cargando notificaciones…",
       "errorTitle": "No pudimos cargar tus notificaciones.",
       "emptyTitle": "Estás al día",
       "emptyMessage": "Las nuevas alertas y actualizaciones de servicio aparecerán aquí.",
-      "noMatchesTitle": "Ninguna notificación coincide con los filtros",
-      "noMatchesMessage": "Prueba otro estado de lectura, severidad o tipo.",
       "read": "Leída",
       "unread": "Sin leer",
       "readAt": "leída {{date}}",
@@ -1002,8 +1075,16 @@
       "markAsRead": "Marcar como leída",
       "dismiss": "Descartar",
       "markedAsRead": "La notificación fue marcada como leída.",
-      "allMarkedAsRead": "Todas las notificaciones fueron marcadas como leídas.",
-      "dismissed": "La notificación fue descartada."
+      "dismissed": "La notificación fue descartada.",
+      "refreshFailed": "No pudimos actualizar tus notificaciones. La lista podría estar desactualizada.",
+      "noUnreadTitle": "No hay notificaciones sin leer",
+      "noUnreadMessage": "Leíste todas las notificaciones activas.",
+      "showAll": "Mostrar todas las notificaciones"
+    },
+    "errors": {
+      "notificationChanged": "Esta notificación ya no está disponible o ya cambió. La lista se actualizó.",
+      "accessDenied": "No tienes permiso para hacer esto.",
+      "unexpected": "No pudimos completar la acción. Revisa tu conexión e inténtalo de nuevo."
     }
   },
   "reporting": {
@@ -1022,12 +1103,11 @@
     },
     "format": {
       "PDF": "PDF",
-      "EXCEL": "Excel",
+      "XLSX": "Excel (XLSX)",
       "CSV": "CSV"
     },
     "fields": {
       "report": "Reporte",
-      "title": "Título del reporte",
       "type": "Tipo de reporte",
       "status": "Estado",
       "format": "Formato",
@@ -1035,7 +1115,8 @@
       "equipment": "Equipo",
       "dateRange": "Periodo",
       "requestedAt": "Solicitado",
-      "completedAt": "Completado"
+      "completedAt": "Completado",
+      "name": "Nombre del reporte"
     },
     "actions": {
       "view": "Ver",
@@ -1045,7 +1126,11 @@
       "invalidRange": "La fecha de inicio debe ser igual o anterior a la fecha de fin."
     },
     "download": {
-      "simulated": "La descarga comenzará cuando el servicio de reportes esté conectado."
+      "open": "Abrir archivo {{format}}",
+      "openFor": "Abrir el archivo {{format}} de {{name}}",
+      "prepareFor": "Obtener el enlace de descarga de {{name}}",
+      "preparing": "Preparando…",
+      "linkValidity": "El enlace es válido por 15 minutos."
     },
     "list": {
       "title": "Reportes",
@@ -1054,7 +1139,7 @@
       "archiveTitle": "Archivo de reportes",
       "showing": "Mostrando {{shown}} de {{total}} reportes",
       "search": "Buscar",
-      "searchPlaceholder": "Título del reporte",
+      "searchPlaceholder": "Nombre del reporte",
       "allTypes": "Todos los tipos",
       "allStatuses": "Todos los estados",
       "requestedFrom": "Solicitado desde",
@@ -1066,13 +1151,15 @@
       "noMatchesTitle": "Ningún reporte coincide con los filtros",
       "noMatchesMessage": "Prueba otra búsqueda, tipo, estado o periodo.",
       "downloadFor": "Descargar {{title}}",
-      "viewFor": "Ver {{title}}"
+      "viewFor": "Ver {{title}}",
+      "refresh": "Actualizar",
+      "refreshing": "Actualizando…",
+      "refreshFailed": "No pudimos actualizar tus reportes. La lista podría estar desactualizada."
     },
     "form": {
       "title": "Generar reporte",
       "subtitle": "Elige qué analizar y el periodo a cubrir.",
       "back": "Volver a reportes",
-      "titlePlaceholder": "Ej. Cumplimiento de cadena de frío · octubre 2026",
       "selectType": "Selecciona un tipo de reporte",
       "typeHint": "Cada tipo calcula indicadores distintos.",
       "typeRequired": "Selecciona el tipo de reporte.",
@@ -1086,7 +1173,10 @@
       "requestedTitle": "Reporte solicitado",
       "requestedMessage": "El reporte se está preparando. Podrás descargarlo cuando esté completado.",
       "requestAnother": "Solicitar otro reporte",
-      "goToReports": "Ir a reportes"
+      "goToReports": "Ir a reportes",
+      "namePlaceholder": "Ej. Cumplimiento de cadena de frío · octubre 2026",
+      "followReport": "Seguir el reporte",
+      "scopeUnavailable": "No pudimos cargar tus sedes y equipos, así que el reporte solo puede cubrirlos todos."
     },
     "detail": {
       "title": "Detalle del reporte",
@@ -1104,15 +1194,25 @@
       "generatingHint": "La generación se ejecuta en segundo plano. Vuelve a consultar el estado en unos momentos.",
       "checkStatus": "Consultar estado",
       "checking": "Consultando…",
-      "stillGenerating": "El reporte todavía se está generando.",
-      "nowCompleted": "El reporte está listo para descargar.",
       "failedTitle": "No se pudo generar el reporte.",
       "failedMessage": "Vuelve a solicitarlo. Si el problema continúa, prueba con un periodo más corto.",
       "requestAgain": "Solicitar de nuevo",
       "completedMessage": "Generado el {{date}}.",
       "notCompleted": "Aún no completado",
       "kpisTitle": "Indicadores clave",
-      "noKpis": "Este reporte no tiene indicadores para mostrar."
+      "noKpis": "Este reporte no tiene indicadores para mostrar.",
+      "watchingHint": "El estado se actualiza automáticamente mientras se genera el reporte.",
+      "refreshFailed": "No pudimos consultar el estado del reporte. La información mostrada podría estar desactualizada.",
+      "failureReason": "Motivo:",
+      "period": "{{from}} – {{to}}"
+    },
+    "errors": {
+      "invalidRequest": "Revisa los datos del reporte: necesita un nombre, un tipo y un periodo válido.",
+      "scopeNotFound": "La sede o el equipo seleccionado no existe o no es tuyo.",
+      "reportNotFound": "Este reporte no existe o no pertenece a tu cuenta.",
+      "accessDenied": "No tienes permiso para hacer esto.",
+      "downloadUnavailable": "No pudimos obtener el enlace de descarga. Vuelve a intentarlo en un momento.",
+      "unexpected": "No pudimos completar la solicitud. Revisa tu conexión e inténtalo de nuevo."
     }
   },
   "profiles": {
