@@ -184,8 +184,6 @@
   },
   "assets": {
     "eyebrow": "Assets management",
-    "online": "Online",
-    "offline": "Offline",
     "noTelemetry": "No telemetry yet",
     "outsideThreshold": "Outside threshold",
     "equipmentType": {
@@ -319,7 +317,6 @@
       "save": "Save threshold",
       "outOfRange": "Enter a value from {{min}} to {{max}} °C."
     },
-    "siteNumber": "Site #{{id}}",
     "coverageArea": {
       "LIMA_METROPOLITANA": "Metropolitan Lima",
       "CALLAO": "Callao"
@@ -366,7 +363,7 @@
       "description": "Only the changes allowed from the current status are offered.",
       "current": "Current status:",
       "newStatus": "New status",
-      "deactivateWarning": "A deactivated unit stops being shown as online. It must be reactivated before moving to another status.",
+      "deactivateWarning": "A deactivated unit is no longer monitored. It must be reactivated before moving to another status.",
       "submit": "Change status",
       "confirmDeactivate": "Deactivate equipment"
     },
@@ -385,7 +382,14 @@
       "tooManyVerifications": "Too many address verifications. Wait a minute and try again.",
       "verificationUnavailable": "The address verification service is unavailable. Try again in about 30 seconds.",
       "unexpected": "Something went wrong. Try again in a moment."
-    }
+    },
+    "connectivity": {
+      "REPORTING": "Reporting",
+      "SILENT": "Silent",
+      "NEVER_REPORTED": "Never reported",
+      "NOT_MONITORED": "Not monitored"
+    },
+    "maintenanceWindowOpen": "Maintenance window open"
   },
   "devices": {
     "eyebrow": "Device management",
@@ -548,9 +552,9 @@
     },
     "state": {
       "outside": "Outside threshold",
-      "offline": "No recent readings",
       "within": "Within threshold",
-      "none": "No telemetry yet"
+      "none": "No telemetry yet",
+      "silent": "Silent: no recent readings"
     },
     "fields": {
       "equipment": "Equipment",
@@ -584,7 +588,7 @@
       "goToEquipment": "Go to equipment",
       "summaryTitle": "Summary",
       "sites": "Sites",
-      "monitoredEquipment": "Monitored equipment",
+      "monitoredEquipment": "Reporting equipment",
       "ofEquipment": "of {{total}} equipment items",
       "openAlerts": "Open alerts",
       "criticalAlerts": "Critical: {{count}}",
@@ -596,16 +600,15 @@
       "alertsTitle": "Open alerts",
       "viewAllAlerts": "View all alerts",
       "noOpenAlerts": "No open alerts",
-      "refreshFailed": "We couldn't refresh the overview. The data shown may be out of date.",
-      "countUnavailable": "Not available right now"
+      "refreshFailed": "We couldn't refresh the overview. The data shown may be out of date."
     },
     "alerts": {
       "title": "Alerts",
-      "subtitle": "Active temperature excursions and offline devices across your equipment.",
+      "subtitle": "Temperature excursions and offline devices across your equipment, current and past.",
       "backToOverview": "Monitoring overview",
       "filters": "Alert filters",
       "statusFilter": "Filter by status",
-      "allStatuses": "All active",
+      "allStatuses": "All",
       "allSeverities": "All severities",
       "allTypes": "All types",
       "equipmentFilter": "Showing the alerts of {{equipment}}.",
@@ -622,10 +625,11 @@
       "requestService": "Request service",
       "alertLabel": "{{type}} · {{equipment}}",
       "noActiveTitle": "No active alerts",
-      "noActiveMessage": "Resolved and dismissed alerts leave this list. Open an alert from its notification to see its history.",
+      "noActiveMessage": "Resolved and dismissed alerts are listed under their status.",
       "acknowledgedAt": "acknowledged {{date}}",
       "acknowledging": "Acknowledging…",
-      "resolve": "Resolve"
+      "resolve": "Resolve",
+      "activeStatuses": "Active"
     },
     "alertDetail": {
       "title": "Alert detail",
@@ -703,7 +707,8 @@
       "historyLoading": "Loading readings…",
       "historyErrorTitle": "We couldn't load the readings of this period.",
       "underMaintenance": "Under maintenance",
-      "excursionSince": "A temperature excursion alert has been active since {{date}} (hatched area)."
+      "excursionSince": "A temperature excursion alert has been active since {{date}} (hatched area).",
+      "noHumidity": "No humidity recorded"
     },
     "policy": {
       "state": "State",
@@ -711,7 +716,7 @@
       "inactive": "Inactive",
       "sustainedExcursion": "Excursion time before alerting",
       "hysteresis": "Hysteresis margin",
-      "offlineAfter": "Offline after",
+      "offlineAfter": "Silent after",
       "missedWindows": "{{count}} missed reporting windows",
       "scope": "Applies",
       "platformDefault": "Platform default policy",
@@ -769,7 +774,8 @@
       "keepOpen": "Keep active",
       "confirm": "Resolve alert",
       "pending": "Resolving…"
-    }
+    },
+    "maintenanceWindowOpen": "Maintenance window open"
   },
   "serviceRequests": {
     "eyebrow": "Service requests",
@@ -807,7 +813,8 @@
       "createdAt": "Created",
       "startedAt": "Work started",
       "completedAt": "Completed",
-      "canceledAt": "Canceled"
+      "canceledAt": "Canceled",
+      "sourceAlert": "Alert"
     },
     "actions": {
       "view": "View",
@@ -830,7 +837,8 @@
       "reviewEditExpired": "The edit period of this review has ended, so it can't be changed anymore.",
       "alreadyReviewed": "This service was already rated. We reloaded the review.",
       "concurrentChange": "Someone else changed this request at the same time. We reloaded it; try again.",
-      "unexpected": "We couldn't complete the action. Check your connection and try again."
+      "unexpected": "We couldn't complete the action. Check your connection and try again.",
+      "equipmentOrAlertNotFound": "The selected equipment or the alert this request was drafted from doesn't exist or doesn't belong to your account."
     },
     "list": {
       "title": "Service requests",
@@ -846,10 +854,12 @@
       "errorTitle": "We couldn't load your service requests.",
       "emptyTitle": "No service requests yet",
       "emptyMessage": "Request a repair or a preventive maintenance for any of your equipment.",
-      "noMatchesTitle": "No requests match the filter",
-      "noMatchesMessage": "Try another status.",
+      "noMatchesTitle": "No requests match the filters",
+      "noMatchesMessage": "Try another status, type or priority.",
       "assignFor": "Assign a technician to request #{{id}}",
-      "viewFor": "View request #{{id}}"
+      "viewFor": "View request #{{id}}",
+      "allTypes": "All types",
+      "allPriorities": "All priorities"
     },
     "interventions": {
       "title": "Service history",
@@ -923,7 +933,8 @@
       "createdMessage": "The request is pending. Open it to assign a technician.",
       "createAnother": "Create another request",
       "goToList": "Go to service requests",
-      "viewRequest": "View request"
+      "viewRequest": "View request",
+      "alertEquipmentMismatch": "Alert #{{id}} was raised on another equipment item, so this request will not be linked to it. Select that equipment again to keep the link."
     },
     "detail": {
       "title": "Service request detail",
@@ -960,7 +971,9 @@
       "assigned": "The technician was assigned and will be notified.",
       "canceled": "The request was canceled.",
       "reviewed": "Thank you. Your review was saved.",
-      "reviewUpdated": "Your review was updated."
+      "reviewUpdated": "Your review was updated.",
+      "sourceAlert": "Opened for alert #{{id}}",
+      "viewSourceAlert": "View alert"
     },
     "progress": {
       "done": "completed",
@@ -1085,7 +1098,19 @@
       "refreshFailed": "We couldn't refresh your notifications. The list may be out of date.",
       "noUnreadTitle": "No unread notifications",
       "noUnreadMessage": "You've read every active notification.",
-      "showAll": "Show all notifications"
+      "showAll": "Show all notifications",
+      "severityFilter": "Severity",
+      "typeFilter": "Type",
+      "allSeverities": "All severities",
+      "allTypes": "All types",
+      "markAllAsRead": "Mark all as read",
+      "markFilteredAsRead": "Mark matching as read",
+      "markingAllAsRead": "Marking as read…",
+      "markedAllAsRead": "Notifications marked as read: {{count}}.",
+      "noMatchesTitle": "No notifications match the filters",
+      "noMatchesMessage": "Try another severity or type.",
+      "receivedAt": "Received {{date}}",
+      "viewServiceRequest": "View service request"
     },
     "errors": {
       "notificationChanged": "This notification is no longer available or already changed. The list was refreshed.",

@@ -184,8 +184,6 @@
   },
   "assets": {
     "eyebrow": "Gestión de activos",
-    "online": "En línea",
-    "offline": "Sin conexión",
     "noTelemetry": "Aún sin telemetría",
     "outsideThreshold": "Fuera del umbral",
     "equipmentType": {
@@ -319,7 +317,6 @@
       "save": "Guardar umbral",
       "outOfRange": "Ingresa un valor de {{min}} a {{max}} °C."
     },
-    "siteNumber": "Sede n.° {{id}}",
     "coverageArea": {
       "LIMA_METROPOLITANA": "Lima Metropolitana",
       "CALLAO": "Callao"
@@ -366,7 +363,7 @@
       "description": "Solo se ofrecen los cambios permitidos desde el estado actual.",
       "current": "Estado actual:",
       "newStatus": "Nuevo estado",
-      "deactivateWarning": "Una unidad desactivada deja de mostrarse en línea. Debe reactivarse antes de pasar a otro estado.",
+      "deactivateWarning": "Una unidad desactivada deja de monitorearse. Debe reactivarse antes de pasar a otro estado.",
       "submit": "Cambiar estado",
       "confirmDeactivate": "Desactivar equipo"
     },
@@ -385,7 +382,14 @@
       "tooManyVerifications": "Demasiadas verificaciones de dirección. Espera un minuto e inténtalo de nuevo.",
       "verificationUnavailable": "El servicio de verificación de direcciones no está disponible. Inténtalo de nuevo en unos 30 segundos.",
       "unexpected": "Algo salió mal. Inténtalo de nuevo en un momento."
-    }
+    },
+    "connectivity": {
+      "REPORTING": "Reportando",
+      "SILENT": "Sin reportar",
+      "NEVER_REPORTED": "Nunca reportó",
+      "NOT_MONITORED": "Sin monitoreo"
+    },
+    "maintenanceWindowOpen": "Ventana de mantenimiento abierta"
   },
   "devices": {
     "eyebrow": "Gestión de dispositivos",
@@ -548,9 +552,9 @@
     },
     "state": {
       "outside": "Fuera del umbral",
-      "offline": "Sin lecturas recientes",
       "within": "Dentro del umbral",
-      "none": "Aún sin telemetría"
+      "none": "Aún sin telemetría",
+      "silent": "Sin reportar: sin lecturas recientes"
     },
     "fields": {
       "equipment": "Equipo",
@@ -584,7 +588,7 @@
       "goToEquipment": "Ir a equipos",
       "summaryTitle": "Resumen",
       "sites": "Sedes",
-      "monitoredEquipment": "Equipos monitoreados",
+      "monitoredEquipment": "Equipos reportando",
       "ofEquipment": "de {{total}} equipos",
       "openAlerts": "Alertas abiertas",
       "criticalAlerts": "Críticas: {{count}}",
@@ -596,16 +600,15 @@
       "alertsTitle": "Alertas abiertas",
       "viewAllAlerts": "Ver todas las alertas",
       "noOpenAlerts": "No hay alertas abiertas",
-      "refreshFailed": "No pudimos actualizar el resumen. Los datos mostrados pueden estar desactualizados.",
-      "countUnavailable": "No disponible por ahora"
+      "refreshFailed": "No pudimos actualizar el resumen. Los datos mostrados pueden estar desactualizados."
     },
     "alerts": {
       "title": "Alertas",
-      "subtitle": "Excursiones de temperatura y dispositivos sin conexión activos en tus equipos.",
+      "subtitle": "Excursiones de temperatura y dispositivos sin conexión en tus equipos, actuales y pasadas.",
       "backToOverview": "Resumen de monitoreo",
       "filters": "Filtros de alertas",
       "statusFilter": "Filtrar por estado",
-      "allStatuses": "Todas las activas",
+      "allStatuses": "Todas",
       "allSeverities": "Todas las severidades",
       "allTypes": "Todos los tipos",
       "equipmentFilter": "Mostrando las alertas de {{equipment}}.",
@@ -622,10 +625,11 @@
       "requestService": "Solicitar servicio",
       "alertLabel": "{{type}} · {{equipment}}",
       "noActiveTitle": "No hay alertas activas",
-      "noActiveMessage": "Las alertas resueltas y descartadas salen de esta lista. Abre una alerta desde su notificación para ver su historial.",
+      "noActiveMessage": "Las alertas resueltas y descartadas se listan bajo su estado.",
       "acknowledgedAt": "reconocida {{date}}",
       "acknowledging": "Reconociendo…",
-      "resolve": "Resolver"
+      "resolve": "Resolver",
+      "activeStatuses": "Activas"
     },
     "alertDetail": {
       "title": "Detalle de la alerta",
@@ -703,7 +707,8 @@
       "historyLoading": "Cargando lecturas…",
       "historyErrorTitle": "No pudimos cargar las lecturas de este periodo.",
       "underMaintenance": "En mantenimiento",
-      "excursionSince": "Hay una alerta de excursión de temperatura activa desde {{date}} (área rayada)."
+      "excursionSince": "Hay una alerta de excursión de temperatura activa desde {{date}} (área rayada).",
+      "noHumidity": "Sin humedad registrada"
     },
     "policy": {
       "state": "Estado",
@@ -711,7 +716,7 @@
       "inactive": "Inactiva",
       "sustainedExcursion": "Tiempo de excursión antes de alertar",
       "hysteresis": "Margen de histéresis",
-      "offlineAfter": "Sin conexión después de",
+      "offlineAfter": "Sin reportar después de",
       "missedWindows": "{{count}} ventanas de reporte perdidas",
       "scope": "Aplica",
       "platformDefault": "Política predeterminada de la plataforma",
@@ -769,7 +774,8 @@
       "keepOpen": "Mantener activa",
       "confirm": "Resolver alerta",
       "pending": "Resolviendo…"
-    }
+    },
+    "maintenanceWindowOpen": "Ventana de mantenimiento abierta"
   },
   "serviceRequests": {
     "eyebrow": "Solicitudes de servicio",
@@ -807,7 +813,8 @@
       "createdAt": "Creada",
       "startedAt": "Inicio del trabajo",
       "completedAt": "Completada",
-      "canceledAt": "Cancelada"
+      "canceledAt": "Cancelada",
+      "sourceAlert": "Alerta"
     },
     "actions": {
       "view": "Ver",
@@ -830,7 +837,8 @@
       "reviewEditExpired": "El plazo de edición de esta calificación terminó, por lo que ya no se puede cambiar.",
       "alreadyReviewed": "Este servicio ya fue calificado. Recargamos la calificación.",
       "concurrentChange": "Otra persona cambió esta solicitud al mismo tiempo. La recargamos; inténtalo de nuevo.",
-      "unexpected": "No pudimos completar la acción. Revisa tu conexión e inténtalo de nuevo."
+      "unexpected": "No pudimos completar la acción. Revisa tu conexión e inténtalo de nuevo.",
+      "equipmentOrAlertNotFound": "El equipo seleccionado o la alerta de la que proviene esta solicitud no existe o no pertenece a tu cuenta."
     },
     "list": {
       "title": "Solicitudes de servicio",
@@ -846,10 +854,12 @@
       "errorTitle": "No pudimos cargar tus solicitudes de servicio.",
       "emptyTitle": "Aún no hay solicitudes de servicio",
       "emptyMessage": "Solicita una reparación o un mantenimiento preventivo para cualquiera de tus equipos.",
-      "noMatchesTitle": "Ninguna solicitud coincide con el filtro",
-      "noMatchesMessage": "Prueba con otro estado.",
+      "noMatchesTitle": "Ninguna solicitud coincide con los filtros",
+      "noMatchesMessage": "Prueba con otro estado, tipo o prioridad.",
       "assignFor": "Asignar un técnico a la solicitud #{{id}}",
-      "viewFor": "Ver la solicitud #{{id}}"
+      "viewFor": "Ver la solicitud #{{id}}",
+      "allTypes": "Todos los tipos",
+      "allPriorities": "Todas las prioridades"
     },
     "interventions": {
       "title": "Historial de servicio",
@@ -923,7 +933,8 @@
       "createdMessage": "La solicitud está pendiente. Ábrela para asignar un técnico.",
       "createAnother": "Crear otra solicitud",
       "goToList": "Ir a solicitudes de servicio",
-      "viewRequest": "Ver solicitud"
+      "viewRequest": "Ver solicitud",
+      "alertEquipmentMismatch": "La alerta #{{id}} se generó en otro equipo, por lo que esta solicitud no quedará vinculada a ella. Vuelve a seleccionar ese equipo para mantener el vínculo."
     },
     "detail": {
       "title": "Detalle de la solicitud de servicio",
@@ -960,7 +971,9 @@
       "assigned": "El técnico fue asignado y será notificado.",
       "canceled": "La solicitud fue cancelada.",
       "reviewed": "Gracias. Tu calificación fue guardada.",
-      "reviewUpdated": "Tu calificación fue actualizada."
+      "reviewUpdated": "Tu calificación fue actualizada.",
+      "sourceAlert": "Abierta por la alerta #{{id}}",
+      "viewSourceAlert": "Ver alerta"
     },
     "progress": {
       "done": "completado",
@@ -1085,7 +1098,19 @@
       "refreshFailed": "No pudimos actualizar tus notificaciones. La lista podría estar desactualizada.",
       "noUnreadTitle": "No hay notificaciones sin leer",
       "noUnreadMessage": "Leíste todas las notificaciones activas.",
-      "showAll": "Mostrar todas las notificaciones"
+      "showAll": "Mostrar todas las notificaciones",
+      "severityFilter": "Severidad",
+      "typeFilter": "Tipo",
+      "allSeverities": "Todas las severidades",
+      "allTypes": "Todos los tipos",
+      "markAllAsRead": "Marcar todas como leídas",
+      "markFilteredAsRead": "Marcar coincidentes como leídas",
+      "markingAllAsRead": "Marcando como leídas…",
+      "markedAllAsRead": "Notificaciones marcadas como leídas: {{count}}.",
+      "noMatchesTitle": "Ninguna notificación coincide con los filtros",
+      "noMatchesMessage": "Prueba otra severidad u otro tipo.",
+      "receivedAt": "Recibida {{date}}",
+      "viewServiceRequest": "Ver solicitud de servicio"
     },
     "errors": {
       "notificationChanged": "Esta notificación ya no está disponible o ya cambió. La lista se actualizó.",
