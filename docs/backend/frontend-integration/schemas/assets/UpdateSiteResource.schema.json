@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "UpdateSiteResource",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 30,
+      "description": "Site name"
+    },
+    "contact_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 30,
+      "description": "Name of the person reachable on site"
+    },
+    "phone": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Contact phone number, digits only with an optional leading '+' and spaces as separators"
+    }
+  },
+  "required": [
+    "name",
+    "contact_name",
+    "phone"
+  ],
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/assets/interfaces/rest/resources/UpdateSiteResource.java"
+}

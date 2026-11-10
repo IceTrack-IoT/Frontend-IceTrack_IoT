@@ -16,20 +16,30 @@ import {
   type ValidatorFn,
   Validators,
 } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { IamStore } from '@iam/application/iam-store';
 import type { GoogleCredential } from '@iam/application/contracts/google-credential';
 import { GoogleSignInButton } from '@iam/presentation/components/google-sign-in-button/google-sign-in-button';
 import {
-  GOOGLE_SIGN_IN_ERROR_KEY,
+  authenticationContinuationUrl,
+  followAuthenticationContinuation,
+} from '@iam/presentation/authentication-continuation';
+import {
+  googleSignInErrorKey,
   registrationErrorKey,
 } from '@iam/presentation/authentication-feedback';
 import { phoneValidators, rucValidators } from '@iam/presentation/owner-registration-validators';
 import { Icon } from '@shared/presentation/components/icon/icon';
 import { PublicLayout } from '@shared/presentation/components/public-layout/public-layout';
 
+/**
+ * The backend password policy of local sign-up, mirrored for immediate feedback: 8 to 64 characters
+ * with at least one uppercase letter, one lowercase letter and one digit.
+ */
 const PASSWORD_MIN_LENGTH = 8;
+const PASSWORD_MAX_LENGTH = 64;
+const PASSWORD_COMPOSITION = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9]).*$/;
 
 type RegisterControl =
   | 'fullName'
@@ -49,6 +59,7 @@ type RegisterControl =
 const PATTERN_ERROR_KEYS: Partial<Record<RegisterControl, string>> = {
   phone: 'iam.validation.phone',
   ruc: 'iam.validation.ruc',
+  password: 'iam.validation.passwordComposition',
 };
 
 const passwordsMatch: ValidatorFn = (group) => {
@@ -69,7 +80,6 @@ const passwordsMatch: ValidatorFn = (group) => {
 })
 export class Register {
   protected readonly iamStore = inject(IamStore);
-  private readonly router = inject(Router);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly injector = inject(Injector);
   private readonly formBuilder = inject(NonNullableFormBuilder);
@@ -86,7 +96,15 @@ export class Register {
       city: ['', Validators.required],
       postalCode: ['', Validators.required],
       country: ['', Validators.required],
-      password: ['', [Validators.required, Validators.minLength(PASSWORD_MIN_LENGTH)]],
+      password: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(PASSWORD_MIN_LENGTH),
+          Validators.maxLength(PASSWORD_MAX_LENGTH),
+          Validators.pattern(PASSWORD_COMPOSITION),
+        ],
+      ],
       confirmPassword: ['', Validators.required],
     },
     { validators: passwordsMatch },
@@ -96,27 +114,20 @@ export class Register {
   private readonly successHeading = viewChild<ElementRef<HTMLElement>>('successHeading');
 
   /**
-   * The translation key of the registration failure. An unregistered Google account is not a failure
-   * here: it continues to the Google registration.
+   * The translation key of the registration failure. Outcomes that continue elsewhere (Google
+   * onboarding, an account that must use the mobile application) are not failures here.
    */
   protected readonly errorKey = computed(() => {
-    if (this.iamStore.error() === null || this.iamStore.googleRegistrationRequired()) {
+    if (this.iamStore.error() === null || authenticationContinuationUrl(this.iamStore) !== null) {
       return null;
     }
-    return this.attempt() === 'google'
-      ? GOOGLE_SIGN_IN_ERROR_KEY
-      : registrationErrorKey(this.iamStore.errorCode());
+    const code = this.iamStore.errorCode();
+    return this.attempt() === 'google' ? googleSignInErrorKey(code) : registrationErrorKey(code);
   });
 
   constructor() {
     this.iamStore.clearFeedback();
-    effect(() => {
-      if (this.iamStore.isAuthenticated()) {
-        void this.router.navigateByUrl('/');
-      } else if (this.iamStore.googleRegistrationRequired()) {
-        void this.router.navigateByUrl('/iam/complete-google-registration');
-      }
-    });
+    followAuthenticationContinuation('/iam/register');
     // The credentials are not needed once the account exists; drop them from memory.
     effect(() => {
       if (this.iamStore.registeredUser() !== null) {
@@ -169,7 +180,7 @@ export class Register {
     if (control.hasError('email')) {
       return 'iam.validation.email';
     }
-    if (control.hasError('minlength')) {
+    if (control.hasError('minlength') || control.hasError('maxlength')) {
       return 'iam.validation.passwordLength';
     }
     if (control.hasError('pattern')) {

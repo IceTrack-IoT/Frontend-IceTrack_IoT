@@ -2,16 +2,20 @@ import {
   afterNextRender,
   Component,
   computed,
-  effect,
   ElementRef,
   inject,
   Injector,
   signal,
 } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { IamStore } from '@iam/application/iam-store';
+import {
+  authenticationContinuationUrl,
+  followAuthenticationContinuation,
+  GOOGLE_REGISTRATION_URL,
+} from '@iam/presentation/authentication-continuation';
 import { registrationErrorKey } from '@iam/presentation/authentication-feedback';
 import { phoneValidators, rucValidators } from '@iam/presentation/owner-registration-validators';
 import { PublicLayout } from '@shared/presentation/components/public-layout/public-layout';
@@ -34,7 +38,9 @@ const PATTERN_ERROR_KEYS: Partial<Record<CompleteRegistrationControl, string>> =
 
 /**
  * Completes the owner registration of a Google account that is not registered yet. The Google ID token
- * stays in IamStore memory: this view never reads or renders it.
+ * stays in IamStore memory: this view never reads or renders it. When the backend answers that the
+ * Google email belongs to a password account, or that the account must use the mobile application, the
+ * view continues to the account link or the technician redirect.
  */
 @Component({
   imports: [ReactiveFormsModule, RouterLink, TranslatePipe, PublicLayout],
@@ -48,7 +54,6 @@ const PATTERN_ERROR_KEYS: Partial<Record<CompleteRegistrationControl, string>> =
 })
 export class CompleteGoogleRegistration {
   protected readonly iamStore = inject(IamStore);
-  private readonly router = inject(Router);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly injector = inject(Injector);
 
@@ -64,15 +69,20 @@ export class CompleteGoogleRegistration {
   });
 
   /**
-   * - `pending`: a Google credential awaits the owner details.
+   * - `pending`: a Google credential awaits the owner details. The form also stays in place while the
+   *   view continues to another step, so the expired notice never flashes during that navigation.
    * - `completed`: the account exists and the session started.
-   * - `unavailable`: no Google credential is pending, e.g. after a reload (it is kept in memory only).
+   * - `unavailable`: no Google credential is pending, e.g. after a reload (it is kept in memory only)
+   *   or after the backend rejected the Google ID token (it may have expired).
    */
   protected readonly state = computed<'pending' | 'completed' | 'unavailable'>(() => {
     if (this.iamStore.isAuthenticated()) {
       return 'completed';
     }
-    return this.iamStore.googleRegistrationRequired() ? 'pending' : 'unavailable';
+    if (this.iamStore.googleRegistrationRequired()) {
+      return 'pending';
+    }
+    return authenticationContinuationUrl(this.iamStore) === null ? 'unavailable' : 'pending';
   });
 
   /** Failures are shown only for submissions from this view, never for the Google sign-in that led here. */
@@ -85,15 +95,11 @@ export class CompleteGoogleRegistration {
   );
 
   constructor() {
-    effect(() => {
-      if (this.iamStore.isAuthenticated()) {
-        void this.router.navigateByUrl('/');
-      }
-    });
+    followAuthenticationContinuation(GOOGLE_REGISTRATION_URL);
   }
 
   protected submit(): void {
-    if (this.iamStore.loading() || this.state() !== 'pending') {
+    if (this.iamStore.loading() || !this.iamStore.googleRegistrationRequired()) {
       return;
     }
     if (this.form.invalid) {

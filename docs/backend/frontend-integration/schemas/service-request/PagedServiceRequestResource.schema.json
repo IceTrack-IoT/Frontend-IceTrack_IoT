@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PagedServiceRequestResource",
+  "type": "object",
+  "properties": {
+    "content": {
+      "type": "array",
+      "items": {
+        "$ref": "ServiceRequestResource.schema.json"
+      },
+      "description": "Service requests of this page, newest first"
+    },
+    "page": {
+      "type": "integer",
+      "format": "int32",
+      "description": "Zero-based index of this page"
+    },
+    "size": {
+      "type": "integer",
+      "format": "int32",
+      "description": "Maximum number of requests a page may hold"
+    },
+    "total_elements": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Total number of requests matching the filters"
+    },
+    "total_pages": {
+      "type": "integer",
+      "format": "int32",
+      "description": "Number of pages the matching requests span"
+    }
+  },
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/service/request/interfaces/rest/resources/PagedServiceRequestResource.java"
+}

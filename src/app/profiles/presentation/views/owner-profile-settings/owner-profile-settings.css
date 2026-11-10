@@ -2,12 +2,26 @@
   display: block;
 }
 
-.owner-profile__title {
+.owner-profile__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-2);
   margin-block-end: var(--space-2);
+}
+
+.owner-profile__header .ui-panel__title {
+  margin: 0;
 }
 
 .owner-profile__wide {
   grid-column: 1 / -1;
+}
+
+.owner-profile__readonly {
+  margin: 0;
+  overflow-wrap: anywhere;
 }
 
 .owner-profile__unavailable {

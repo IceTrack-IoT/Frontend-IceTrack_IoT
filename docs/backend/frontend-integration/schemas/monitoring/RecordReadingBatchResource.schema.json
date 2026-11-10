@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RecordReadingBatchResource",
+  "type": "object",
+  "properties": {
+    "reading_uid": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Client-generated identifier used to de-duplicate retried deliveries"
+    },
+    "equipment_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Optional cross-check: must equal the equipment the authenticated device is paired with"
+    },
+    "device_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Optional cross-check: must equal the authenticated device"
+    },
+    "min_temperature": {
+      "type": "number",
+      "format": "double",
+      "minimum": -5.0,
+      "maximum": 55.0,
+      "description": "Calibrated minimum temperature in the window, in Celsius; within 5 of raw_min_temperature"
+    },
+    "max_temperature": {
+      "type": "number",
+      "format": "double",
+      "minimum": -5.0,
+      "maximum": 55.0,
+      "description": "Calibrated maximum temperature in the window, in Celsius; within 5 of raw_max_temperature"
+    },
+    "avg_temperature": {
+      "type": "number",
+      "format": "double",
+      "minimum": -5.0,
+      "maximum": 55.0,
+      "description": "Calibrated average temperature in the window, in Celsius; within 5 of raw_avg_temperature"
+    },
+    "raw_min_temperature": {
+      "type": "number",
+      "format": "double",
+      "minimum": 0.0,
+      "maximum": 50.0,
+      "description": "Minimum temperature measured by the probe before calibration, in Celsius (0 to 50)"
+    },
+    "raw_max_temperature": {
+      "type": "number",
+      "format": "double",
+      "minimum": 0.0,
+      "maximum": 50.0,
+      "description": "Maximum temperature measured by the probe before calibration, in Celsius (0 to 50)"
+    },
+    "raw_avg_temperature": {
+      "type": "number",
+      "format": "double",
+      "minimum": 0.0,
+      "maximum": 50.0,
+      "description": "Average temperature measured by the probe before calibration, in Celsius (0 to 50)"
+    },
+    "humidity": {
+      "type": "number",
+      "format": "double",
+      "minimum": 20.0,
+      "maximum": 90.0,
+      "description": "Average relative humidity observed in the window, as a percentage (20 to 90)"
+    },
+    "sample_count": {
+      "type": "integer",
+      "format": "int32",
+      "minimum": 1.0,
+      "maximum": 360.0,
+      "description": "Number of raw samples folded into this reading (1 to 360)"
+    },
+    "light_level_max": {
+      "type": "number",
+      "format": "double",
+      "minimum": 0.0,
+      "maximum": 100.0,
+      "description": "Highest light level inside the unit during the window, 0 to 100 %; omitted when the device has no light sensor"
+    },
+    "door_open_seconds": {
+      "type": "integer",
+      "format": "int32",
+      "minimum": 0,
+      "description": "Seconds the door was detected open during the window; omitted when not reported"
+    },
+    "presence_detected": {
+      "type": "boolean",
+      "description": "Whether the PIR sensor detected presence near the unit during the window; omitted when presence is unavailable, which is stored as unavailable, not as false"
+    },
+    "recorded_at": {
+      "type": "string",
+      "description": "Format: date-time (ISO 8601 UTC with Z, e.g. 2026-09-29T08:30:00Z) Timestamp assigned by the device clock"
+    },
+    "applied_config_version": {
+      "type": "integer",
+      "format": "int64",
+      "minimum": 0,
+      "description": "Edge configuration version the gateway was running when it built this batch"
+    }
+  },
+  "required": [
+    "reading_uid",
+    "min_temperature",
+    "max_temperature",
+    "avg_temperature",
+    "raw_min_temperature",
+    "raw_max_temperature",
+    "raw_avg_temperature",
+    "humidity",
+    "sample_count",
+    "recorded_at",
+    "applied_config_version"
+  ],
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/monitoring/interfaces/rest/resources/RecordReadingBatchResource.java"
+}

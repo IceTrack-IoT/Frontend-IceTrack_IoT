@@ -1,0 +1,90 @@
+<app-public-layout>
+  <section class="iam-card" aria-labelledby="link-account-title">
+    @switch (state()) {
+      @case ('pending') {
+        <header class="iam-card__header">
+          <h1 class="iam-card__title" id="link-account-title">
+            {{ 'iam.linkGoogleAccount.title' | translate }}
+          </h1>
+          <p class="iam-card__subtitle">{{ 'iam.linkGoogleAccount.subtitle' | translate }}</p>
+        </header>
+
+        <p class="iam-alert iam-alert--info">{{ 'iam.linkGoogleAccount.notice' | translate }}</p>
+
+        @if (errorKey(); as key) {
+          <p class="iam-alert iam-alert--error" id="link-account-error" role="alert">
+            {{ key | translate }}
+          </p>
+        }
+
+        <form class="iam-form" [formGroup]="form" (ngSubmit)="submit()">
+          @let passwordError = passwordErrorKey();
+          <div class="iam-field">
+            <label class="iam-field__label" for="link-account-password">
+              {{ 'iam.fields.password' | translate }}
+            </label>
+            <input
+              class="iam-field__input"
+              id="link-account-password"
+              type="password"
+              formControlName="password"
+              autocomplete="current-password"
+              [placeholder]="'iam.placeholders.password' | translate"
+              [attr.aria-invalid]="passwordError ? true : null"
+              [attr.aria-describedby]="
+                passwordError
+                  ? 'link-account-password-error'
+                  : errorKey()
+                    ? 'link-account-error'
+                    : null
+              "
+            />
+            @if (passwordError) {
+              <p class="iam-field__error" id="link-account-password-error">
+                {{ passwordError | translate }}
+              </p>
+            }
+          </div>
+
+          <div class="link-account__actions">
+            <button
+              class="iam-button iam-button--primary"
+              type="submit"
+              [disabled]="iamStore.loading()"
+            >
+              @if (iamStore.loading()) {
+                {{ 'iam.linkGoogleAccount.submitting' | translate }}
+              } @else {
+                {{ 'iam.linkGoogleAccount.submit' | translate }}
+              }
+            </button>
+            <a class="iam-button iam-button--secondary" routerLink="/iam/login">
+              {{ 'iam.actions.backToSignIn' | translate }}
+            </a>
+          </div>
+        </form>
+      }
+      @case ('completed') {
+        <header class="iam-card__header">
+          <h1 class="iam-card__title" id="link-account-title">
+            {{ 'iam.linkGoogleAccount.title' | translate }}
+          </h1>
+          <p class="iam-card__subtitle" role="status">
+            {{ 'iam.linkGoogleAccount.completed' | translate }}
+          </p>
+        </header>
+      }
+      @default {
+        <header class="iam-card__header">
+          <h1 class="iam-card__title" id="link-account-title">
+            {{ 'iam.linkGoogleAccount.expiredTitle' | translate }}
+          </h1>
+          <p class="iam-card__subtitle">{{ 'iam.linkGoogleAccount.expiredMessage' | translate }}</p>
+        </header>
+        <a class="iam-button iam-button--primary" routerLink="/iam/login">
+          {{ 'iam.actions.backToSignIn' | translate }}
+        </a>
+      }
+    }
+  </section>
+</app-public-layout>

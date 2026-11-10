@@ -7,21 +7,32 @@ import {
   type AuthenticationErrorCode,
   isAuthenticationError,
 } from '@iam/application/contracts/authentication-error';
+import type { LocalCredential } from '@iam/application/contracts/local-credential';
+import type { OwnerSignUp } from '@iam/application/contracts/local-sign-up';
+import type { GoogleOwnerRegistration } from '@iam/application/contracts/google-registration';
 import type { ClientSession } from '@iam/application/state/client-session';
+import { CompleteGoogleRegistrationUseCase } from '@iam/application/use-cases/complete-google-registration.use-case';
+import { LinkGoogleAccountUseCase } from '@iam/application/use-cases/link-google-account.use-case';
 import { LoadCurrentUserUseCase } from '@iam/application/use-cases/load-current-user.use-case';
 import { RefreshClientSessionUseCase } from '@iam/application/use-cases/refresh-client-session.use-case';
 import { RestoreClientSessionUseCase } from '@iam/application/use-cases/restore-client-session.use-case';
+import { SignInLocallyUseCase } from '@iam/application/use-cases/sign-in-locally.use-case';
 import { SignInWithGoogleUseCase } from '@iam/application/use-cases/sign-in-with-google.use-case';
 import { SignOutUseCase } from '@iam/application/use-cases/sign-out.use-case';
-import { SynchronizeClientSessionUseCase } from '@iam/application/use-cases/synchronize-client-session.use-case';
-import { LocalCredential } from '@iam/application/contracts/local-credential';
-import { SignInLocallyUseCase } from '@iam/application/use-cases/sign-in-locally.use-case';
-import type { OwnerSignUp } from '@iam/application/contracts/local-sign-up';
 import { SignUpOwnerUseCase } from '@iam/application/use-cases/sign-up-owner.use-case';
-import type {
-  GoogleOwnerRegistration,
-} from '@iam/application/contracts/google-registration';
-import { CompleteGoogleRegistrationUseCase } from '@iam/application/use-cases/complete-google-registration.use-case';
+import { SynchronizeClientSessionUseCase } from '@iam/application/use-cases/synchronize-client-session.use-case';
+
+/**
+ * The Google onboarding step requested by the backend after a Google sign-in:
+ * - `complete-registration`: the Google account is not registered (`GOOGLE_ACCOUNT_NOT_FOUND`);
+ * - `link-account`: the Google email belongs to a password account (`ACCOUNT_LINK_REQUIRED`).
+ */
+type PendingGoogleStep = 'complete-registration' | 'link-account';
+
+interface PendingGoogleCredential {
+  readonly credential: GoogleCredential;
+  readonly step: PendingGoogleStep;
+}
 
 /**
  * Iam Store is a service that manages the state of users and session information in the application.
@@ -38,11 +49,9 @@ export class IamStore {
   private readonly signUpOwnerUseCase = inject(SignUpOwnerUseCase);
   private readonly signInWithGoogleUseCase = inject(SignInWithGoogleUseCase);
   private readonly completeGoogleRegistrationUseCase = inject(CompleteGoogleRegistrationUseCase);
+  private readonly linkGoogleAccountUseCase = inject(LinkGoogleAccountUseCase);
   private readonly loadCurrentUserUseCase = inject(LoadCurrentUserUseCase);
   private readonly signOutUseCase = inject(SignOutUseCase);
-
-  private readonly usersSignal = signal<User[]>([]);
-  readonly users = this.usersSignal.asReadonly();
 
   private readonly sessionSignal = signal<ClientSession | null>(null);
   readonly currentUser = computed(() => this.sessionSignal()?.user ?? null);
@@ -57,11 +66,15 @@ export class IamStore {
   readonly loading = this.loadingSignal.asReadonly();
 
   private readonly errorSignal = signal<string | null>(null);
+  /**
+   * A technical description of the last failure, or null. It never contains backend text; views show
+   * translated feedback chosen from `errorCode` instead.
+   */
   readonly error = this.errorSignal.asReadonly();
 
   private readonly errorCodeSignal = signal<AuthenticationErrorCode | null>(null);
   /**
-   * The machine-readable code of the last authentication failure, e.g. `GOOGLE_ACCOUNT_NOT_FOUND`.
+   * The machine-readable code of the last authentication failure, e.g. `BAD_CREDENTIALS`.
    */
   readonly errorCode = this.errorCodeSignal.asReadonly();
 
@@ -72,19 +85,31 @@ export class IamStore {
   readonly registeredUser = this.registeredUserSignal.asReadonly();
 
   /**
-   * The Google credential rejected with `GOOGLE_ACCOUNT_NOT_FOUND`. Completing the registration must
-   * send its ID token again, so it is kept in memory only (never persisted) until the registration
-   * completes, another sign-in starts, or the feedback is cleared.
+   * The Google credential of a Google sign-in that requires an onboarding step. Completing that step
+   * must send its ID token again, so it is kept in memory only (never persisted) until the step
+   * completes, the ID token is rejected, another sign-in starts, or the feedback is cleared.
    */
-  private readonly pendingGoogleCredentialSignal = signal<GoogleCredential | null>(null);
+  private readonly pendingGoogleSignal = signal<PendingGoogleCredential | null>(null);
   /**
    * True when the last Google sign-in found no account and the Google registration must be completed.
    */
   readonly googleRegistrationRequired = computed(
-    () => this.pendingGoogleCredentialSignal() !== null,
+    () => this.pendingGoogleSignal()?.step === 'complete-registration',
+  );
+  /**
+   * True when the Google email belongs to a password account that must be linked with its password.
+   */
+  readonly googleAccountLinkRequired = computed(
+    () => this.pendingGoogleSignal()?.step === 'link-account',
   );
 
-  readonly userCount = computed(() => this.users().length);
+  private readonly mobileApplicationRequiredSignal = signal<boolean>(false);
+  /**
+   * True when the backend rejected the last sign-in with `ROLE_CHANNEL_MISMATCH`: the credentials are
+   * valid, but the account is not an owner and must use the mobile application. No session is issued;
+   * the flag lives in memory only, until another attempt starts or the feedback is cleared.
+   */
+  readonly mobileApplicationRequired = this.mobileApplicationRequiredSignal.asReadonly();
 
   constructor() {
     this.synchronizeClientSessionUseCase
@@ -141,24 +166,20 @@ export class IamStore {
   }
 
   /**
-   * Signs in locally with a username and password, and keeps the resulting client session.
+   * Signs in locally with a username (or profile email) and password, and keeps the resulting client
+   * session.
    *
    * @param credential - The local credential containing the username and password.
    */
   signInLocally(credential: LocalCredential): void {
-    this.loadingSignal.set(true);
-    this.errorSignal.set(null);
-    this.errorCodeSignal.set(null);
-    this.pendingGoogleCredentialSignal.set(null);
+    this.startAttempt();
+    this.pendingGoogleSignal.set(null);
     this.signInLocallyUseCase
       .execute(credential)
       .pipe(finalize(() => this.loadingSignal.set(false)))
       .subscribe({
         next: (session) => this.sessionSignal.set(session),
-        error: (error: unknown) => {
-          this.errorCodeSignal.set(isAuthenticationError(error) ? error.code : null);
-          this.errorSignal.set(this.formatError(error, 'Failed to sign in locally'));
-        },
+        error: (error: unknown) => this.fail(error, 'Failed to sign in locally'),
       });
   }
 
@@ -167,30 +188,37 @@ export class IamStore {
    * @param signUp - The owner registration data.
    */
   signUpOwner(signUp: OwnerSignUp): void {
-    this.signUp(this.signUpOwnerUseCase.execute(signUp), 'Failed to sign up as owner');
+    this.clearFeedback();
+    this.loadingSignal.set(true);
+    this.signUpOwnerUseCase
+      .execute(signUp)
+      .pipe(finalize(() => this.loadingSignal.set(false)))
+      .subscribe({
+        next: (user) => this.registeredUserSignal.set(user),
+        error: (error: unknown) => this.fail(error, 'Failed to sign up as owner'),
+      });
   }
 
   /**
-   * Clears the feedback of the last operation (error, error code, registered user and pending Google
-   * registration).
+   * Clears the feedback of the last operation (error, error code, registered user, pending Google
+   * onboarding step and mobile application requirement).
    */
   clearFeedback(): void {
     this.errorSignal.set(null);
     this.errorCodeSignal.set(null);
     this.registeredUserSignal.set(null);
-    this.pendingGoogleCredentialSignal.set(null);
+    this.pendingGoogleSignal.set(null);
+    this.mobileApplicationRequiredSignal.set(false);
   }
 
   /**
-   * Signs in with a Google credential and keeps the resulting client session. When the Google account
-   * is not registered, the credential is kept in memory so the registration can be completed.
+   * Signs in with a Google credential and keeps the resulting client session. When the backend requests
+   * an onboarding step (registration or account link), the credential is kept in memory for it.
    * @param credential - The Google credential containing the ID token issued by Google.
    */
   signInWithGoogle(credential: GoogleCredential): void {
-    this.loadingSignal.set(true);
-    this.errorSignal.set(null);
-    this.errorCodeSignal.set(null);
-    this.pendingGoogleCredentialSignal.set(null);
+    this.startAttempt();
+    this.pendingGoogleSignal.set(null);
     this.signInWithGoogleUseCase
       .execute(credential)
       .pipe(finalize(() => this.loadingSignal.set(false)))
@@ -198,10 +226,11 @@ export class IamStore {
         next: (session) => this.sessionSignal.set(session),
         error: (error: unknown) => {
           if (isAuthenticationError(error, 'GOOGLE_ACCOUNT_NOT_FOUND')) {
-            this.pendingGoogleCredentialSignal.set(credential);
+            this.pendingGoogleSignal.set({ credential, step: 'complete-registration' });
+          } else if (isAuthenticationError(error, 'ACCOUNT_LINK_REQUIRED')) {
+            this.pendingGoogleSignal.set({ credential, step: 'link-account' });
           }
-          this.errorCodeSignal.set(isAuthenticationError(error) ? error.code : null);
-          this.errorSignal.set(this.formatError(error, 'Failed to sign in with Google'));
+          this.fail(error, 'Failed to sign in with Google');
         },
       });
   }
@@ -211,10 +240,33 @@ export class IamStore {
    * @param registration - The owner onboarding data.
    */
   completeGoogleOwnerRegistration(registration: GoogleOwnerRegistration): void {
-    this.completeGoogleRegistration(
-      (credential) =>
-        this.completeGoogleRegistrationUseCase.executeAsOwner(credential, registration),
+    const pending = this.pendingGoogleSignal();
+    if (pending?.step !== 'complete-registration') {
+      this.errorSignal.set('Sign in with Google before completing the registration.');
+      return;
+    }
+    this.continueGoogleOnboarding(
+      pending,
+      this.completeGoogleRegistrationUseCase.executeAsOwner(pending.credential, registration),
       'Failed to complete the Google registration as owner',
+    );
+  }
+
+  /**
+   * Links the pending Google credential to the existing password account and keeps the resulting
+   * client session.
+   * @param password - The current local password of the existing account.
+   */
+  linkGoogleAccount(password: string): void {
+    const pending = this.pendingGoogleSignal();
+    if (pending?.step !== 'link-account') {
+      this.errorSignal.set('Sign in with Google before linking the account.');
+      return;
+    }
+    this.continueGoogleOnboarding(
+      pending,
+      this.linkGoogleAccountUseCase.execute(pending.credential, password),
+      'Failed to link the Google account',
     );
   }
 
@@ -242,46 +294,67 @@ export class IamStore {
     this.sessionSignal.set(null);
     this.errorSignal.set(null);
     this.errorCodeSignal.set(null);
-    this.pendingGoogleCredentialSignal.set(null);
+    this.pendingGoogleSignal.set(null);
+    this.mobileApplicationRequiredSignal.set(false);
     this.signOutUseCase.execute(refreshToken).subscribe();
   }
 
-  private completeGoogleRegistration(
-    complete: (credential: GoogleCredential) => Observable<ClientSession>,
+  /**
+   * Runs a Google onboarding step (registration completion or account link) with the pending credential.
+   */
+  private continueGoogleOnboarding(
+    pending: PendingGoogleCredential,
+    onboarding: Observable<ClientSession>,
     fallbackError: string,
   ): void {
-    const credential = this.pendingGoogleCredentialSignal();
-    if (credential === null) {
-      this.errorSignal.set('Sign in with Google before completing the registration.');
-      return;
+    this.startAttempt();
+    onboarding.pipe(finalize(() => this.loadingSignal.set(false))).subscribe({
+      next: (session) => {
+        this.pendingGoogleSignal.set(null);
+        this.sessionSignal.set(session);
+      },
+      error: (error: unknown) => {
+        this.pendingGoogleSignal.set(this.remainingGoogleOnboarding(pending, error));
+        this.fail(error, fallbackError);
+      },
+    });
+  }
+
+  /**
+   * Resolves the Google onboarding step that remains after a failed step:
+   * - `ACCOUNT_LINK_REQUIRED`: the same credential continues to the account link;
+   * - `INVALID_TOKEN` (e.g. the Google ID token expired) or `ROLE_CHANNEL_MISMATCH`: no step can
+   *   continue, the user must start over;
+   * - anything else: the same step can be retried with the same credential.
+   */
+  private remainingGoogleOnboarding(
+    pending: PendingGoogleCredential,
+    error: unknown,
+  ): PendingGoogleCredential | null {
+    if (isAuthenticationError(error, 'ACCOUNT_LINK_REQUIRED')) {
+      return { credential: pending.credential, step: 'link-account' };
     }
+    if (
+      isAuthenticationError(error, 'INVALID_TOKEN') ||
+      isAuthenticationError(error, 'ROLE_CHANNEL_MISMATCH')
+    ) {
+      return null;
+    }
+    return pending;
+  }
+
+  private startAttempt(): void {
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
     this.errorCodeSignal.set(null);
-    complete(credential)
-      .pipe(finalize(() => this.loadingSignal.set(false)))
-      .subscribe({
-        next: (session) => {
-          this.pendingGoogleCredentialSignal.set(null);
-          this.sessionSignal.set(session);
-        },
-        error: (error: unknown) => {
-          this.errorCodeSignal.set(isAuthenticationError(error) ? error.code : null);
-          this.errorSignal.set(this.formatError(error, fallbackError));
-        },
-      });
+    this.mobileApplicationRequiredSignal.set(false);
   }
 
-  private signUp(registration: Observable<User>, fallbackError: string): void {
-    this.loadingSignal.set(true);
-    this.clearFeedback();
-    registration.pipe(finalize(() => this.loadingSignal.set(false))).subscribe({
-      next: (user) => this.registeredUserSignal.set(user),
-      error: (error: unknown) => {
-        this.errorCodeSignal.set(isAuthenticationError(error) ? error.code : null);
-        this.errorSignal.set(this.formatError(error, fallbackError));
-      },
-    });
+  private fail(error: unknown, fallbackError: string): void {
+    const code = isAuthenticationError(error) ? error.code : null;
+    this.errorCodeSignal.set(code);
+    this.mobileApplicationRequiredSignal.set(code === 'ROLE_CHANNEL_MISMATCH');
+    this.errorSignal.set(this.formatError(error, fallbackError));
   }
 
   /**

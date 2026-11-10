@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SignInWithLocalResource",
+  "type": "object",
+  "properties": {
+    "username": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255,
+      "description": "Username, or the email address of the account's profile (matched case-insensitively)"
+    },
+    "password": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255,
+      "description": "User password"
+    },
+    "channel": {
+      "type": "string",
+      "enum": [
+        "WEB",
+        "MOBILE"
+      ],
+      "description": "Client application: WEB for owners, MOBILE for technicians"
+    }
+  },
+  "required": [
+    "username",
+    "password",
+    "channel"
+  ],
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/iam/interfaces/rest/resources/SignInWithLocalResource.java"
+}

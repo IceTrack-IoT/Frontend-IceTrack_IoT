@@ -1,14 +1,14 @@
 /**
- * ReportFormat enum represents the file formats a report can be exported to.
+ * ReportFormat enum represents the file format a report is rendered in.
  */
 export enum ReportFormat {
   PDF = 'PDF',
-  EXCEL = 'EXCEL',
+  XLSX = 'XLSX',
   CSV = 'CSV',
 }
 
 /**
- * Checks whether a value is one of the confirmed values of report format.
+ * Checks whether a value is one of the confirmed report formats.
  * @param value - The value to check.
  * @returns True when the value is a ReportFormat.
  */

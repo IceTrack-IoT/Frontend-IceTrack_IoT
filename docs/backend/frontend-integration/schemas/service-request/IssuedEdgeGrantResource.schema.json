@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "IssuedEdgeGrantResource",
+  "type": "object",
+  "properties": {
+    "token": {
+      "type": "string",
+      "description": "Plaintext grant token: it_grt_ followed by 64 hexadecimal characters. Store it securely; it cannot be retrieved again, only regenerated"
+    },
+    "service_request_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Service request the grant was issued for"
+    },
+    "technician_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Technician the grant was issued to"
+    },
+    "equipment_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Unit whose gateway the grant opens"
+    },
+    "issued_at": {
+      "type": "string",
+      "description": "When the grant was issued"
+    },
+    "expires_at": {
+      "type": "string",
+      "description": "When the grant stops being valid"
+    }
+  },
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/service/request/interfaces/rest/resources/IssuedEdgeGrantResource.java"
+}

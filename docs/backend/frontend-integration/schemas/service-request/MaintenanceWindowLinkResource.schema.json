@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MaintenanceWindowLinkResource",
+  "type": "object",
+  "properties": {
+    "window_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Maintenance window identifier, as listed by GET /api/v1/maintenance-windows"
+    },
+    "origin": {
+      "type": "string",
+      "enum": [
+        "APP",
+        "BUTTON"
+      ],
+      "description": "How the window was started"
+    },
+    "technician_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Technician attributed to the window; null when unknown"
+    },
+    "started_at": {
+      "type": "string",
+      "description": "When the window started, ISO-8601 UTC"
+    },
+    "ended_at": {
+      "type": "string",
+      "description": "When the window ended; null while it is open"
+    },
+    "closure_reason": {
+      "type": "string",
+      "description": "Why the window ended; null while it is open"
+    }
+  },
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/service/request/interfaces/rest/resources/MaintenanceWindowLinkResource.java"
+}

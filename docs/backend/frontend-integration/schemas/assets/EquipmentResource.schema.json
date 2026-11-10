@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "EquipmentResource",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Equipment unique identifier"
+    },
+    "site_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Identifier of the site the unit is installed at"
+    },
+    "site_name": {
+      "type": "string",
+      "readOnly": true,
+      "description": "Name of the site the unit is installed at, at the time of the read"
+    },
+    "uid": {
+      "type": "string",
+      "description": "The unit's own identifier, unique across the platform"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name assigned to the unit"
+    },
+    "equipment_type": {
+      "type": "string",
+      "enum": [
+        "DISPLAY_CASE",
+        "COLD_ROOM",
+        "REFRIGERATOR",
+        "OTHER"
+      ],
+      "description": "Kind of refrigeration unit"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ACTIVE",
+        "MAINTENANCE",
+        "REPAIR",
+        "DEACTIVATED"
+      ],
+      "description": "Current lifecycle status"
+    },
+    "online": {
+      "type": "boolean",
+      "description": "Whether the unit is reporting: true once a reading batch is stored; false before the first one, after offline detection and while DEACTIVATED"
+    },
+    "min_celsius": {
+      "type": "number",
+      "format": "double",
+      "description": "Lowest acceptable temperature in Celsius"
+    },
+    "max_celsius": {
+      "type": "number",
+      "format": "double",
+      "description": "Highest acceptable temperature in Celsius"
+    },
+    "reminder_interval_days": {
+      "type": "integer",
+      "format": "int32",
+      "description": "Preventive maintenance interval in days"
+    },
+    "last_reading_at": {
+      "type": "string",
+      "description": "When the unit's latest reading batch was taken (its recorded_at); a batch delivered late never moves it back; null when the unit has not reported yet"
+    },
+    "last_known_temperature": {
+      "type": "number",
+      "format": "double",
+      "description": "Average temperature of the unit's latest reading batch, in Celsius; null when the unit has not reported yet"
+    },
+    "config_version": {
+      "type": "integer",
+      "format": "int32",
+      "description": "Version of the configuration the unit's edge gateway enforces; incremented whenever the threshold, the alert policy or the technician grants of the unit change"
+    }
+  },
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/assets/interfaces/rest/resources/EquipmentResource.java"
+}

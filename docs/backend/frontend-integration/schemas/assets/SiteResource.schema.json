@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SiteResource",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Site unique identifier"
+    },
+    "owner_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Identifier of the owner profile the site belongs to"
+    },
+    "name": {
+      "type": "string",
+      "description": "Site name"
+    },
+    "address": {
+      "type": "string",
+      "description": "Physical address of the site"
+    },
+    "contact_name": {
+      "type": "string",
+      "description": "Name of the person reachable on site"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Contact phone number"
+    },
+    "equipment_count": {
+      "type": "integer",
+      "format": "int32",
+      "description": "Number of equipment units installed at the site"
+    },
+    "geocoding_status": {
+      "type": "string",
+      "enum": [
+        "PENDING",
+        "RESOLVED",
+        "FAILED",
+        "NOT_FOUND"
+      ],
+      "description": "Where the site stands in locating its address"
+    },
+    "location": {
+      "$ref": "GeoLocationResource.schema.json",
+      "description": "Resolved coordinates; omitted unless geocoding_status is RESOLVED"
+    },
+    "navigation_url": {
+      "type": "string",
+      "description": "Google Maps directions link; omitted unless the site is located"
+    }
+  },
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/assets/interfaces/rest/resources/SiteResource.java"
+}

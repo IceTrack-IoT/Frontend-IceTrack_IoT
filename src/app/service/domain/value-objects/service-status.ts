@@ -1,13 +1,15 @@
 /**
  * ServiceStatus enum represents the lifecycle states of a service request.
+ *
+ * A technician rejection is not a status: the request stays PENDING without a technician, and the
+ * rejection appears only in its status history.
  */
 export enum ServiceStatus {
   PENDING = 'PENDING',
   ACCEPTED = 'ACCEPTED',
-  REJECTED = 'REJECTED',
   IN_PROGRESS = 'IN_PROGRESS',
-  CANCELED = 'CANCELED',
   COMPLETED = 'COMPLETED',
+  CANCELED = 'CANCELED',
 }
 
 /**

@@ -5,48 +5,67 @@
 >
   <p class="ui-field__hint">{{ 'monitoring.dismiss.explanation' | translate }}</p>
 
+  @if (errorKey(); as key) {
+    <p class="ui-alert ui-alert--critical" role="alert">
+      <app-icon class="ui-alert__icon" name="alert-triangle" />
+      {{ key | translate }}
+    </p>
+  }
+
   <form class="ui-form" id="dismiss-alert-form" novalidate [formGroup]="form" (ngSubmit)="submit()">
     <div class="ui-field">
       <label class="ui-field__label" for="dismiss-reason">{{
         'monitoring.dismiss.reason' | translate
       }}</label>
-      <select
+      <textarea
         class="ui-field__control"
         id="dismiss-reason"
         formControlName="reason"
+        required
+        [attr.maxlength]="reasonMaxLength"
+        [placeholder]="'monitoring.dismiss.reasonPlaceholder' | translate"
         [attr.aria-invalid]="showError('reason') || null"
-        [attr.aria-describedby]="showError('reason') ? 'dismiss-reason-error' : null"
-      >
-        <option value="">{{ 'monitoring.dismiss.selectReason' | translate }}</option>
-        @for (reason of reasons; track reason) {
-          <option [value]="reason">{{ 'monitoring.dismiss.reasons.' + reason | translate }}</option>
-        }
-      </select>
+        [attr.aria-describedby]="
+          showError('reason') ? 'dismiss-reason-hint dismiss-reason-error' : 'dismiss-reason-hint'
+        "
+      ></textarea>
+      <p class="ui-field__hint" id="dismiss-reason-hint">
+        {{ 'monitoring.dismiss.reasonHint' | translate: { max: reasonMaxLength } }}
+      </p>
       @if (showError('reason')) {
         <p class="ui-field__error" id="dismiss-reason-error">
-          {{ 'monitoring.dismiss.reasonRequired' | translate }}
+          {{
+            (form.controls.reason.hasError('maxlength')
+              ? 'shared.validation.tooLong'
+              : 'monitoring.dismiss.reasonRequired'
+            ) | translate
+          }}
         </p>
       }
     </div>
 
     <div class="ui-field">
-      <label class="ui-field__label" for="dismiss-notes">{{
-        'monitoring.dismiss.notes' | translate
+      <label class="ui-field__label" for="dismiss-evidence">{{
+        'monitoring.dismiss.evidence' | translate
       }}</label>
       <textarea
         class="ui-field__control"
-        id="dismiss-notes"
-        formControlName="notes"
-        [attr.maxlength]="notesMaxLength"
-        [placeholder]="'monitoring.dismiss.notesPlaceholder' | translate"
-        [attr.aria-invalid]="showError('notes') || null"
-        [attr.aria-describedby]="showError('notes') ? 'dismiss-notes-error' : 'dismiss-notes-hint'"
+        id="dismiss-evidence"
+        formControlName="evidence"
+        [attr.maxlength]="evidenceMaxLength"
+        [placeholder]="'monitoring.dismiss.evidencePlaceholder' | translate"
+        [attr.aria-invalid]="showError('evidence') || null"
+        [attr.aria-describedby]="
+          showError('evidence')
+            ? 'dismiss-evidence-hint dismiss-evidence-error'
+            : 'dismiss-evidence-hint'
+        "
       ></textarea>
-      <p class="ui-field__hint" id="dismiss-notes-hint">
-        {{ 'shared.validation.optionalMax' | translate: { max: notesMaxLength } }}
+      <p class="ui-field__hint" id="dismiss-evidence-hint">
+        {{ 'shared.validation.optionalMax' | translate: { max: evidenceMaxLength } }}
       </p>
-      @if (showError('notes')) {
-        <p class="ui-field__error" id="dismiss-notes-error">
+      @if (showError('evidence')) {
+        <p class="ui-field__error" id="dismiss-evidence-error">
           {{ 'shared.validation.tooLong' | translate }}
         </p>
       }

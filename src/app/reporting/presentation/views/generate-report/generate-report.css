@@ -58,3 +58,12 @@
 .generate-report__confirmation-actions {
   justify-content: flex-start;
 }
+
+.generate-report__retry {
+  margin-inline-start: var(--space-1);
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}

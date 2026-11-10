@@ -1,0 +1,8 @@
+{
+  "id": 11,
+  "equipment_id": 1,
+  "sustained_excursion_minutes": 2,
+  "hysteresis_margin_celsius": 1.0,
+  "missed_sync_windows_for_offline": 3,
+  "active": true
+}

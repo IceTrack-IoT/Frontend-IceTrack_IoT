@@ -107,3 +107,10 @@
     text-align: start;
   }
 }
+
+.equipment-detail__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-block-start: var(--space-2);
+}

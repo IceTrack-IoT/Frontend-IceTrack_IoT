@@ -4,7 +4,7 @@
     {{ 'monitoring.alertDetail.back' | translate }}
   </a>
 
-  @switch (source.status()) {
+  @switch (status()) {
     @case ('loading') {
       <h1 class="visually-hidden">{{ 'monitoring.alertDetail.title' | translate }}</h1>
       <app-state-panel kind="loading" [heading]="'monitoring.alertDetail.loading' | translate" />
@@ -22,11 +22,23 @@
         </button>
       </app-state-panel>
     }
+    @case ('not-found') {
+      <h1 class="visually-hidden">{{ 'monitoring.alertDetail.title' | translate }}</h1>
+      <app-state-panel
+        kind="empty"
+        [heading]="'monitoring.alertDetail.notFoundTitle' | translate"
+        [message]="'monitoring.alertDetail.notFoundMessage' | translate"
+      >
+        <a class="ui-button ui-button--secondary" routerLink="/monitoring/alerts">
+          {{ 'monitoring.alertDetail.back' | translate }}
+        </a>
+      </app-state-panel>
+    }
     @default {
       @if (alert(); as item) {
         <header
           class="ui-panel alert-detail__header"
-          [class.alert-detail__header--critical]="critical() && open()"
+          [class.alert-detail__header--critical]="critical() && active()"
         >
           <span class="alert-detail__icon"><app-icon [name]="typeIcons[item.type]" /></span>
           <div class="alert-detail__heading">
@@ -46,19 +58,24 @@
                 [label]="'monitoring.alertStatus.' + item.status | translate"
                 [appearance]="statusAppearance[item.status]"
               />
-              @if (acknowledgedAt() && open()) {
-                <app-status-tag
-                  [label]="'monitoring.alerts.acknowledged' | translate"
-                  [appearance]="acknowledgedAppearance"
-                />
-              }
             </div>
           </div>
         </header>
 
+        <p class="visually-hidden" role="status">
+          @if (announcement(); as key) {
+            {{ key | translate }}
+          }
+        </p>
         @if (announcement(); as key) {
-          <p class="ui-alert ui-alert--success" role="status">
+          <p class="ui-alert ui-alert--success" aria-hidden="true">
             <app-icon class="ui-alert__icon" name="circle-check" />
+            {{ key | translate }}
+          </p>
+        }
+        @if (actionErrorKey(); as key) {
+          <p class="ui-alert ui-alert--critical" role="alert">
+            <app-icon class="ui-alert__icon" name="alert-triangle" />
             {{ key | translate }}
           </p>
         }
@@ -76,41 +93,28 @@
                     <a class="ui-link" [routerLink]="['/assets/equipment', monitored.id]">{{
                       monitored.name
                     }}</a>
+                  } @else {
+                    {{ 'monitoring.alerts.unknownEquipment' | translate }}
                   }
                 </dd>
               </div>
-              <div>
-                <dt>{{ 'monitoring.fields.site' | translate }}</dt>
-                <dd>{{ equipment()?.siteName }}</dd>
-              </div>
-              <div>
-                <dt>{{ 'monitoring.fields.openedAt' | translate }}</dt>
-                <dd>{{ item.opened_at | localizedDate }}</dd>
-              </div>
-              <div>
-                <dt>{{ 'monitoring.fields.closedAt' | translate }}</dt>
-                <dd>
-                  {{
-                    item.resolved_at
-                      ? (item.resolved_at | localizedDate)
-                      : ('monitoring.alertDetail.stillOpen' | translate)
-                  }}
-                </dd>
-              </div>
+              @if (equipment()?.siteName; as siteName) {
+                <div>
+                  <dt>{{ 'monitoring.fields.site' | translate }}</dt>
+                  <dd>{{ siteName }}</dd>
+                </div>
+              }
               @if (item.peak_temperature !== null) {
                 <div>
                   <dt>{{ 'monitoring.fields.peakTemperature' | translate }}</dt>
                   <dd class="telemetry">{{ item.peak_temperature | temperature }}</dd>
                 </div>
               }
-              @if (item.excursion_duration !== null) {
+              @if (durationMinutes(); as minutes) {
                 <div>
-                  <dt>{{ 'monitoring.fields.excursionDuration' | translate }}</dt>
+                  <dt>{{ 'monitoring.fields.alertDuration' | translate }}</dt>
                   <dd class="telemetry">
-                    {{
-                      'monitoring.minutes'
-                        | translate: { value: (item.excursion_duration | localizedNumber) }
-                    }}
+                    {{ 'monitoring.minutes' | translate: { value: (minutes | localizedNumber) } }}
                   </dd>
                 </div>
               }
@@ -133,30 +137,39 @@
             <h2 class="ui-panel__title alert-detail__section-title" id="alert-actions-title">
               {{ 'monitoring.alertDetail.actionsTitle' | translate }}
             </h2>
-            @if (open()) {
+            @if (active()) {
               <div class="alert-detail__actions">
-                @if (acknowledgedAt(); as acknowledged) {
-                  <p class="ui-alert ui-alert--info">
-                    <app-icon class="ui-alert__icon" name="check" />
-                    {{
-                      'monitoring.alertDetail.acknowledgedNote'
-                        | translate: { date: (acknowledged | localizedDate: 'time') }
-                    }}
-                  </p>
-                } @else {
+                @if (item.canBeAcknowledged()) {
                   <button
                     class="ui-button ui-button--secondary"
                     type="button"
+                    [disabled]="store.alertActionPending()"
                     (click)="acknowledge()"
                   >
                     <app-icon class="ui-button__icon" name="check" />
-                    {{ 'monitoring.alerts.acknowledge' | translate }}
+                    {{
+                      (store.alertActionPending() &&
+                      store.alertActionState()?.action === 'acknowledge'
+                        ? 'monitoring.alerts.acknowledging'
+                        : 'monitoring.alerts.acknowledge'
+                      ) | translate
+                    }}
                   </button>
                 }
                 <button
                   class="ui-button ui-button--secondary"
                   type="button"
-                  (click)="announcement.set(null); dismissing.set(true)"
+                  [disabled]="store.alertActionPending()"
+                  (click)="confirm('resolve')"
+                >
+                  <app-icon class="ui-button__icon" name="circle-check" />
+                  {{ 'monitoring.alerts.resolve' | translate }}
+                </button>
+                <button
+                  class="ui-button ui-button--secondary"
+                  type="button"
+                  [disabled]="store.alertActionPending()"
+                  (click)="confirm('dismiss')"
                 >
                   <app-icon class="ui-button__icon" name="bell-off" />
                   {{ 'monitoring.alerts.dismiss' | translate }}
@@ -193,66 +206,102 @@
           </section>
         </div>
 
-        @if (triggerReading(); as reading) {
+        <section class="ui-panel" aria-labelledby="alert-lifecycle-title">
+          <h2 class="ui-panel__title alert-detail__section-title" id="alert-lifecycle-title">
+            {{ 'monitoring.alertDetail.lifecycleTitle' | translate }}
+          </h2>
+          <dl class="ui-details">
+            @for (entry of lifecycle(); track entry.step) {
+              <div>
+                <dt>{{ 'monitoring.lifecycle.' + entry.step | translate }}</dt>
+                <dd>
+                  <time [attr.datetime]="entry.at.toISOString()">{{
+                    entry.at | localizedDate
+                  }}</time>
+                  @if (entry.actor; as actor) {
+                    @switch (actor.kind) {
+                      @case ('you') {
+                        · {{ 'monitoring.actor.you' | translate }}
+                      }
+                      @case ('automatic') {
+                        · {{ 'monitoring.actor.automatic' | translate }}
+                      }
+                      @case ('user') {
+                        @if (actor.kind === 'user') {
+                          · {{ 'monitoring.actor.user' | translate: { id: actor.id } }}
+                        }
+                      }
+                    }
+                  }
+                </dd>
+              </div>
+            }
+            @if (item.dismiss_reason; as reason) {
+              <div>
+                <dt>{{ 'monitoring.fields.dismissReason' | translate }}</dt>
+                <dd>{{ reason }}</dd>
+              </div>
+            }
+            @if (item.dismiss_evidence; as evidence) {
+              <div>
+                <dt>{{ 'monitoring.fields.dismissEvidence' | translate }}</dt>
+                <dd>{{ evidence }}</dd>
+              </div>
+            }
+          </dl>
+        </section>
+
+        @if (item.triggering_recorded_at; as recordedAt) {
           <section class="ui-panel" aria-labelledby="alert-reading-title">
             <h2 class="ui-panel__title alert-detail__section-title" id="alert-reading-title">
-              {{ 'monitoring.alertDetail.triggerTitle' | translate }}
+              {{ 'monitoring.alertDetail.triggerTitle.' + item.type | translate }}
             </h2>
             <dl class="ui-details">
               <div>
                 <dt>{{ 'monitoring.fields.recordedAt' | translate }}</dt>
-                <dd>{{ reading.recorded_at | localizedDate }}</dd>
-              </div>
-              <div>
-                <dt>{{ 'monitoring.fields.averageTemperature' | translate }}</dt>
-                <dd class="telemetry">{{ reading.average_temperature | temperature }}</dd>
-              </div>
-              <div>
-                <dt>{{ 'monitoring.fields.temperatureRange' | translate }}</dt>
-                <dd class="telemetry">
-                  {{ reading.min_temperature | temperature }} –
-                  {{ reading.max_temperature | temperature }}
+                <dd>
+                  <time [attr.datetime]="recordedAt.toISOString()">{{
+                    recordedAt | localizedDate
+                  }}</time>
                 </dd>
               </div>
-              <div>
-                <dt>{{ 'monitoring.fields.humidity' | translate }}</dt>
-                <dd class="telemetry">{{ reading.humidity | localizedNumber }} %</dd>
-              </div>
-              <div>
-                <dt>{{ 'monitoring.fields.device' | translate }}</dt>
-                <dd>{{ 'monitoring.deviceLabel' | translate: { id: reading.device_id } }}</dd>
-              </div>
+              @if (item.triggering_temperature !== null) {
+                <div>
+                  <dt>{{ 'monitoring.fields.triggeringTemperature' | translate }}</dt>
+                  <dd class="telemetry">{{ item.triggering_temperature | temperature }}</dd>
+                </div>
+              }
             </dl>
           </section>
         }
-      } @else {
-        <h1 class="visually-hidden">{{ 'monitoring.alertDetail.title' | translate }}</h1>
-        <app-state-panel
-          kind="empty"
-          [heading]="'monitoring.alertDetail.notFoundTitle' | translate"
-          [message]="'monitoring.alertDetail.notFoundMessage' | translate"
-        >
-          <a class="ui-button ui-button--secondary" routerLink="/monitoring/alerts">
-            {{ 'monitoring.alertDetail.back' | translate }}
-          </a>
-        </app-state-panel>
       }
     }
   }
 </div>
 
-@if (dismissing() && alert(); as item) {
-  <app-dismiss-alert-dialog
-    [alertLabel]="
-      'monitoring.alerts.alertLabel'
-        | translate
-          : {
-              type: ('monitoring.alertType.' + item.type | translate),
-              equipment: equipment()?.name ?? item.equipment_id,
-            }
-    "
-    [pending]="source.pending()"
-    (dismissed)="dismiss($event)"
-    (closed)="dismissing.set(false)"
-  />
+@if (confirming() && alert(); as item) {
+  @let label =
+    'monitoring.alerts.alertLabel'
+      | translate
+        : {
+            type: ('monitoring.alertType.' + item.type | translate),
+            equipment: equipment()?.name ?? item.equipment_id,
+          };
+  @if (confirming() === 'resolve') {
+    <app-resolve-alert-dialog
+      [alertLabel]="label"
+      [pending]="store.alertActionPending()"
+      [errorKey]="dialogErrorKey()"
+      (confirmed)="resolve()"
+      (closed)="closeConfirmation()"
+    />
+  } @else {
+    <app-dismiss-alert-dialog
+      [alertLabel]="label"
+      [pending]="store.alertActionPending()"
+      [errorKey]="dialogErrorKey()"
+      (dismissed)="dismiss($event)"
+      (closed)="closeConfirmation()"
+    />
+  }
 }

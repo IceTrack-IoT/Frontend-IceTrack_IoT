@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PinResource",
+  "type": "object",
+  "properties": {
+    "latitude": {
+      "type": "number",
+      "format": "double",
+      "minimum": -90.0,
+      "maximum": 90.0,
+      "description": "Latitude of the pin"
+    },
+    "longitude": {
+      "type": "number",
+      "format": "double",
+      "minimum": -180.0,
+      "maximum": 180.0,
+      "description": "Longitude of the pin"
+    }
+  },
+  "required": [
+    "latitude",
+    "longitude"
+  ],
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/assets/interfaces/rest/resources/PinResource.java"
+}

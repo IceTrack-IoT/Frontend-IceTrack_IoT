@@ -1,7 +1,7 @@
 @let item = alert();
 <article
   class="alert-card"
-  [class.alert-card--critical]="critical() && open()"
+  [class.alert-card--critical]="critical() && active()"
   [attr.aria-labelledby]="titleId()"
 >
   <span class="alert-card__icon"><app-icon [name]="typeIcons[item.type]" /></span>
@@ -16,12 +16,6 @@
         [label]="'monitoring.alertStatus.' + item.status | translate"
         [appearance]="statusAppearance[item.status]"
       />
-      @if (acknowledgedAt() && open()) {
-        <app-status-tag
-          [label]="'monitoring.alerts.acknowledged' | translate"
-          [appearance]="acknowledgedAppearance"
-        />
-      }
     </div>
 
     <h2 class="alert-card__title" [id]="titleId()">
@@ -30,32 +24,31 @@
     </h2>
 
     <p class="alert-card__meta">
-      @if (equipment(); as monitored) {
-        {{ monitored.siteName }} ·
+      @if (equipment()?.siteName; as siteName) {
+        {{ siteName }} ·
       }
       {{ 'monitoring.alerts.openedAt' | translate: { date: (item.opened_at | localizedDate) } }}
       ({{ item.opened_at | relativeTime }})
-      @if (item.resolved_at) {
+      @if (item.acknowledged_at; as acknowledgedAt) {
         ·
-        {{ 'monitoring.alerts.closedAt' | translate: { date: (item.resolved_at | localizedDate) } }}
+        {{
+          'monitoring.alerts.acknowledgedAt' | translate: { date: (acknowledgedAt | localizedDate) }
+        }}
       }
     </p>
 
-    @if (item.peak_temperature !== null) {
+    @if (item.peak_temperature !== null || item.triggering_temperature !== null) {
       <dl class="alert-card__facts">
-        <div>
-          <dt>{{ 'monitoring.fields.peakTemperature' | translate }}</dt>
-          <dd class="telemetry">{{ item.peak_temperature | temperature }}</dd>
-        </div>
-        @if (item.excursion_duration !== null) {
+        @if (item.triggering_temperature !== null) {
           <div>
-            <dt>{{ 'monitoring.fields.excursionDuration' | translate }}</dt>
-            <dd class="telemetry">
-              {{
-                'monitoring.minutes'
-                  | translate: { value: (item.excursion_duration | localizedNumber) }
-              }}
-            </dd>
+            <dt>{{ 'monitoring.fields.triggeringTemperature' | translate }}</dt>
+            <dd class="telemetry">{{ item.triggering_temperature | temperature }}</dd>
+          </div>
+        }
+        @if (item.peak_temperature !== null) {
+          <div>
+            <dt>{{ 'monitoring.fields.peakTemperature' | translate }}</dt>
+            <dd class="telemetry">{{ item.peak_temperature | temperature }}</dd>
           </div>
         }
         @if (equipment(); as monitored) {
@@ -73,12 +66,13 @@
       <a class="ui-link" [routerLink]="['/monitoring/alerts', item.id]">
         {{ 'monitoring.alerts.viewDetails' | translate }}
       </a>
-      @if (open()) {
+      @if (active()) {
         <span class="alert-card__buttons">
-          @if (!acknowledgedAt()) {
+          @if (item.canBeAcknowledged()) {
             <button
               class="ui-button ui-button--secondary ui-button--small"
               type="button"
+              [disabled]="pending()"
               [attr.aria-describedby]="titleId()"
               (click)="acknowledged.emit(item)"
             >
@@ -87,8 +81,19 @@
             </button>
           }
           <button
+            class="ui-button ui-button--secondary ui-button--small"
+            type="button"
+            [disabled]="pending()"
+            [attr.aria-describedby]="titleId()"
+            (click)="resolveRequested.emit(item)"
+          >
+            <app-icon class="ui-button__icon" name="circle-check" />
+            {{ 'monitoring.alerts.resolve' | translate }}
+          </button>
+          <button
             class="ui-button ui-button--ghost ui-button--small"
             type="button"
+            [disabled]="pending()"
             [attr.aria-describedby]="titleId()"
             (click)="dismissRequested.emit(item)"
           >

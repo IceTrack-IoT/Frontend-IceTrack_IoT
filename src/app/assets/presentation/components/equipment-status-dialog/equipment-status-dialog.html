@@ -1,0 +1,80 @@
+<app-dialog
+  [heading]="'assets.statusForm.title' | translate: { equipment: equipment().name }"
+  [description]="'assets.statusForm.description' | translate"
+  (closed)="closed.emit()"
+>
+  @if (errorKey(); as failureKey) {
+    <p class="ui-alert ui-alert--critical" role="alert">
+      <app-icon class="ui-alert__icon" name="alert-triangle" />
+      {{ failureKey | translate }}
+    </p>
+  }
+
+  <form
+    class="ui-form"
+    id="equipment-status-form"
+    novalidate
+    [formGroup]="form"
+    (ngSubmit)="submit()"
+  >
+    <p>
+      {{ 'assets.statusForm.current' | translate }}
+      <app-status-tag
+        [label]="'assets.statusEquipment.' + equipment().status | translate"
+        [appearance]="statusAppearance[equipment().status]"
+      />
+    </p>
+
+    <fieldset
+      class="ui-fieldset"
+      [attr.aria-describedby]="missingChoice() ? 'equipment-status-error' : null"
+    >
+      <legend class="ui-fieldset__legend">{{ 'assets.statusForm.newStatus' | translate }}</legend>
+      @for (option of options(); track option) {
+        <label class="equipment-status__option">
+          <input type="radio" formControlName="status" [value]="option" />
+          {{ 'assets.statusEquipment.' + option | translate }}
+        </label>
+      }
+      @if (missingChoice()) {
+        <p class="ui-field__error" id="equipment-status-error">
+          {{ 'shared.validation.required' | translate }}
+        </p>
+      }
+    </fieldset>
+
+    @if (deactivating()) {
+      <p class="ui-alert ui-alert--warning" role="status">
+        <app-icon class="ui-alert__icon" name="alert-triangle" />
+        {{ 'assets.statusForm.deactivateWarning' | translate }}
+      </p>
+    }
+  </form>
+
+  <button
+    dialogActions
+    class="ui-button ui-button--secondary"
+    type="button"
+    (click)="closed.emit()"
+  >
+    {{ 'shared.actions.cancel' | translate }}
+  </button>
+  <button
+    dialogActions
+    class="ui-button"
+    type="submit"
+    form="equipment-status-form"
+    [class.ui-button--danger]="deactivating()"
+    [class.ui-button--primary]="!deactivating()"
+    [disabled]="pending()"
+  >
+    {{
+      (pending()
+        ? 'shared.actions.saving'
+        : deactivating()
+          ? 'assets.statusForm.confirmDeactivate'
+          : 'assets.statusForm.submit'
+      ) | translate
+    }}
+  </button>
+</app-dialog>

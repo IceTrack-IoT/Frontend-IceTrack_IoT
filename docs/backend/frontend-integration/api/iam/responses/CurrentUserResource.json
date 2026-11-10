@@ -1,0 +1,7 @@
+{
+  "id": 1,
+  "username": "john.doe",
+  "email": "john.doe@example.com",
+  "role": "OWNER_ROLE",
+  "provider": "LOCAL"
+}

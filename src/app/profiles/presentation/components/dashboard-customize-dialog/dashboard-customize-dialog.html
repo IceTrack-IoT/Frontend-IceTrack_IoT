@@ -1,6 +1,14 @@
 <app-dialog
-  [heading]="'profiles.dashboard.customize.title' | translate"
-  [description]="'profiles.dashboard.customize.description' | translate"
+  [heading]="
+    (settingUp() ? 'profiles.dashboard.customize.setupTitle' : 'profiles.dashboard.customize.title')
+      | translate
+  "
+  [description]="
+    (settingUp()
+      ? 'profiles.dashboard.customize.setupDescription'
+      : 'profiles.dashboard.customize.description'
+    ) | translate
+  "
   (closed)="closed.emit()"
 >
   <p class="visually-hidden" role="status">
@@ -9,74 +17,89 @@
     }
   </p>
 
-  <section class="customize__section" aria-labelledby="customize-cards-title">
-    <div class="customize__section-header">
-      <h3 class="customize__section-title" id="customize-cards-title">
-        {{ 'profiles.dashboard.customize.cardsTitle' | translate }}
-      </h3>
-      <span class="customize__count">
-        {{
-          'profiles.dashboard.customize.visibleCount'
-            | translate: { visible: visibleCount(), total: cards().length }
-        }}
-      </span>
-    </div>
-    <p class="ui-field__hint">{{ 'profiles.dashboard.customize.cardsHint' | translate }}</p>
+  @if (errorKey(); as key) {
+    <p class="ui-alert ui-alert--critical" role="alert">
+      <app-icon class="ui-alert__icon" name="alert-triangle" />
+      {{ key | translate }}
+    </p>
+  }
 
-    <ol class="customize__cards">
-      @for (card of cards(); track card.card_id; let index = $index, first = $first, last = $last) {
-        @let name = 'profiles.cardType.' + card.card_type | translate;
-        <li class="customize__card" [class.customize__card--hidden]="!card.is_visible">
-          <span class="customize__position" aria-hidden="true">{{ index + 1 }}</span>
-          <app-icon class="customize__icon" [name]="cardIcons[card.card_type]" />
-          <span class="customize__text">
-            <label class="customize__name" [for]="'customize-card-' + card.card_id + '-visible'">
-              {{ name }}
-            </label>
-            <span
-              class="customize__description"
-              [id]="'customize-card-' + card.card_id + '-description'"
-            >
-              {{ 'profiles.cardTypeDescription.' + card.card_type | translate }}
+  @if (!settingUp()) {
+    <section class="customize__section" aria-labelledby="customize-cards-title">
+      <div class="customize__section-header">
+        <h3 class="customize__section-title" id="customize-cards-title">
+          {{ 'profiles.dashboard.customize.cardsTitle' | translate }}
+        </h3>
+        <span class="customize__count">
+          {{
+            'profiles.dashboard.customize.visibleCount'
+              | translate: { visible: visibleCount(), total: cards().length }
+          }}
+        </span>
+      </div>
+      <p class="ui-field__hint">{{ 'profiles.dashboard.customize.cardsHint' | translate }}</p>
+
+      <ol class="customize__cards">
+        @for (
+          card of cards();
+          track card.card_id;
+          let index = $index, first = $first, last = $last
+        ) {
+          @let name = 'profiles.cardType.' + card.card_type | translate;
+          <li class="customize__card" [class.customize__card--hidden]="!card.is_visible">
+            <span class="customize__position" aria-hidden="true">{{ index + 1 }}</span>
+            <app-icon class="customize__icon" [name]="cardIcons[card.card_type]" />
+            <span class="customize__text">
+              <label class="customize__name" [for]="'customize-card-' + card.card_id + '-visible'">
+                {{ name }}
+              </label>
+              <span
+                class="customize__description"
+                [id]="'customize-card-' + card.card_id + '-description'"
+              >
+                {{ 'profiles.cardTypeDescription.' + card.card_type | translate }}
+              </span>
             </span>
-          </span>
-          <span class="customize__moves">
-            <button
-              class="ui-button ui-button--ghost ui-button--icon ui-button--small"
-              type="button"
-              [id]="'customize-card-' + card.card_id + '-up'"
-              [disabled]="first"
-              [attr.aria-label]="'profiles.dashboard.customize.moveUp' | translate: { card: name }"
-              (click)="move(index, -1)"
-            >
-              <app-icon class="ui-button__icon" name="chevron-up" />
-            </button>
-            <button
-              class="ui-button ui-button--ghost ui-button--icon ui-button--small"
-              type="button"
-              [id]="'customize-card-' + card.card_id + '-down'"
-              [disabled]="last"
-              [attr.aria-label]="
-                'profiles.dashboard.customize.moveDown' | translate: { card: name }
-              "
-              (click)="move(index, 1)"
-            >
-              <app-icon class="ui-button__icon" name="chevron-down" />
-            </button>
-          </span>
-          <input
-            class="customize__switch"
-            type="checkbox"
-            role="switch"
-            [id]="'customize-card-' + card.card_id + '-visible'"
-            [checked]="card.is_visible"
-            [attr.aria-describedby]="'customize-card-' + card.card_id + '-description'"
-            (change)="toggle(card.card_id)"
-          />
-        </li>
-      }
-    </ol>
-  </section>
+            <span class="customize__moves">
+              <button
+                class="ui-button ui-button--ghost ui-button--icon ui-button--small"
+                type="button"
+                [id]="'customize-card-' + card.card_id + '-up'"
+                [disabled]="first"
+                [attr.aria-label]="
+                  'profiles.dashboard.customize.moveUp' | translate: { card: name }
+                "
+                (click)="move(index, -1)"
+              >
+                <app-icon class="ui-button__icon" name="chevron-up" />
+              </button>
+              <button
+                class="ui-button ui-button--ghost ui-button--icon ui-button--small"
+                type="button"
+                [id]="'customize-card-' + card.card_id + '-down'"
+                [disabled]="last"
+                [attr.aria-label]="
+                  'profiles.dashboard.customize.moveDown' | translate: { card: name }
+                "
+                (click)="move(index, 1)"
+              >
+                <app-icon class="ui-button__icon" name="chevron-down" />
+              </button>
+            </span>
+            <input
+              class="customize__switch"
+              type="checkbox"
+              role="switch"
+              [id]="'customize-card-' + card.card_id + '-visible'"
+              [checked]="card.is_visible"
+              [attr.aria-describedby]="'customize-card-' + card.card_id + '-description'"
+              (change)="toggle(card.card_id)"
+            />
+          </li>
+        }
+      </ol>
+    </section>
+  }
 
   <form
     class="ui-form customize__section"
@@ -101,6 +124,11 @@
         [attr.aria-invalid]="siteError ? true : null"
         [attr.aria-describedby]="siteError ? 'customize-site-error' : null"
       >
+        @if (settingUp()) {
+          <option [ngValue]="null" disabled>
+            {{ 'profiles.dashboard.customize.chooseSite' | translate }}
+          </option>
+        }
         @for (site of sites(); track site.id) {
           <option [ngValue]="site.id">{{ site.name }}</option>
         }
@@ -118,14 +146,13 @@
         @let minError = fieldErrorKey('min');
         <div class="ui-field">
           <label class="ui-field__label" for="customize-min">{{
-            'profiles.dashboard.customize.min' | translate
+            'profiles.dashboard.customize.min' | translate: { unit: unitSymbol() }
           }}</label>
           <input
             class="ui-field__control telemetry"
             id="customize-min"
             type="number"
-            step="0.1"
-            inputmode="decimal"
+            step="1"
             formControlName="min"
             [attr.aria-invalid]="minError || rangeInvalid() ? true : null"
             [attr.aria-describedby]="
@@ -139,14 +166,13 @@
         @let maxError = fieldErrorKey('max');
         <div class="ui-field">
           <label class="ui-field__label" for="customize-max">{{
-            'profiles.dashboard.customize.max' | translate
+            'profiles.dashboard.customize.max' | translate: { unit: unitSymbol() }
           }}</label>
           <input
             class="ui-field__control telemetry"
             id="customize-max"
             type="number"
-            step="0.1"
-            inputmode="decimal"
+            step="1"
             formControlName="max"
             [attr.aria-invalid]="maxError || rangeInvalid() ? true : null"
             [attr.aria-describedby]="
@@ -178,21 +204,23 @@
       </div>
       @if (rangeInvalid()) {
         <p class="ui-field__error" id="customize-range-error">
-          {{ 'profiles.dashboard.customize.minBelowMax' | translate }}
+          {{ 'profiles.dashboard.customize.minAboveMax' | translate }}
         </p>
       }
     </fieldset>
   </form>
 
   <div dialogActions class="ui-form__actions customize__actions">
-    <button
-      class="ui-button ui-button--ghost customize__restore"
-      type="button"
-      (click)="restoreLayout()"
-    >
-      <app-icon class="ui-button__icon" name="refresh" />
-      {{ 'profiles.dashboard.customize.restore' | translate }}
-    </button>
+    @if (!settingUp()) {
+      <button
+        class="ui-button ui-button--ghost customize__restore"
+        type="button"
+        (click)="restoreLayout()"
+      >
+        <app-icon class="ui-button__icon" name="refresh" />
+        {{ 'profiles.dashboard.customize.restore' | translate }}
+      </button>
+    }
     <button class="ui-button ui-button--secondary" type="button" (click)="closed.emit()">
       {{ 'shared.actions.cancel' | translate }}
     </button>
@@ -202,7 +230,13 @@
       form="dashboard-customize-form"
       [disabled]="pending()"
     >
-      {{ (pending() ? 'shared.actions.saving' : 'profiles.dashboard.customize.save') | translate }}
+      @if (pending()) {
+        {{ 'shared.actions.saving' | translate }}
+      } @else if (settingUp()) {
+        {{ 'profiles.dashboard.customize.create' | translate }}
+      } @else {
+        {{ 'profiles.dashboard.customize.save' | translate }}
+      }
     </button>
   </div>
 </app-dialog>

@@ -1,0 +1,40 @@
+<div class="ui-alert ui-alert--warning" role="alert">
+  <app-icon class="ui-alert__icon" name="alert-triangle" />
+  <div>
+    <p class="issued-key__strong">{{ 'devices.credential.storeNow' | translate }}</p>
+    <p>{{ 'devices.credential.hashOnly' | translate }}</p>
+  </div>
+</div>
+
+<div class="ui-field">
+  <label class="ui-field__label" [for]="fieldId">{{
+    'devices.credential.newKey' | translate
+  }}</label>
+  <div class="issued-key__key">
+    <input
+      class="ui-field__control telemetry"
+      readonly
+      autocomplete="off"
+      spellcheck="false"
+      [id]="fieldId"
+      [value]="apiKey()"
+    />
+    <button class="ui-button ui-button--primary" type="button" (click)="copy()">
+      <app-icon class="ui-button__icon" [name]="copyState() === 'copied' ? 'check' : 'copy'" />
+      {{
+        (copyState() === 'copied' ? 'devices.credential.copied' : 'devices.credential.copy')
+          | translate
+      }}
+    </button>
+  </div>
+  <p class="ui-field__hint" role="status">
+    @if (copyState() === 'failed') {
+      {{ 'devices.credential.copyFailed' | translate }}
+    }
+  </p>
+</div>
+
+<label class="issued-key__check">
+  <input type="checkbox" [formControl]="stored" />
+  {{ 'devices.credential.storedConfirmation' | translate }}
+</label>

@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SignUpTechnicianResource",
+  "type": "object",
+  "properties": {
+    "username": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Desired username"
+    },
+    "password": {
+      "type": "string",
+      "minLength": 8,
+      "description": "User password: 8 to 64 characters with at least one uppercase letter, one lowercase letter and one digit",
+      "maxLength": 64,
+      "pattern": "^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9]).*$"
+    },
+    "email": {
+      "type": "string",
+      "minLength": 1,
+      "format": "email",
+      "description": "User email address; it also identifies the profile"
+    },
+    "full_name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Full name of the account holder"
+    },
+    "phone": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Phone number, optionally prefixed by the country code and a space"
+    },
+    "street": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Street of the address"
+    },
+    "number": {
+      "type": "string",
+      "description": "Street number or apartment"
+    },
+    "city": {
+      "type": "string",
+      "minLength": 1,
+      "description": "City of the address"
+    },
+    "postal_code": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Postal code of the address"
+    },
+    "country": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Country of the address"
+    },
+    "speciality": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Technician speciality"
+    },
+    "certification_number": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Technician certification number"
+    }
+  },
+  "required": [
+    "username",
+    "password",
+    "email",
+    "full_name",
+    "phone",
+    "street",
+    "city",
+    "postal_code",
+    "country",
+    "speciality",
+    "certification_number"
+  ],
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/iam/interfaces/rest/resources/SignUpTechnicianResource.java"
+}

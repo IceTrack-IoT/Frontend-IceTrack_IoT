@@ -1,20 +1,17 @@
-import { BaseAssembler } from '@shared/infrastructure/api/base-assembler';
 import { OwnerProfile } from '@profiles/domain/model/owner-profile.entity';
-import { OwnerProfileResource, OwnerProfileResponse } from '@profiles/infrastructure/api/owner-profile.response';
+import type { OwnerProfileUpdate } from '@profiles/application/contracts/owner-profile-update';
+import type { OwnerProfileResource } from '@profiles/infrastructure/api/owner-profile.response';
+import type { UpdateOwnerProfileRequest } from '@profiles/infrastructure/api/update-owner-profile.request';
 
 /**
- * The `OwnerProfileAssembler` class is responsible for converting between `OwnerProfile` entities and their corresponding API resources and responses.
+ * OwnerProfileAssembler converts owner profile resources into entities and owner profile updates into
+ * request bodies.
  */
-export class OwnerProfileAssembler implements BaseAssembler<
-  OwnerProfile,
-  OwnerProfileResource,
-  OwnerProfileResponse
-> {
+export class OwnerProfileAssembler {
   /**
-   * Converts an `OwnerProfileResource` to an `OwnerProfile` entity.
-   *
-   * @param resource - The `OwnerProfileResource` to convert.
-   * @returns An instance of `OwnerProfile` entity.
+   * Converts an OwnerProfileResource to an OwnerProfile entity.
+   * @param resource - The OwnerProfileResource to convert.
+   * @returns The corresponding OwnerProfile entity.
    */
   toEntityFromResource(resource: OwnerProfileResource): OwnerProfile {
     return new OwnerProfile({
@@ -29,30 +26,20 @@ export class OwnerProfileAssembler implements BaseAssembler<
   }
 
   /**
-   * Converts an `OwnerProfile` entity to an `OwnerProfileResource`.
-   *
-   * @param entity - The `OwnerProfile` entity to convert.
-   * @returns An instance of `OwnerProfileResource`.
+   * Converts an OwnerProfileUpdate to the body of the owner profile update request.
+   * @param update - The new profile data.
+   * @returns The corresponding UpdateOwnerProfileRequest.
    */
-  toResourceFromEntity(entity: OwnerProfile): OwnerProfileResource {
+  toRequestFromUpdate(update: OwnerProfileUpdate): UpdateOwnerProfileRequest {
     return {
-      id: entity.id,
-      user_id: entity.user_id,
-      full_name: entity.full_name,
-      email: entity.email,
-      phone: entity.phone,
-      address: entity.address,
-      ruc: entity.ruc,
+      full_name: update.fullName,
+      phone: update.phone,
+      street: update.street,
+      number: update.number,
+      city: update.city,
+      postal_code: update.postalCode,
+      country: update.country,
+      ruc: update.ruc,
     };
-  }
-
-  /**
-   * Converts an `OwnerProfileResponse` to an array of `OwnerProfile` entities.
-   *
-   * @param response - The `OwnerProfileResponse` to convert.
-   * @returns An array of `OwnerProfile` entities.
-   */
-  toEntitiesFromResponse(response: OwnerProfileResponse): OwnerProfile[] {
-    return response.owner_profiles.map((resource) => this.toEntityFromResource(resource as OwnerProfileResource));
   }
 }

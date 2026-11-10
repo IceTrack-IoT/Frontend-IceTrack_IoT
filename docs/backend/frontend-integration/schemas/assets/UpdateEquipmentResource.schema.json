@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "UpdateEquipmentResource",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 30,
+      "description": "Name assigned to the unit"
+    },
+    "equipment_type": {
+      "type": "string",
+      "enum": [
+        "DISPLAY_CASE",
+        "COLD_ROOM",
+        "REFRIGERATOR",
+        "OTHER"
+      ],
+      "description": "Kind of refrigeration unit"
+    },
+    "reminder_interval_days": {
+      "type": "integer",
+      "format": "int32",
+      "exclusiveMinimum": 0,
+      "description": "Preventive maintenance interval in days"
+    }
+  },
+  "required": [
+    "name",
+    "equipment_type",
+    "reminder_interval_days"
+  ],
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/assets/interfaces/rest/resources/UpdateEquipmentResource.java"
+}

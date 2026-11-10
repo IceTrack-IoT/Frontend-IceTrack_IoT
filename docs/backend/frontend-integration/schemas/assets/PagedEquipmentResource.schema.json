@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PagedEquipmentResource",
+  "type": "object",
+  "properties": {
+    "content": {
+      "type": "array",
+      "items": {
+        "$ref": "EquipmentResource.schema.json"
+      },
+      "description": "Equipment units of this page"
+    },
+    "page": {
+      "type": "integer",
+      "format": "int32",
+      "description": "Zero-based index of this page"
+    },
+    "size": {
+      "type": "integer",
+      "format": "int32",
+      "description": "Maximum number of units a page may hold"
+    },
+    "total_elements": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Total number of units matching the filters"
+    },
+    "total_pages": {
+      "type": "integer",
+      "format": "int32",
+      "description": "Number of pages the matching units span"
+    }
+  },
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/assets/interfaces/rest/resources/PagedEquipmentResource.java"
+}

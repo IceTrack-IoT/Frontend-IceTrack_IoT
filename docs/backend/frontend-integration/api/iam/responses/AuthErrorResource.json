@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-10-01T12:00:00Z",
+  "status": 401,
+  "error": "Unauthorized",
+  "code": "REFRESH_TOKEN_RECENTLY_ROTATED",
+  "message": "The provided refresh token was already rotated within the acceptable grace period window."
+}

@@ -13,25 +13,32 @@
     </div>
   </header>
 
-  @if (announcement(); as key) {
-    <p class="ui-alert ui-alert--info" role="status">
-      <app-icon class="ui-alert__icon" name="info-circle" />
-      {{ key | translate }}
-    </p>
-  }
-
   <section class="ui-panel" aria-labelledby="report-archive-title">
     <div class="ui-panel__header">
       <div>
         <h2 class="ui-panel__title" id="report-archive-title">
           {{ 'reporting.list.archiveTitle' | translate }}
         </h2>
-        @if (source.status() === 'ready') {
+        @if (store.reportsLoaded()) {
           <p class="ui-panel__subtitle" role="status">
-            {{ 'reporting.list.showing' | translate: { shown: filtered().length, total: total() } }}
+            {{ 'reporting.list.showing' | translate: { shown: visible().length, total: total() } }}
           </p>
         }
       </div>
+      @if (store.reportsLoaded()) {
+        <button
+          class="ui-button ui-button--ghost"
+          type="button"
+          [disabled]="store.reportsLoading()"
+          (click)="load()"
+        >
+          <app-icon class="ui-button__icon" name="refresh" />
+          {{
+            (store.reportsLoading() ? 'reporting.list.refreshing' : 'reporting.list.refresh')
+              | translate
+          }}
+        </button>
+      }
     </div>
 
     <form class="ui-toolbar report-list__filters" role="search" [formGroup]="filters">
@@ -105,11 +112,8 @@
       </p>
     }
 
-    @switch (source.status()) {
-      @case ('loading') {
-        <app-state-panel kind="loading" [heading]="'reporting.list.loading' | translate" />
-      }
-      @case ('error') {
+    @if (!store.reportsLoaded()) {
+      @if (store.reportsFailure()) {
         <app-state-panel
           kind="error"
           [heading]="'reporting.list.errorTitle' | translate"
@@ -120,104 +124,105 @@
             {{ 'shared.actions.retry' | translate }}
           </button>
         </app-state-panel>
+      } @else {
+        <app-state-panel kind="loading" [heading]="'reporting.list.loading' | translate" />
       }
-      @default {
-        @if (total() === 0) {
-          <app-state-panel
-            kind="empty"
-            [heading]="'reporting.list.emptyTitle' | translate"
-            [message]="'reporting.list.emptyMessage' | translate"
-          >
-            <a class="ui-button ui-button--primary" routerLink="/reports/new">{{
-              'reporting.list.generate' | translate
-            }}</a>
-          </app-state-panel>
-        } @else if (filtered().length === 0) {
-          <app-state-panel
-            kind="empty"
-            [heading]="'reporting.list.noMatchesTitle' | translate"
-            [message]="'reporting.list.noMatchesMessage' | translate"
-          >
-            <button class="ui-button ui-button--secondary" type="button" (click)="clearFilters()">
-              {{ 'shared.actions.clearFilters' | translate }}
-            </button>
-          </app-state-panel>
-        } @else {
-          <div
-            class="ui-table-scroll"
-            role="region"
-            tabindex="0"
-            [attr.aria-label]="'reporting.list.archiveTitle' | translate"
-          >
-            <table class="ui-table">
-              <thead>
+    } @else {
+      @if (store.reportsFailure()) {
+        <p class="ui-alert ui-alert--critical" role="alert">
+          <app-icon class="ui-alert__icon" name="alert-triangle" />
+          {{ 'reporting.list.refreshFailed' | translate }}
+        </p>
+      }
+
+      @if (total() === 0 && !filtered()) {
+        <app-state-panel
+          kind="empty"
+          [heading]="'reporting.list.emptyTitle' | translate"
+          [message]="'reporting.list.emptyMessage' | translate"
+        >
+          <a class="ui-button ui-button--primary" routerLink="/reports/new">{{
+            'reporting.list.generate' | translate
+          }}</a>
+        </app-state-panel>
+      } @else if (visible().length === 0) {
+        <app-state-panel
+          kind="empty"
+          [heading]="'reporting.list.noMatchesTitle' | translate"
+          [message]="'reporting.list.noMatchesMessage' | translate"
+        >
+          <button class="ui-button ui-button--secondary" type="button" (click)="clearFilters()">
+            {{ 'shared.actions.clearFilters' | translate }}
+          </button>
+        </app-state-panel>
+      } @else {
+        <div
+          class="ui-table-scroll"
+          role="region"
+          tabindex="0"
+          [attr.aria-label]="'reporting.list.archiveTitle' | translate"
+        >
+          <table class="ui-table">
+            <thead>
+              <tr>
+                <th scope="col">{{ 'reporting.fields.report' | translate }}</th>
+                <th scope="col">{{ 'reporting.fields.type' | translate }}</th>
+                <th scope="col">{{ 'reporting.fields.status' | translate }}</th>
+                <th scope="col">{{ 'reporting.fields.requestedAt' | translate }}</th>
+                <th scope="col" class="ui-table__actions">
+                  {{ 'shared.actions.label' | translate }}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (report of visible(); track report.id) {
                 <tr>
-                  <th scope="col">{{ 'reporting.fields.report' | translate }}</th>
-                  <th scope="col">{{ 'reporting.fields.type' | translate }}</th>
-                  <th scope="col">{{ 'reporting.fields.status' | translate }}</th>
-                  <th scope="col">{{ 'reporting.fields.requestedAt' | translate }}</th>
-                  <th scope="col" class="ui-table__actions">
-                    {{ 'shared.actions.label' | translate }}
+                  <th scope="row">
+                    <a class="ui-link" [routerLink]="['/reports', report.id]">{{ report.name }}</a>
+                    <span class="ui-table__secondary">{{
+                      'reporting.format.' + report.format | translate
+                    }}</span>
                   </th>
+                  <td>{{ 'reporting.type.' + report.type | translate }}</td>
+                  <td>
+                    <app-status-tag
+                      [label]="'reporting.status.' + report.status | translate"
+                      [appearance]="statusAppearance[report.status]"
+                    />
+                  </td>
+                  <td>{{ report.requested_at | localizedDate }}</td>
+                  <td class="ui-table__actions">
+                    <span class="report-list__actions">
+                      @if (report.isDownloadable()) {
+                        <app-report-download
+                          [report]="report"
+                          [state]="store.downloadState()"
+                          [compact]="true"
+                          (requested)="download(report)"
+                        />
+                      }
+                      <a
+                        class="ui-button ui-button--ghost ui-button--small"
+                        [routerLink]="['/reports', report.id]"
+                        [attr.aria-label]="
+                          'reporting.list.viewFor' | translate: { title: report.name }
+                        "
+                      >
+                        {{ 'reporting.actions.view' | translate }}
+                      </a>
+                    </span>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                @for (report of visible(); track report.id) {
-                  <tr>
-                    <th scope="row">
-                      <a class="ui-link" [routerLink]="['/reports', report.id]">{{
-                        report.title
-                      }}</a>
-                      <span class="ui-table__secondary">{{
-                        'reporting.format.' + report.format | translate
-                      }}</span>
-                    </th>
-                    <td>{{ 'reporting.type.' + report.type | translate }}</td>
-                    <td>
-                      <app-status-tag
-                        [label]="'reporting.status.' + report.status | translate"
-                        [appearance]="statusAppearance[report.status]"
-                      />
-                    </td>
-                    <td>{{ report.requested_at | localizedDate }}</td>
-                    <td class="ui-table__actions">
-                      <span class="report-list__actions">
-                        @if (report.status === completedStatus) {
-                          <button
-                            class="ui-button ui-button--secondary ui-button--small"
-                            type="button"
-                            [attr.aria-label]="
-                              'reporting.list.downloadFor' | translate: { title: report.title }
-                            "
-                            (click)="download()"
-                          >
-                            <app-icon class="ui-button__icon" name="download" />
-                            {{ 'reporting.actions.download' | translate }}
-                          </button>
-                        }
-                        <a
-                          class="ui-button ui-button--ghost ui-button--small"
-                          [routerLink]="['/reports', report.id]"
-                          [attr.aria-label]="
-                            'reporting.list.viewFor' | translate: { title: report.title }
-                          "
-                        >
-                          {{ 'reporting.actions.view' | translate }}
-                        </a>
-                      </span>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-          <app-pagination
-            class="report-list__pagination"
-            [page]="page()"
-            [pageCount]="pageCount()"
-            (pageChange)="page.set($event)"
-          />
-        }
+              }
+            </tbody>
+          </table>
+        </div>
+        <app-pagination
+          class="report-list__pagination"
+          [page]="page()"
+          [pageCount]="pageCount()"
+          (pageChange)="goToPage($event)"
+        />
       }
     }
   </section>

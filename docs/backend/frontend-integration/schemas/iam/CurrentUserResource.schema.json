@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CurrentUserResource",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "User unique identifier"
+    },
+    "username": {
+      "type": "string",
+      "description": "User username"
+    },
+    "email": {
+      "type": "string",
+      "description": "User email address"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "OWNER_ROLE",
+        "TECHNICIAN_ROLE"
+      ],
+      "description": "User role"
+    },
+    "provider": {
+      "type": "string",
+      "enum": [
+        "LOCAL",
+        "GOOGLE"
+      ],
+      "description": "User identity provider"
+    }
+  },
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/iam/interfaces/rest/resources/CurrentUserResource.java"
+}

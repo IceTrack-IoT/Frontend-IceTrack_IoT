@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "UnreadNotificationCountResource",
+  "type": "object",
+  "properties": {
+    "unread_count": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Number of notifications neither read nor dismissed"
+    }
+  },
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/notifications/interfaces/rest/resources/UnreadNotificationCountResource.java"
+}

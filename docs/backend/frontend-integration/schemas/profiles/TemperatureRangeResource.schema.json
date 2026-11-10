@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TemperatureRangeResource",
+  "type": "object",
+  "properties": {
+    "min": {
+      "type": "integer",
+      "format": "int32",
+      "description": "Lower bound of the range, never above max"
+    },
+    "max": {
+      "type": "integer",
+      "format": "int32",
+      "description": "Upper bound of the range, never below min"
+    },
+    "unit": {
+      "type": "string",
+      "enum": [
+        "C",
+        "F"
+      ],
+      "minLength": 1,
+      "description": "Unit of both bounds"
+    },
+    "label": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-readable range label"
+    }
+  },
+  "required": [
+    "min",
+    "max",
+    "unit",
+    "label"
+  ],
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/profiles/interfaces/rest/resources/TemperatureRangeResource.java"
+}

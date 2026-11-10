@@ -2,10 +2,28 @@
   align-items: center;
 }
 
+.dashboard__status {
+  display: grid;
+  gap: 2px;
+  justify-items: end;
+}
+
+.dashboard__live,
 .dashboard__updated {
   margin: 0;
   font-size: 0.875rem;
   color: var(--text-secondary);
+}
+
+.dashboard__live {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.dashboard__live--on {
+  color: var(--tone-success-fg);
 }
 
 .dashboard__tiles,
@@ -112,7 +130,8 @@
   color: var(--tone-critical-fg);
 }
 
-.dashboard__temperature-value--none {
+.dashboard__temperature-value--none,
+.dashboard__temperature-value--stale {
   color: var(--text-secondary);
 }
 

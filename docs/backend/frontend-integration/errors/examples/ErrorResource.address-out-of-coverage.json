@@ -1,0 +1,5 @@
+{
+  "code": "ADDRESS_OUT_OF_COVERAGE",
+  "message": "The address is outside the service area",
+  "details": "The platform serves Metropolitan Lima and the Constitutional Province of Callao only"
+}

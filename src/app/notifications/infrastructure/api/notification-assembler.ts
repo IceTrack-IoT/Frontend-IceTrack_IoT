@@ -1,96 +1,71 @@
-import { BaseAssembler } from '@shared/infrastructure/api/base-assembler';
 import { Notification } from '@notifications/domain/model/notification.entity';
-import {
+import { isNotificationSeverity } from '@notifications/domain/value-objects/notification-severity';
+import { isNotificationType } from '@notifications/domain/value-objects/notification-type';
+import type { NotificationPage } from '@notifications/application/contracts/notification-page';
+import type {
   NotificationResource,
-  NotificationResponse,
+  PagedNotificationResource,
 } from '@notifications/infrastructure/api/notification.response';
-import { isNotificationType, NotificationType } from '@notifications/domain/value-objects/notification-type';
-import { isNotificationSeverity, NotificationSeverity } from '@notifications/domain/value-objects/notification-severity';
 
 /**
- * NotificationAssembler is responsible for converting between Notification entities and their corresponding API resources and responses.
+ * NotificationAssembler converts the Notifications resources into domain entities and application
+ * contracts.
+ *
+ * A notification carrying a type or severity outside the documented enumerations, or an unreadable
+ * instant, is rejected with an error instead of being shown wrongly.
  */
-export class NotificationAssembler implements BaseAssembler<
-  Notification,
-  NotificationResource,
-  NotificationResponse
-> {
+export class NotificationAssembler {
   /**
    * Converts a NotificationResource to a Notification entity.
-   * @param resource - The NotificationResource to convert.
+   * @param resource - The resource to convert.
    * @returns The corresponding Notification entity.
    */
-  toEntityFromResource(resource: NotificationResource): Notification {
+  toNotificationFromResource(resource: NotificationResource): Notification {
+    const { type, severity } = resource;
+    if (!isNotificationType(type) || !isNotificationSeverity(severity)) {
+      throw new Error('The notification has an unknown type or severity.');
+    }
     return new Notification({
       id: resource.id,
-      equipment_id: resource.equipment_id,
-      device_id: resource.device_id,
-      source_alert_id: resource.source_alert_id,
+      recipient_user_id: resource.recipient_user_id,
+      equipment_id: resource.equipment_id ?? null,
+      device_id: resource.device_id ?? null,
+      source_alert_id: resource.source_alert_id ?? null,
+      service_request_id: resource.service_request_id ?? null,
       message: resource.message,
-      type: this.toNotificationType(resource.type),
-      severity: this.toNotificationSeverity(resource.severity),
+      type,
+      severity,
       is_read: resource.is_read,
-      read_at: resource.read_at,
-      dismissed_at: resource.dismissed_at,
+      created_at: toInstant(resource.created_at),
+      read_at: toOptionalInstant(resource.read_at),
+      dismissed_at: toOptionalInstant(resource.dismissed_at),
     });
   }
 
   /**
-   * Converts a Notification entity to a NotificationResource.
-   * @param entity - The Notification entity to convert.
-   * @returns The corresponding NotificationResource.
+   * Converts a PagedNotificationResource to a page of notifications.
+   * @param resource - The resource to convert.
+   * @returns The page.
    */
-  toResourceFromEntity(entity: Notification): NotificationResource {
+  toNotificationPageFromResource(resource: PagedNotificationResource): NotificationPage {
     return {
-      id: entity.id,
-      equipment_id: entity.equipment_id,
-      device_id: entity.device_id,
-      source_alert_id: entity.source_alert_id,
-      message: entity.message,
-      type: entity.type,
-      severity: entity.severity,
-      is_read: entity.is_read,
-      read_at: entity.read_at,
-      dismissed_at: entity.dismissed_at,
-    } as NotificationResource;
+      items: resource.items.map((item) => this.toNotificationFromResource(item)),
+      page: resource.page,
+      size: resource.size,
+      totalElements: resource.total_elements,
+      totalPages: Math.max(1, resource.total_pages),
+    };
   }
+}
 
-  /**
-   * Converts a NotificationResponse to an array of Notification entities.
-   * @param response - The NotificationResponse to convert.
-   * @returns An array of corresponding Notification entities.
-   */
-  toEntitiesFromResponse(response: NotificationResponse): Notification[] {
-    return response.notifications.map((resource) =>
-      this.toEntityFromResource(resource as NotificationResource),
-    );
-  }
+function toOptionalInstant(value: string | null | undefined): Date | null {
+  return value === null || value === undefined ? null : toInstant(value);
+}
 
-  /**
-   * Converts a string value to a NotificationType enum value.
-   * @param value - The string value to convert.
-   * @returns The corresponding NotificationType enum value.
-   * @throws Error if the value is not a valid NotificationType.
-   * @private
-   */
-  private toNotificationType(value: string): NotificationType {
-    if (!isNotificationType(value)) {
-      throw new Error(`Unsupported notification type: ${value}`);
-    }
-    return value;
+function toInstant(value: string): Date {
+  const instant = new Date(value);
+  if (Number.isNaN(instant.getTime())) {
+    throw new Error('The notification resource has an unreadable instant.');
   }
-
-  /**
-   * Converts a string value to a NotificationSeverity enum value.
-   * @param value - The string value to convert.
-   * @returns The corresponding NotificationSeverity enum value.
-   * @throws Error if the value is not a valid NotificationSeverity.
-   * @private
-   */
-  private toNotificationSeverity(value: string): NotificationSeverity {
-    if (!isNotificationSeverity(value)) {
-      throw new Error(`Unsupported notification severity: ${value}`);
-    }
-    return value;
-  }
+  return instant;
 }

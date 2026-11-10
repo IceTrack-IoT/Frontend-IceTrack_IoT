@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GeoLocationResource",
+  "type": "object",
+  "properties": {
+    "latitude": {
+      "type": "number",
+      "format": "double",
+      "description": "Latitude in degrees"
+    },
+    "longitude": {
+      "type": "number",
+      "format": "double",
+      "description": "Longitude in degrees"
+    },
+    "place_id": {
+      "type": "string",
+      "description": "Google Maps place identifier; null when the provider supplied none"
+    }
+  },
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/assets/interfaces/rest/resources/GeoLocationResource.java"
+}

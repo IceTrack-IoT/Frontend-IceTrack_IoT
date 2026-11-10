@@ -53,3 +53,8 @@
   font-size: 0.8125rem;
   color: var(--text-secondary);
 }
+
+.request-progress__reason {
+  display: block;
+  margin-block-start: 4px;
+}

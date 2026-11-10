@@ -1,0 +1,70 @@
+# Real-time telemetry stream (Server-Sent Events)
+
+Backend-only transport (no third party). Sources: `monitoring/interfaces/rest/TelemetryStreamController`, `monitoring/application/internal/outboundservices/streaming/StreamTicketService`, `monitoring/infrastructure/streaming/**` (`TelemetryStreamRegistry`, `TelemetryStreamEventDispatcher`, tickets), `WebSecurityConfiguration`, `application.properties` (`monitoring.telemetry-stream.*`).
+
+Audience: the **web application** (`OWNER_ROLE`). Technicians cannot request a ticket.
+
+## Why a ticket
+
+Browser `EventSource` cannot send an `Authorization` header. The owner trades the JWT for a one-time ticket, then opens the stream with the ticket in the query string. `GET /api/v1/telemetry/stream` is therefore reachable without a bearer token; the ticket is its only credential.
+
+## Step 1: ticket
+
+`POST /api/v1/telemetry/stream-ticket` (bearer token, `OWNER_ROLE`, no body) answers `200` with `Cache-Control: no-store`:
+
+```json
+{ "ticket": "st_9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", "expires_in": 60 }
+```
+
+- Single use, valid 60 seconds, bound to the authenticated owner.
+- An owner may hold up to 10 unredeemed tickets (`max-pending-tickets-per-owner`); the instance caps total tickets at 10,000. Beyond either: `429 TOO_MANY_REQUESTS` with `Retry-After: 60`.
+- `403 ACCESS_DENIED` for a non-owner; `401` without a valid token.
+
+## Step 2: open the stream
+
+`GET /api/v1/telemetry/stream?ticket=<ticket>[&last_event_id=<id>]`; `Accept: text/event-stream` (EventSource sets it).
+
+- The ticket is consumed by this request **whatever its outcome**. A missing, malformed, unknown, used or expired ticket answers `401` with a JSON `UNAUTHORIZED` body; `EventSource` does not retry a `401`, so request a new ticket and create a new `EventSource`.
+- Response headers: `Content-Type: text/event-stream`, `Cache-Control: no-cache`, `X-Accel-Buffering: no`.
+- The stream is the owner's event stream: it shows only the ticket owner's events (readings and alert changes of its units, notifications, report status changes, device lifecycle changes and connectivity changes).
+- Every event but `stream-opened` carries an SSE `id` (`<instance start in epoch ms>-<sequence>`, increasing per owner). Remember the last one and pass it as `last_event_id` on reconnection; a query parameter is needed because each reconnection builds a new `EventSource` with a new ticket, so the browser never sends `Last-Event-ID`.
+- At most 10 streams per owner (`max-streams-per-owner`); opening one more closes the **oldest**.
+- The stream closes after **30 minutes**. Reconnect with a **new ticket** (the stored `EventSource` URL would carry a spent ticket, so close and recreate it rather than relying on automatic reconnect).
+- Heartbeat: an SSE comment line (`: heartbeat`) every 25 seconds (`heartbeat-ms`) to keep proxies from closing the connection.
+
+## Events
+
+| SSE event name | Sent | `data` (JSON, snake_case) |
+|---|---|---|
+| `stream-opened` | once, first; sets `retry: 5000` ms | `{ "timeout_seconds": 1800, "heartbeat_seconds": 25, "replayed": 12, "replay_complete": true }` |
+| `telemetry-update` | for every reading and alert status change | one of the two resources below, discriminated by `type` |
+| `notification-created` | a notification addressed to the owner is stored | `notification_id`, `type`, `severity`, `equipment_id`, `source_alert_id`, `created_at`, `unread_count` |
+| `unread-count-changed` | the owner's unread count changes (new, read, dismissed, read-all) | `unread_count`, `changed_at` |
+| `report-status-changed` | a report of the owner moves to `GENERATING`, `COMPLETED` or `FAILED` | `report_id`, `previous_status`, `status`, `changed_at` |
+| `device-status-changed` | a board of the owner is paired, rotated, revoked or unpaired, from any session | `device_id`, `paired_equipment_id`, `previous_status`, `status`, `changed_at` |
+| `connectivity-changed` | a unit's connectivity state changes, or a maintenance window opens or closes on it | `equipment_id`, `device_id`, `previous_state`, `state`, `last_received_at`, `under_maintenance`, `changed_at` |
+
+`type: "READING_RECORDED"` - `ReadingRecordedStreamResource`: `reading_uid`, `equipment_id`, `device_id`, `min_temperature`, `max_temperature`, `avg_temperature`, `humidity`, `sample_count`, `recorded_at`, `received_at`, `under_maintenance`.
+
+`type: "ALERT_STATUS_CHANGED"` - `AlertStatusChangedStreamResource`: `alert_id`, `equipment_id`, `alert_type`, `severity`, `previous_status` (null when the alert has just opened), `status`, `peak_temperature`, `changed_at`.
+
+Contracts and examples: [../api/monitoring/contracts.md](../api/monitoring/contracts.md), `api/monitoring/responses/ReadingRecordedStreamResource.json`, `api/monitoring/responses/AlertStatusChangedStreamResource.json`. Timestamps are local date-times without a zone.
+
+## Client sketch (language neutral)
+
+```text
+ticket = POST /telemetry/stream-ticket            (with Authorization)
+es = new EventSource(BASE + "/api/v1/telemetry/stream?ticket=" + ticket
+                     + (lastEventId ? "&last_event_id=" + lastEventId : ""))
+on any event with an id -> lastEventId = event.lastEventId
+on "stream-opened"   -> note timeout_seconds; schedule reconnect a little before it;
+                        if !replay_complete -> resynchronize over REST
+on "telemetry-update"-> switch(data.type) READING_RECORDED | ALERT_STATUS_CHANGED
+on error             -> es.close(); get a new ticket; reopen with backoff and lastEventId
+```
+
+The server keeps each owner's last 1000 events of the last 5 minutes (whichever is fewer) while the owner has a stream open and for 5 minutes after the last one closed, and replays the ones after `last_event_id` right after `stream-opened`, before live events. Reload current state over REST (`GET /api/v1/assets/equipments`, `GET /api/v1/alerts`, `GET /api/v1/telemetry/equipment/{id}`) on the first connection and whenever `replay_complete` is `false`: the id is older than the buffer, unknown, or issued by another instance or before a restart. Updates are still dropped (oldest first) when the server's stream queue is full.
+
+## Operational limits to know
+
+Tickets and open streams live in the memory of one server instance. With several replicas the backend needs sticky sessions and cross-instance fan-out (noted in `application.properties`). The backend exposes only `ETag` and `Retry-After` through `Access-Control-Expose-Headers`; the SSE flow does not need any exposed header.

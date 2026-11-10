@@ -1,0 +1,47 @@
+<app-dialog
+  [heading]="'assets.siteAddress.title' | translate: { site: site().name }"
+  [description]="'assets.siteAddress.description' | translate"
+  (closed)="closed.emit()"
+>
+  @if (errorKey(); as failureKey) {
+    <p class="ui-alert ui-alert--critical" role="alert">
+      <app-icon class="ui-alert__icon" name="alert-triangle" />
+      {{ failureKey | translate }}
+    </p>
+  }
+
+  <div class="ui-form">
+    <dl class="ui-details">
+      <div>
+        <dt>{{ 'assets.siteAddress.current' | translate }}</dt>
+        <dd>{{ site().address }}</dd>
+      </div>
+    </dl>
+
+    <app-site-address-verification
+      [verification]="verification()"
+      [showMissing]="addressMissing()"
+      [disabled]="pending()"
+      (verify)="onVerify($event)"
+      (reset)="resetAddress.emit()"
+    />
+  </div>
+
+  <button
+    dialogActions
+    class="ui-button ui-button--secondary"
+    type="button"
+    (click)="closed.emit()"
+  >
+    {{ 'shared.actions.cancel' | translate }}
+  </button>
+  <button
+    dialogActions
+    class="ui-button ui-button--primary"
+    type="button"
+    [disabled]="pending()"
+    (click)="submit()"
+  >
+    {{ (pending() ? 'shared.actions.saving' : 'assets.siteAddress.submit') | translate }}
+  </button>
+</app-dialog>

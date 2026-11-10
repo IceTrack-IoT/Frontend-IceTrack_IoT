@@ -15,9 +15,8 @@ const PROGRESS_STEPS: readonly ServiceStatus[] = [
 type StepState = 'done' | 'current' | 'upcoming';
 
 /**
- * Progress of a service request along its regular path, with the moments the model records: the start of
- * the intervention and the completion. Rejected and canceled requests leave the path and are shown as a
- * final note.
+ * Progress of a service request along its regular path, with the moment each step was reached. A canceled
+ * request leaves the path and is shown as a final note with its reason.
  */
 @Component({
   imports: [TranslatePipe, Icon, LocalizedDatePipe],
@@ -27,18 +26,25 @@ type StepState = 'done' | 'current' | 'upcoming';
 })
 export class RequestProgress {
   readonly status = input.required<ServiceStatus>();
-  /** When the field intervention started, if it did. */
+  /** When the request was created. */
+  readonly createdAt = input<Date | null>(null);
+  /** When the technician last accepted the request, if it did. */
+  readonly acceptedAt = input<Date | null>(null);
   readonly startedAt = input<Date | null>(null);
   readonly completedAt = input<Date | null>(null);
   readonly canceledAt = input<Date | null>(null);
+  readonly cancelReason = input<string | null>(null);
 
-  protected readonly rejected = computed(() => this.status() === ServiceStatus.REJECTED);
-  protected readonly offPath = computed(
-    () => this.status() === ServiceStatus.CANCELED || this.status() === ServiceStatus.REJECTED,
-  );
+  protected readonly canceled = computed(() => this.status() === ServiceStatus.CANCELED);
   protected readonly steps = computed(() => {
     const status = this.status();
     const current = PROGRESS_STEPS.indexOf(status);
+    const times: Readonly<Record<string, Date | null>> = {
+      [ServiceStatus.PENDING]: this.createdAt(),
+      [ServiceStatus.ACCEPTED]: this.acceptedAt(),
+      [ServiceStatus.IN_PROGRESS]: this.startedAt(),
+      [ServiceStatus.COMPLETED]: this.completedAt(),
+    };
     return PROGRESS_STEPS.map((step, index) => {
       const state: StepState =
         index < current || status === ServiceStatus.COMPLETED
@@ -46,12 +52,8 @@ export class RequestProgress {
           : index === current
             ? 'current'
             : 'upcoming';
-      const time =
-        step === ServiceStatus.IN_PROGRESS
-          ? this.startedAt()
-          : step === ServiceStatus.COMPLETED
-            ? this.completedAt()
-            : null;
+      // A step not reached yet shows no time, even if an earlier assignment reached it before.
+      const time = state === 'upcoming' ? null : times[step];
       return { step, state, time, number: index + 1 };
     });
   });

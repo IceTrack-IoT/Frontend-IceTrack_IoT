@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OwnerProfileResource",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Owner profile unique identifier"
+    },
+    "user_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Identifier of the platform account the owner belongs to"
+    },
+    "full_name": {
+      "type": "string",
+      "description": "Owner full name"
+    },
+    "email": {
+      "type": "string",
+      "description": "Owner email address"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Owner phone number"
+    },
+    "address": {
+      "type": "string",
+      "description": "Owner complete street address"
+    },
+    "ruc": {
+      "type": "integer",
+      "format": "int64",
+      "description": "11 digit taxpayer registration number (RUC)"
+    }
+  },
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/profiles/interfaces/rest/resources/OwnerProfileResource.java"
+}

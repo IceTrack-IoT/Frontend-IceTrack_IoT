@@ -18,7 +18,7 @@
     <form class="iam-form" [formGroup]="form" (ngSubmit)="submit()">
       <div class="iam-field">
         <label class="iam-field__label" for="login-username">
-          {{ 'iam.fields.username' | translate }}
+          {{ 'iam.fields.usernameOrEmail' | translate }}
         </label>
         <div class="login__control">
           <app-icon class="login__field-icon" name="user" />
@@ -27,7 +27,7 @@
             id="login-username"
             formControlName="username"
             autocomplete="username"
-            [placeholder]="'iam.placeholders.username' | translate"
+            [placeholder]="'iam.placeholders.usernameOrEmail' | translate"
             [attr.aria-invalid]="showError('username') || null"
             [attr.aria-describedby]="describedBy('username')"
           />

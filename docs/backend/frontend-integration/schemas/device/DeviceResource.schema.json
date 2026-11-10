@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DeviceResource",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Device unique identifier"
+    },
+    "device_uid": {
+      "type": "string",
+      "description": "Unique identifier of the board"
+    },
+    "board_model": {
+      "type": "string",
+      "description": "Board model"
+    },
+    "firmware_version": {
+      "type": "string",
+      "description": "Firmware version currently running on the board"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "UNPAIRED",
+        "PAIRED",
+        "REVOKED"
+      ],
+      "description": "Current lifecycle status of the device"
+    },
+    "paired_equipment_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Identifier of the equipment the device is paired with"
+    },
+    "paired_equipment_name": {
+      "type": "string",
+      "description": "Name of the equipment the device is paired with; null when unpaired"
+    },
+    "paired_site_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Identifier of the site that equipment is installed at; null when unpaired"
+    },
+    "last_seen_at": {
+      "type": "string",
+      "description": "When the platform received the device's latest reading batch; null before the first one"
+    }
+  },
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/device/interfaces/rest/resources/DeviceResource.java"
+}

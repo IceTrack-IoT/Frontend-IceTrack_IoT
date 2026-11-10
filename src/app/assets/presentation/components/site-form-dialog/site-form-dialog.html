@@ -5,8 +5,15 @@
   "
   (closed)="closed.emit()"
 >
+  @if (errorKey(); as failureKey) {
+    <p class="ui-alert ui-alert--critical" role="alert">
+      <app-icon class="ui-alert__icon" name="alert-triangle" />
+      {{ failureKey | translate }}
+    </p>
+  }
+
   <form class="ui-form" id="site-form" novalidate [formGroup]="form" (ngSubmit)="submit()">
-    @let nameError = errorKey('name');
+    @let nameError = fieldErrorKey('name');
     <div class="ui-field">
       <label class="ui-field__label" for="site-name">{{
         'assets.fields.siteName' | translate
@@ -16,6 +23,7 @@
         id="site-name"
         formControlName="name"
         autocomplete="organization"
+        [attr.maxlength]="nameMaxLength"
         [placeholder]="'assets.placeholders.siteName' | translate"
         [attr.aria-invalid]="nameError ? true : null"
         [attr.aria-describedby]="nameError ? 'site-name-error' : null"
@@ -25,27 +33,35 @@
       }
     </div>
 
-    @let addressError = errorKey('address');
-    <div class="ui-field">
-      <label class="ui-field__label" for="site-address">{{
-        'assets.fields.address' | translate
-      }}</label>
-      <input
-        class="ui-field__control"
-        id="site-address"
-        formControlName="address"
-        autocomplete="street-address"
-        [placeholder]="'assets.placeholders.address' | translate"
-        [attr.aria-invalid]="addressError ? true : null"
-        [attr.aria-describedby]="addressError ? 'site-address-error' : null"
+    @if (site(); as existing) {
+      <div class="ui-field">
+        <dl class="ui-details">
+          <div>
+            <dt>{{ 'assets.fields.address' | translate }}</dt>
+            <dd>{{ existing.address }}</dd>
+          </div>
+        </dl>
+        @if (existing.location; as location) {
+          <app-site-map
+            [latitude]="location.latitude"
+            [longitude]="location.longitude"
+            [label]="existing.name"
+          />
+        }
+        <p class="ui-field__hint">{{ 'assets.siteForm.addressHint' | translate }}</p>
+      </div>
+    } @else {
+      <app-site-address-verification
+        [verification]="verification()"
+        [showMissing]="addressMissing()"
+        [disabled]="pending()"
+        (verify)="onVerify($event)"
+        (reset)="resetAddress.emit()"
       />
-      @if (addressError) {
-        <p class="ui-field__error" id="site-address-error">{{ addressError | translate }}</p>
-      }
-    </div>
+    }
 
     <div class="ui-form__grid">
-      @let contactNameError = errorKey('contactName');
+      @let contactNameError = fieldErrorKey('contactName');
       <div class="ui-field">
         <label class="ui-field__label" for="site-contact-name">
           {{ 'assets.fields.contactName' | translate }}
@@ -55,6 +71,7 @@
           id="site-contact-name"
           formControlName="contactName"
           autocomplete="name"
+          [attr.maxlength]="contactNameMaxLength"
           [placeholder]="'assets.placeholders.contactName' | translate"
           [attr.aria-invalid]="contactNameError ? true : null"
           [attr.aria-describedby]="contactNameError ? 'site-contact-name-error' : null"
@@ -66,7 +83,7 @@
         }
       </div>
 
-      @let phoneError = errorKey('phone');
+      @let phoneError = fieldErrorKey('phone');
       <div class="ui-field">
         <label class="ui-field__label" for="site-phone">{{
           'assets.fields.phone' | translate

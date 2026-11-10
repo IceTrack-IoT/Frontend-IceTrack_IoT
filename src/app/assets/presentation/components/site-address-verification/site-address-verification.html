@@ -1,0 +1,131 @@
+@if (verification().verified; as verified) {
+  <div class="address-verification__result" role="status">
+    <p class="address-verification__result-title">
+      <app-icon name="circle-check" />
+      {{ 'assets.addressVerification.verified' | translate }}
+    </p>
+    <p class="address-verification__formatted">{{ verified.formattedAddress }}</p>
+    <app-site-map
+      [latitude]="verified.latitude"
+      [longitude]="verified.longitude"
+      [label]="verified.formattedAddress"
+    />
+    <p class="ui-field__hint">
+      @if (verified.district) {
+        {{ verified.district }} ·
+      }
+      {{ 'assets.coverageArea.' + verified.area | translate }}
+    </p>
+    <p class="ui-field__hint">{{ 'assets.addressVerification.validity' | translate }}</p>
+    <button
+      class="ui-button ui-button--ghost ui-button--small address-verification__change"
+      type="button"
+      [disabled]="disabled()"
+      (click)="restart()"
+    >
+      <app-icon class="ui-button__icon" name="pencil" />
+      {{ 'assets.addressVerification.useAnother' | translate }}
+    </button>
+  </div>
+} @else {
+  @let fieldError = fieldErrorKey();
+  <div class="ui-field">
+    <label class="ui-field__label" [for]="id">{{ 'assets.fields.address' | translate }}</label>
+    <div class="address-verification__row">
+      <input
+        class="ui-field__control"
+        autocomplete="street-address"
+        role="combobox"
+        aria-autocomplete="list"
+        [id]="id"
+        [formControl]="address"
+        [attr.maxlength]="maxLength"
+        [placeholder]="'assets.placeholders.address' | translate"
+        [attr.aria-expanded]="open()"
+        [attr.aria-controls]="open() ? suggestionsId : null"
+        [attr.aria-activedescendant]="activeOptionId()"
+        [attr.aria-invalid]="fieldError ? true : null"
+        [attr.aria-describedby]="fieldError ? id + '-hint ' + id + '-error' : id + '-hint'"
+        (keydown)="onInputKeydown($event)"
+        (blur)="onInputBlur()"
+      />
+      <button
+        class="ui-button ui-button--secondary"
+        type="button"
+        [disabled]="verifying() || disabled()"
+        (click)="submit()"
+      >
+        <app-icon class="ui-button__icon" name="map-pin" />
+        {{
+          (verifying()
+            ? 'assets.addressVerification.verifying'
+            : 'assets.addressVerification.verify'
+          ) | translate
+        }}
+      </button>
+    </div>
+
+    @if (open()) {
+      <ul
+        class="address-verification__suggestions"
+        role="listbox"
+        [id]="suggestionsId"
+        [attr.aria-label]="'assets.addressVerification.suggestions' | translate"
+      >
+        @for (suggestion of suggestions(); track suggestion.placeId; let index = $index) {
+          <li
+            class="address-verification__suggestion"
+            role="option"
+            [id]="suggestionsId + '-' + index"
+            [attr.aria-selected]="index === activeIndex()"
+            (mousedown)="$event.preventDefault()"
+            (click)="pickSuggestion(suggestion)"
+          >
+            <span class="address-verification__suggestion-main">{{ suggestion.mainText }}</span>
+            @if (suggestion.secondaryText) {
+              <span class="address-verification__suggestion-secondary">
+                {{ suggestion.secondaryText }}
+              </span>
+            }
+          </li>
+        }
+      </ul>
+    }
+
+    <p class="ui-field__hint" [id]="id + '-hint'">
+      {{ 'assets.addressVerification.hint' | translate }}
+    </p>
+    @if (fieldError) {
+      <p class="ui-field__error" [id]="id + '-error'">{{ fieldError | translate }}</p>
+    }
+  </div>
+
+  @if (failureKey(); as key) {
+    <p class="ui-alert ui-alert--critical" role="alert">
+      <app-icon class="ui-alert__icon" name="alert-triangle" />
+      {{ key | translate }}
+    </p>
+  }
+
+  @if (verification().candidates.length > 0) {
+    <fieldset class="ui-fieldset address-verification__candidates">
+      <legend class="ui-fieldset__legend">
+        {{ 'assets.addressVerification.candidates' | translate }}
+      </legend>
+      <ul class="address-verification__candidate-list">
+        @for (candidate of verification().candidates; track candidate) {
+          <li>
+            <button
+              class="ui-button ui-button--secondary ui-button--small address-verification__candidate"
+              type="button"
+              [disabled]="verifying() || disabled()"
+              (click)="pickCandidate(candidate)"
+            >
+              {{ candidate }}
+            </button>
+          </li>
+        }
+      </ul>
+    </fieldset>
+  }
+}

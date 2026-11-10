@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ValidateAddressResource",
+  "type": "object",
+  "properties": {
+    "address": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255,
+      "description": "Free-form address to verify"
+    },
+    "place_id": {
+      "type": "string",
+      "maxLength": 256,
+      "description": "Place identifier of the suggestion the owner picked, when there is one"
+    }
+  },
+  "required": [
+    "address"
+  ],
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/assets/interfaces/rest/resources/ValidateAddressResource.java"
+}

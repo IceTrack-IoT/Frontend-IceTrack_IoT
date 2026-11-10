@@ -58,6 +58,7 @@
   "iam": {
     "fields": {
       "username": "Username",
+      "usernameOrEmail": "Username or email",
       "password": "Password",
       "confirmPassword": "Confirm password",
       "fullName": "Full name",
@@ -72,8 +73,9 @@
     },
     "placeholders": {
       "username": "e.g. roberto_morales",
+      "usernameOrEmail": "e.g. roberto_morales or contact@company.com",
       "password": "Enter your password",
-      "newPassword": "At least 8 characters",
+      "newPassword": "8 to 64 characters",
       "confirmPassword": "Repeat the password",
       "fullName": "e.g. Roberto Morales",
       "email": "contact@company.com",
@@ -86,7 +88,7 @@
       "country": "e.g. Peru"
     },
     "hints": {
-      "password": "Use at least 8 characters.",
+      "password": "Use 8 to 64 characters, with at least one uppercase letter, one lowercase letter and one digit.",
       "ruc": "11 digits, numbers only."
     },
     "sections": {
@@ -97,16 +99,21 @@
       "email": "Enter a valid email address, for example name@company.com.",
       "phone": "Enter a valid phone number: digits, spaces, hyphens or parentheses, with an optional leading +.",
       "ruc": "The RUC must have exactly 11 digits.",
-      "passwordLength": "The password must have at least 8 characters.",
+      "passwordLength": "The password must have 8 to 64 characters.",
+      "passwordComposition": "The password must include at least one uppercase letter, one lowercase letter and one digit.",
+      "passwordTooLong": "The password is too long.",
       "passwordMismatch": "The passwords don't match."
     },
     "errors": {
       "invalidCredentials": "We couldn't sign you in. Check your username and password and try again.",
-      "federatedAccount": "This account signs in with Google. Use Continue with Google to access it.",
+      "tooManyAttempts": "Too many failed attempts. Wait a few minutes and try again.",
       "googleSignInFailed": "We couldn't continue with Google. Try again, or use the form below.",
       "googleUnavailable": "Google sign-in is unavailable right now. You can continue with the form below.",
       "invalidRegistration": "Some of your details were rejected. Review them and try again.",
-      "registrationRejected": "We couldn't create your account. Your username, email or RUC may already be registered. Review your details and try again."
+      "accountAlreadyRegistered": "Your username, email or RUC is already registered. Change it and try again.",
+      "registrationRejected": "We couldn't create your account. Review your details and try again.",
+      "invalidLinkPassword": "We couldn't link your Google account. Check the password and try again.",
+      "googleAccountLinkFailed": "We couldn't link your Google account. Try again, or sign in with your username and password."
     },
     "actions": {
       "signOut": "Sign out",
@@ -144,6 +151,16 @@
       "expiredMessage": "To complete your registration, return to sign in and select Continue with Google again.",
       "completed": "Your account is ready. Signing you in…"
     },
+    "linkGoogleAccount": {
+      "title": "Link your Google account",
+      "subtitle": "An IceTrack account already uses the email of this Google account.",
+      "notice": "Enter the password of that account to link it. Afterwards, you can sign in with Google or with your password.",
+      "submit": "Link and sign in",
+      "submitting": "Linking account…",
+      "expiredTitle": "Continue with Google again",
+      "expiredMessage": "To link your Google account, return to sign in and select Continue with Google again.",
+      "completed": "Your Google account is linked. Signing you in…"
+    },
     "technicianRedirect": {
       "title": "The web platform is for business owners",
       "message": "Technician operations are available in the IceTrack mobile application.",
@@ -167,20 +184,19 @@
   },
   "assets": {
     "eyebrow": "Assets management",
-    "online": "Online",
-    "offline": "Offline",
     "noTelemetry": "No telemetry yet",
     "outsideThreshold": "Outside threshold",
     "equipmentType": {
-      "FREEZER": "Freezer",
       "COLD_ROOM": "Cold room",
-      "REFRIGERATOR": "Refrigerator"
+      "REFRIGERATOR": "Refrigerator",
+      "DISPLAY_CASE": "Display case",
+      "OTHER": "Other"
     },
     "statusEquipment": {
       "ACTIVE": "Active",
-      "DESACTIVATE": "Deactivated",
       "MAINTENANCE": "Maintenance",
-      "REPAIR": "Under repair"
+      "REPAIR": "Under repair",
+      "DEACTIVATED": "Deactivated"
     },
     "fields": {
       "siteName": "Site name",
@@ -195,16 +211,21 @@
       "lastKnownTemperature": "Last known temperature",
       "lastReadingAt": "Last reading",
       "reminderInterval": "Maintenance reminder",
-      "code": "Equipment code"
+      "code": "Equipment code",
+      "equipmentName": "Equipment name",
+      "reminderIntervalDays": "Maintenance reminder (days)"
     },
     "placeholders": {
       "siteName": "e.g. San Miguel Depot",
-      "address": "e.g. Av. La Marina 2355, San Miguel, Lima",
+      "address": "e.g. Av. Primavera 123, Santiago de Surco",
       "contactName": "e.g. Rosa Quispe",
-      "phone": "e.g. +51 987 654 321"
+      "phone": "e.g. +51 987 654 321",
+      "code": "e.g. ESP32-0001",
+      "equipmentName": "e.g. Refrigerator 1"
     },
     "validation": {
-      "phone": "Enter a valid phone number: digits, spaces, hyphens or parentheses, with an optional leading +."
+      "phone": "Enter a valid phone number: digits separated by single spaces, with an optional leading +.",
+      "positiveDays": "Enter a whole number of days greater than zero."
     },
     "siteList": {
       "title": "Sites",
@@ -218,17 +239,23 @@
       "equipmentCount": "Equipment items: {{count}}",
       "viewEquipment": "View equipment",
       "viewEquipmentOf": "View equipment of {{site}}",
-      "editContact": "Edit contact",
-      "editContactOf": "Edit contact of {{site}}",
       "registered": "The site was registered.",
-      "updated": "The site contact was updated."
+      "updated": "The site was updated.",
+      "edit": "Edit",
+      "editOf": "Edit {{site}}",
+      "changeAddress": "Change address",
+      "changeAddressOf": "Change the address of {{site}}",
+      "openMap": "Open in maps",
+      "openMapOf": "Open {{site}} in maps (new tab)",
+      "addressChanged": "The site address was changed. Its equipment stays registered at the site."
     },
     "siteForm": {
       "createTitle": "Register site",
-      "createDescription": "Add a facility where your refrigeration equipment operates.",
-      "editTitle": "Edit site contact",
-      "editDescription": "The name and address of a site cannot be changed once it is registered.",
-      "submit": "Save site"
+      "createDescription": "Add a facility where your refrigeration equipment operates. Its address is verified before it is saved.",
+      "editTitle": "Edit site",
+      "editDescription": "Update the name and contact of the site.",
+      "submit": "Save site",
+      "addressHint": "To move the site, use \"Change address\" in the site list."
     },
     "equipmentList": {
       "title": "Refrigeration equipment",
@@ -244,9 +271,11 @@
       "loading": "Loading equipment…",
       "errorTitle": "We couldn't load your equipment.",
       "emptyTitle": "No equipment registered yet",
-      "emptyMessage": "The refrigeration equipment of your sites will appear here once it is registered.",
+      "emptyMessage": "Register the refrigeration equipment of your sites to start monitoring it.",
       "noMatchesTitle": "No equipment matches the filters",
-      "noMatchesMessage": "Try another search or widen the site, type or status filters."
+      "noMatchesMessage": "Try another search or widen the site, type or status filters.",
+      "register": "Register equipment",
+      "registered": "The equipment was registered."
     },
     "equipmentDetail": {
       "title": "Equipment detail",
@@ -259,7 +288,7 @@
       "readingAge": "Reported {{age}}",
       "thresholdTitle": "Temperature threshold",
       "thresholdCurrent": "Current safe range: {{min}} to {{max}}",
-      "thresholdSaved": "The temperature threshold was saved.",
+      "thresholdSaved": "The temperature threshold was saved. The monitoring gateway applies it on its next sync.",
       "detailsTitle": "Equipment information",
       "days": "Every {{count}} days",
       "relatedTitle": "Related information",
@@ -273,68 +302,164 @@
       "serviceTitle": "Service history",
       "serviceText": "Service requests and interventions of this equipment.",
       "serviceHistoryLink": "View service history",
-      "requestServiceLink": "Request a service"
+      "requestServiceLink": "Request a service",
+      "edit": "Edit",
+      "changeStatus": "Change status",
+      "updated": "The equipment was updated.",
+      "statusChanged": "The equipment status was changed."
     },
     "thresholdForm": {
-      "hint": "Values in degrees Celsius (°C). The minimum must be lower than the maximum.",
+      "hint": "Values in degrees Celsius (°C), from {{min}} to {{max}}. The minimum must be lower than the maximum.",
       "min": "Minimum temperature (°C)",
       "max": "Maximum temperature (°C)",
       "minBelowMax": "The minimum temperature must be lower than the maximum temperature.",
       "discard": "Discard changes",
-      "save": "Save threshold"
-    }
+      "save": "Save threshold",
+      "outOfRange": "Enter a value from {{min}} to {{max}} °C."
+    },
+    "coverageArea": {
+      "LIMA_METROPOLITANA": "Metropolitan Lima",
+      "CALLAO": "Callao"
+    },
+    "addressVerification": {
+      "verify": "Verify address",
+      "verifying": "Verifying…",
+      "hint": "We verify the address within Metropolitan Lima or Callao before saving it.",
+      "suggestions": "Suggested addresses",
+      "verified": "Verified address",
+      "validity": "The verification is valid for 15 minutes. Save the site before it expires.",
+      "useAnother": "Use another address",
+      "candidates": "Did you mean one of these addresses?",
+      "required": "Verify the address before saving the site."
+    },
+    "siteAddress": {
+      "title": "Change the address of {{site}}",
+      "description": "Verify the new address. The site keeps its equipment.",
+      "current": "Current address",
+      "submit": "Save address"
+    },
+    "map": {
+      "label": "Map of {{place}}",
+      "loading": "Loading map…",
+      "unavailable": "The map couldn't be loaded. The address is still verified."
+    },
+    "equipmentForm": {
+      "createTitle": "Register equipment",
+      "createDescription": "Add a refrigeration unit to one of your sites with its temperature threshold.",
+      "editTitle": "Edit equipment",
+      "editDescription": "Update the name, type and maintenance reminder. Its telemetry and service history are kept.",
+      "noSites": "Register a site before adding equipment.",
+      "goToSites": "Go to sites",
+      "chooseSite": "Choose a site",
+      "chooseType": "Choose a type",
+      "codeHint": "The unit's own identifier, unique across IceTrack. Up to {{max}} characters.",
+      "fixedHint": "The equipment code and site cannot be changed.",
+      "reminderHint": "How often the equipment needs preventive maintenance.",
+      "register": "Register equipment",
+      "saveChanges": "Save changes"
+    },
+    "statusForm": {
+      "title": "Change the status of {{equipment}}",
+      "description": "Only the changes allowed from the current status are offered.",
+      "current": "Current status:",
+      "newStatus": "New status",
+      "deactivateWarning": "A deactivated unit is no longer monitored. It must be reactivated before moving to another status.",
+      "submit": "Change status",
+      "confirmDeactivate": "Deactivate equipment"
+    },
+    "errors": {
+      "invalid": "Some data was rejected. Review the fields and try again.",
+      "invalidThreshold": "The threshold was rejected. Both limits must be from 0 to 30 °C and the minimum lower than the maximum.",
+      "notAllowed": "Your account isn't allowed to do this.",
+      "siteNotFound": "This site doesn't exist or isn't registered to your account.",
+      "equipmentNotFound": "This equipment doesn't exist or isn't registered to your account.",
+      "duplicateUid": "Another unit already uses this equipment code. Enter a different one.",
+      "statusNotAllowed": "This status change isn't allowed from the current status. The equipment was reloaded.",
+      "concurrentChange": "This equipment was changed at the same time. Review it and try again.",
+      "addressVerificationExpired": "The address verification expired. Verify the address again and save.",
+      "addressNotVerified": "We couldn't find that address as a single location. Choose a suggestion or refine the address.",
+      "addressOutOfCoverage": "The address is outside the service area. IceTrack serves Metropolitan Lima and Callao only.",
+      "tooManyVerifications": "Too many address verifications. Wait a minute and try again.",
+      "verificationUnavailable": "The address verification service is unavailable. Try again in about 30 seconds.",
+      "unexpected": "Something went wrong. Try again in a moment."
+    },
+    "connectivity": {
+      "REPORTING": "Reporting",
+      "SILENT": "Silent",
+      "NEVER_REPORTED": "Never reported",
+      "NOT_MONITORED": "Not monitored"
+    },
+    "maintenanceWindowOpen": "Maintenance window open"
   },
   "devices": {
     "eyebrow": "Device management",
     "status": {
       "UNPAIRED": "Unpaired",
       "PAIRED": "Paired",
-      "ONLINE": "Online",
-      "OFFLINE": "Offline"
+      "REVOKED": "Key revoked"
     },
     "fields": {
       "device": "Device",
+      "boardModel": "Board model",
       "status": "Status",
       "equipment": "Equipment",
       "site": "Site",
-      "credential": "Credential",
-      "lastRead": "Last reading"
+      "credential": "API key",
+      "lastSeen": "Last seen"
     },
     "list": {
       "title": "Monitoring devices",
-      "subtitle": "Pair devices with your equipment and manage their credentials.",
+      "subtitle": "Pair devices with your equipment and manage their API keys.",
       "pair": "Pair a device",
       "tableTitle": "Devices",
-      "pairingFilter": "Filter by pairing",
+      "statusFilter": "Filter by status",
       "all": "All",
-      "paired": "Paired",
-      "unpaired": "The device was unpaired.",
-      "equipmentFilter": "Showing the device of {{equipment}}.",
+      "equipmentFilter": "Showing the devices of {{equipment}}.",
       "showAll": "Show all devices",
       "loading": "Loading devices…",
       "errorTitle": "We couldn't load your devices.",
+      "refreshFailed": "We couldn't refresh your devices. The list may be out of date.",
+      "noEquipmentTitle": "You have no equipment yet",
+      "noEquipmentMessage": "Register an equipment item first; then pair a device with it.",
+      "goToEquipment": "Go to equipment",
       "emptyTitle": "No devices to show",
-      "noDeviceForEquipment": "No device is paired with this equipment",
+      "noDeviceForEquipment": "No device is linked to this equipment",
       "emptyMessage": "Pair a monitoring device so its equipment starts reporting telemetry.",
-      "deviceLabel": "Device #{{id}}",
-      "deviceOfEquipment": "Device #{{id}} · {{equipment}}",
+      "noMatchTitle": "No devices match this filter",
+      "noMatchMessage": "Choose another status to see the rest of your devices.",
+      "deviceLabel": "Device {{uid}}",
+      "deviceOfEquipment": "Device {{uid}} · {{equipment}}",
+      "equipmentLabel": "Equipment #{{id}}",
       "firmware": "Firmware {{version}}",
       "notPaired": "Not paired",
+      "telemetry": "Telemetry",
+      "alerts": "Alerts",
       "credentialActive": "Active",
-      "noCredential": "No active credential",
-      "never": "Never",
-      "pairShort": "Pair",
-      "pairDevice": "Pair device #{{id}}",
+      "credentialRevoked": "Revoked",
+      "noReadings": "No readings yet",
       "rotate": "Rotate key",
-      "rotateFor": "Rotate the key of device #{{id}}",
-      "issue": "Issue key",
-      "issueFor": "Issue a key for device #{{id}}",
+      "rotateFor": "Rotate the key of device {{uid}}",
+      "reissue": "Issue new key",
+      "reissueFor": "Issue a new key for device {{uid}}",
       "revoke": "Revoke key",
-      "revokeFor": "Revoke the key of device #{{id}}",
+      "revokeFor": "Revoke the key of device {{uid}}",
       "unpair": "Unpair",
-      "unpairFor": "Unpair device #{{id}}",
-      "rotated": "The device key was replaced.",
+      "unpairFor": "Unpair device {{uid}}"
+    },
+    "feedback": {
+      "paired": "The device was paired.",
+      "unpaired": "The device was unpaired and its key no longer works.",
+      "rotated": "The device received a new key.",
       "revoked": "The device key was revoked."
+    },
+    "errors": {
+      "pairingConflict": "This board is already paired, or the equipment already has a paired device. The list was refreshed.",
+      "equipmentNotFound": "The equipment doesn't exist or isn't yours. The list was refreshed.",
+      "deviceChanged": "This device changed in the meantime. The list was refreshed; close this and try again if needed.",
+      "deviceNotFound": "The device doesn't exist or isn't linked to your equipment anymore. The list was refreshed.",
+      "invalidPairing": "Check the device data and try again.",
+      "accessDenied": "You aren't allowed to do this.",
+      "unexpected": "We couldn't complete the action. Check your connection and try again."
     },
     "credential": {
       "rotate": {
@@ -343,9 +468,15 @@
         "confirm": "Rotate key",
         "pending": "Rotating…"
       },
+      "reissue": {
+        "title": "Issue a new device key",
+        "warning": "A new key will be issued and the device will be paired again. Load the new key on the device so it resumes sending telemetry.",
+        "confirm": "Issue new key",
+        "pending": "Issuing…"
+      },
       "revoke": {
         "title": "Revoke device key",
-        "warning": "The device will stop sending telemetry until you issue a new key. Its equipment will appear offline meanwhile.",
+        "warning": "The key stops working at once and the device can no longer send telemetry. The device stays linked to its equipment; issue a new key to resume.",
         "acknowledgement": "I understand the device will stop sending telemetry.",
         "acknowledgementRequired": "Confirm that you understand the consequence before revoking the key.",
         "confirm": "Revoke key",
@@ -354,7 +485,7 @@
       },
       "storeNow": "Store this key now. It won't be shown again.",
       "hashOnly": "IceTrack only keeps a fingerprint of the key. If you lose it, rotate the key again.",
-      "newKey": "New device key",
+      "newKey": "Device API key",
       "copy": "Copy",
       "copied": "Copied",
       "copyFailed": "We couldn't copy the key. Select it and copy it manually.",
@@ -362,34 +493,39 @@
       "done": "Done"
     },
     "unpair": {
-      "title": "Unpair device #{{id}}?",
-      "message": "{{equipment}} will stop reporting telemetry until another device is paired with it.",
+      "title": "Unpair device {{uid}}?",
+      "message": "{{equipment}} will stop reporting telemetry until another device is paired with it. The device key stops working at once.",
+      "messageUnknown": "Its equipment will stop reporting telemetry until another device is paired with it. The device key stops working at once.",
       "confirm": "Unpair device",
       "pending": "Unpairing…"
     },
     "pairing": {
       "title": "Pair a device",
-      "subtitle": "Link an unpaired monitoring device with an equipment item that has no device.",
+      "subtitle": "Link a monitoring board with an equipment item that has no paired device. Its API key is issued right away.",
       "back": "Back to devices",
-      "loading": "Loading devices and equipment…",
-      "errorTitle": "We couldn't load the devices available for pairing.",
-      "noDevicesTitle": "No unpaired devices",
-      "noDevicesMessage": "All your devices are already paired. Unpair a device to link it with other equipment.",
-      "noEquipmentTitle": "All your equipment already has a device",
-      "noEquipmentMessage": "Unpair a device from its equipment, or register new equipment, to pair another device.",
-      "device": "Device",
-      "deviceHint": "Only unpaired devices are listed.",
-      "selectDevice": "Select a device",
-      "deviceRequired": "Select the device to pair.",
+      "loading": "Loading your equipment and devices…",
+      "errorTitle": "We couldn't load the equipment available for pairing.",
+      "noEquipmentTitle": "You have no equipment yet",
+      "noEquipmentMessage": "Register an equipment item first; then pair a device with it.",
+      "allPairedTitle": "All your equipment already has a device",
+      "allPairedMessage": "Unpair a device from its equipment, or register new equipment, to pair another device.",
       "equipment": "Equipment",
-      "equipmentHint": "Only equipment without a device is listed.",
+      "equipmentHint": "Only equipment without a paired device is listed.",
       "selectEquipment": "Select an equipment item",
       "equipmentRequired": "Select the equipment to pair the device with.",
+      "deviceUid": "Device UID",
+      "deviceUidHint": "The unique identifier of the board. A board unpaired earlier can be paired again with the same UID.",
+      "deviceUidRequired": "Enter the device UID.",
+      "boardModel": "Board model",
+      "boardModelRequired": "Enter the board model.",
+      "firmwareVersion": "Firmware version (optional)",
+      "firmwareVersionHint": "The firmware version currently running on the board.",
+      "tooLong": "Use {{max}} characters or fewer.",
       "confirm": "Pair device",
       "pending": "Pairing…",
       "successTitle": "Device paired",
-      "successMessage": "Device #{{id}} is now paired with {{equipment}}.",
-      "credentialNext": "Issue a key for the device from the device list so it can start sending telemetry.",
+      "successMessage": "Device {{uid}} is now paired with {{equipment}}. Load this key on the device so it can send telemetry.",
+      "confirmStoredToContinue": "Confirm that you stored the key to continue.",
       "pairAnother": "Pair another device",
       "viewEquipment": "View equipment",
       "goToDevices": "Go to devices"
@@ -407,7 +543,8 @@
     "alertStatus": {
       "OPEN": "Open",
       "RESOLVED": "Resolved",
-      "DISMISSED": "Dismissed"
+      "DISMISSED": "Dismissed",
+      "ACKNOWLEDGED": "Acknowledged"
     },
     "alertType": {
       "TEMPERATURE_EXCURSION": "Temperature excursion",
@@ -415,9 +552,9 @@
     },
     "state": {
       "outside": "Outside threshold",
-      "offline": "No recent readings",
       "within": "Within threshold",
-      "none": "No telemetry yet"
+      "none": "No telemetry yet",
+      "silent": "Silent: no recent readings"
     },
     "fields": {
       "equipment": "Equipment",
@@ -425,15 +562,18 @@
       "severity": "Severity",
       "type": "Type",
       "openedAt": "Opened",
-      "closedAt": "Closed",
       "peakTemperature": "Peak temperature",
-      "excursionDuration": "Excursion duration",
       "threshold": "Threshold",
       "recordedAt": "Recorded",
       "averageTemperature": "Average temperature",
       "temperatureRange": "Min – max",
       "humidity": "Humidity",
-      "device": "Device"
+      "device": "Device",
+      "triggeringTemperature": "Triggering temperature",
+      "alertDuration": "Duration",
+      "dismissReason": "Dismissal reason",
+      "dismissEvidence": "Evidence",
+      "maintenance": "Maintenance"
     },
     "dashboard": {
       "title": "Monitoring overview",
@@ -448,22 +588,23 @@
       "goToEquipment": "Go to equipment",
       "summaryTitle": "Summary",
       "sites": "Sites",
-      "monitoredEquipment": "Monitored equipment",
+      "monitoredEquipment": "Reporting equipment",
       "ofEquipment": "of {{total}} equipment items",
       "openAlerts": "Open alerts",
       "criticalAlerts": "Critical: {{count}}",
       "activeServiceRequests": "Active service requests",
       "currentTitle": "Current temperatures",
-      "currentSubtitle": "Last reading of each equipment item. Open one to see its history.",
+      "currentSubtitle": "Last known reading of each equipment item. Open one to see its history.",
       "thresholdShort": "Safe range {{min}} to {{max}}",
       "readingAge": "Reported {{age}}",
       "alertsTitle": "Open alerts",
       "viewAllAlerts": "View all alerts",
-      "noOpenAlerts": "No open alerts"
+      "noOpenAlerts": "No open alerts",
+      "refreshFailed": "We couldn't refresh the overview. The data shown may be out of date."
     },
     "alerts": {
       "title": "Alerts",
-      "subtitle": "Temperature excursions and offline devices across your equipment.",
+      "subtitle": "Temperature excursions and offline devices across your equipment, current and past.",
       "backToOverview": "Monitoring overview",
       "filters": "Alert filters",
       "statusFilter": "Filter by status",
@@ -474,20 +615,21 @@
       "showAll": "Show all alerts",
       "loading": "Loading alerts…",
       "errorTitle": "We couldn't load your alerts.",
-      "noOpenTitle": "No open alerts",
       "noMatchesTitle": "No alerts match the filters",
       "noMatchesMessage": "Try another status, severity or type.",
       "unknownEquipment": "Unknown equipment",
       "openedAt": "Opened {{date}}",
-      "closedAt": "closed {{date}}",
       "viewDetails": "View details",
       "acknowledge": "Acknowledge",
-      "acknowledged": "Acknowledged",
-      "acknowledgedMessage": "You acknowledged the alert. It stays open until the condition clears.",
       "dismiss": "Dismiss",
-      "dismissedMessage": "The alert was dismissed.",
       "requestService": "Request service",
-      "alertLabel": "{{type}} · {{equipment}}"
+      "alertLabel": "{{type}} · {{equipment}}",
+      "noActiveTitle": "No active alerts",
+      "noActiveMessage": "Resolved and dismissed alerts are listed under their status.",
+      "acknowledgedAt": "acknowledged {{date}}",
+      "acknowledging": "Acknowledging…",
+      "resolve": "Resolve",
+      "activeStatuses": "Active"
     },
     "alertDetail": {
       "title": "Alert detail",
@@ -498,35 +640,32 @@
       "notFoundTitle": "Alert not found",
       "notFoundMessage": "This alert doesn't exist or doesn't belong to your equipment.",
       "factsTitle": "What happened",
-      "stillOpen": "Still open",
       "explanation": {
         "TEMPERATURE_EXCURSION": "The temperature of the equipment stayed outside its threshold longer than its alert policy allows.",
         "DEVICE_OFFLINE": "The monitoring device of the equipment stopped sending readings."
       },
       "actionsTitle": "Actions",
-      "acknowledgedNote": "You acknowledged this alert at {{date}}. It stays open until the condition clears.",
       "requestServiceHint": "The request form opens prefilled with this equipment. You confirm it before it is sent.",
       "closedNote": "This alert is closed. No further actions are available.",
       "viewTelemetry": "View equipment telemetry",
-      "triggerTitle": "Reading that triggered the alert"
+      "lifecycleTitle": "Lifecycle",
+      "triggerTitle": {
+        "TEMPERATURE_EXCURSION": "Reading that triggered the alert",
+        "DEVICE_OFFLINE": "Last reading before the device went offline"
+      }
     },
     "dismiss": {
       "title": "Dismiss alert",
-      "explanation": "Dismissed alerts stay in the history with the reason you give.",
+      "explanation": "Dismiss the alert only if it is a false alarm, such as a planned defrost cycle. The reason is recorded, and dismissed alerts are excluded from thermal excursion reports.",
       "reason": "Reason",
-      "selectReason": "Select a reason",
-      "reasonRequired": "Select why you are dismissing the alert.",
-      "reasons": {
-        "DEFROST_CYCLE": "Defrost cycle",
-        "LOADING_DOOR_OPEN": "Loading door open",
-        "SENSOR_RELOCATION": "Sensor relocation",
-        "OTHER": "Other"
-      },
-      "notes": "Notes",
-      "notesPlaceholder": "Add details for the history",
-      "keepOpen": "Keep open",
+      "reasonRequired": "Enter why you are dismissing the alert.",
+      "keepOpen": "Keep active",
       "confirm": "Dismiss alert",
-      "pending": "Dismissing…"
+      "pending": "Dismissing…",
+      "reasonPlaceholder": "Why this alert is not an actual fault",
+      "reasonHint": "Required. Up to {{max}} characters.",
+      "evidence": "Evidence",
+      "evidencePlaceholder": "A note or a link to a maintenance record"
     },
     "telemetry": {
       "title": "Equipment telemetry",
@@ -540,13 +679,11 @@
       "viewEquipment": "Equipment detail",
       "viewAlerts": "Alerts",
       "currentTitle": "Current reading",
-      "staleNotice": "No readings since {{age}}. The value shown is the last known reading.",
+      "staleNotice": "No readings since {{age}}. The value shown is the last known reading, not a current one.",
       "noTelemetryTitle": "No telemetry yet",
-      "noTelemetryMessage": "This equipment has not reported any reading yet.",
-      "noDeviceMessage": "Pair a monitoring device with this equipment to receive its readings.",
+      "noTelemetryMessage": "This equipment has not reported any reading yet. Pair a monitoring device with it if it has none.",
       "pairDevice": "Pair a device",
       "historyTitle": "Temperature history",
-      "interval": "Readings aggregated every {{minutes}} minutes",
       "rangeLabel": "Period",
       "ranges": {
         "2H": "2 hours",
@@ -565,7 +702,13 @@
       "tableLabel": "Temperature readings",
       "noHistoryTitle": "No readings in this period",
       "noHistoryMessage": "Choose a longer period, or check that the device is reporting.",
-      "policyTitle": "Alert policy"
+      "policyTitle": "Alert policy",
+      "historySubtitle": "Each point is one reading batch. The line breaks where readings are missing.",
+      "historyLoading": "Loading readings…",
+      "historyErrorTitle": "We couldn't load the readings of this period.",
+      "underMaintenance": "Under maintenance",
+      "excursionSince": "A temperature excursion alert has been active since {{date}} (hatched area).",
+      "noHumidity": "No humidity recorded"
     },
     "policy": {
       "state": "State",
@@ -573,8 +716,13 @@
       "inactive": "Inactive",
       "sustainedExcursion": "Excursion time before alerting",
       "hysteresis": "Hysteresis margin",
-      "offlineAfter": "Offline after",
-      "missedWindows": "{{count}} missed reporting windows"
+      "offlineAfter": "Silent after",
+      "missedWindows": "{{count}} missed reporting windows",
+      "scope": "Applies",
+      "platformDefault": "Platform default policy",
+      "equipmentSpecific": "Specific to this equipment",
+      "loading": "Loading the alert policy…",
+      "unavailable": "The alert policy of this equipment couldn't be read."
     },
     "chart": {
       "average": "Average temperature",
@@ -587,20 +735,61 @@
       "sliderHint": "Use the arrow keys to read each reading.",
       "valueText": "{{time}}: {{temperature}}",
       "rangeValue": "Min {{min}} · max {{max}}",
-      "humidity": "Humidity {{value}} %"
-    }
+      "humidity": "Humidity {{value}} %",
+      "excursion": "Active excursion alert",
+      "underMaintenance": "Under maintenance"
+    },
+    "actions": {
+      "acknowledged": "You acknowledged the alert. It stays active until it is resolved or dismissed.",
+      "resolved": "The alert was resolved.",
+      "dismissed": "The alert was dismissed."
+    },
+    "errors": {
+      "alertChanged": "Someone already changed this alert. It now shows its current status.",
+      "alertNotFound": "This alert is no longer available.",
+      "invalidDismissal": "Check the reason and evidence, then try again.",
+      "accessDenied": "Your account can't change this alert.",
+      "unexpected": "We couldn't update the alert. Try again."
+    },
+    "live": {
+      "connecting": "Connecting to live updates…",
+      "live": "Live updates on",
+      "reconnecting": "Reconnecting live updates…",
+      "unavailable": "Live updates unavailable. Refresh to see the latest data."
+    },
+    "lifecycle": {
+      "opened": "Opened",
+      "acknowledged": "Acknowledged",
+      "resolved": "Resolved",
+      "dismissed": "Dismissed"
+    },
+    "actor": {
+      "you": "by you",
+      "user": "by user #{{id}}",
+      "automatic": "automatically by the platform"
+    },
+    "resolve": {
+      "title": "Resolve alert",
+      "explanation": "Resolve the alert once its condition has been corrected. The alert closes and records that you resolved it.",
+      "keepOpen": "Keep active",
+      "confirm": "Resolve alert",
+      "pending": "Resolving…"
+    },
+    "maintenanceWindowOpen": "Maintenance window open"
   },
   "serviceRequests": {
     "eyebrow": "Service requests",
     "number": "Request #{{id}}",
     "unassigned": "Unassigned",
+    "equipmentNumber": "Equipment #{{id}}",
+    "siteNumber": "Site #{{id}}",
+    "technicianNumber": "Technician #{{id}}",
     "status": {
       "PENDING": "Pending",
       "ACCEPTED": "Accepted",
-      "REJECTED": "Rejected",
       "IN_PROGRESS": "In progress",
-      "CANCELED": "Canceled",
-      "COMPLETED": "Completed"
+      "COMPLETED": "Completed",
+      "CANCELED": "Canceled"
     },
     "priority": {
       "LOW": "Low",
@@ -609,20 +798,8 @@
       "URGENT": "Urgent"
     },
     "type": {
-      "REPAIR": "Repair",
       "PREVENTIVE_MAINTENANCE": "Preventive maintenance",
-      "INSTALLATION": "Installation",
-      "INSPECTION": "Inspection",
-      "OTHER": "Other"
-    },
-    "interventionStatus": {
-      "PENDING": "In progress",
-      "COMPLETED": "Completed"
-    },
-    "specialty": {
-      "REFRIGERATION": "Refrigeration",
-      "ELECTRICAL": "Electrical",
-      "GENERAL": "General"
+      "REPAIR": "Repair"
     },
     "fields": {
       "request": "Request",
@@ -633,25 +810,44 @@
       "status": "Status",
       "type": "Service type",
       "description": "Description",
+      "createdAt": "Created",
+      "startedAt": "Work started",
       "completedAt": "Completed",
-      "canceledAt": "Canceled"
+      "canceledAt": "Canceled",
+      "sourceAlert": "Alert"
     },
     "actions": {
       "view": "View",
       "assign": "Assign technician",
       "reassign": "Assign another technician",
       "review": "Rate service",
+      "editReview": "Edit review",
       "cancel": "Cancel request"
+    },
+    "errors": {
+      "invalid": "Some of the data was not accepted. Review it and try again.",
+      "notAllowed": "You aren't allowed to do this.",
+      "notFound": "This request doesn't exist or doesn't belong to your account.",
+      "equipmentNotFound": "The selected equipment doesn't exist or doesn't belong to your account.",
+      "cancelNotAllowed": "This request can no longer be canceled. We reloaded it so you can see its current status.",
+      "assignNotAllowed": "A technician can't be assigned to this request anymore. We reloaded it so you can see its current status.",
+      "staleState": "This request changed in the meantime. We reloaded it; check it and try again.",
+      "technicianNotEligible": "This technician can't be assigned. Choose another technician.",
+      "reviewNotAllowed": "This service can't be rated right now. We reloaded the request.",
+      "reviewEditExpired": "The edit period of this review has ended, so it can't be changed anymore.",
+      "alreadyReviewed": "This service was already rated. We reloaded the review.",
+      "concurrentChange": "Someone else changed this request at the same time. We reloaded it; try again.",
+      "unexpected": "We couldn't complete the action. Check your connection and try again.",
+      "equipmentOrAlertNotFound": "The selected equipment or the alert this request was drafted from doesn't exist or doesn't belong to your account."
     },
     "list": {
       "title": "Service requests",
       "subtitle": "Corrective and preventive services for your equipment.",
       "create": "New service request",
       "tableTitle": "Requests",
+      "total": "{{count}} requests",
       "statusFilter": "Filter by status",
       "allStatuses": "All",
-      "allPriorities": "All priorities",
-      "allTypes": "All types",
       "equipmentFilter": "Showing the service history of {{equipment}}.",
       "showAll": "Show all requests",
       "loading": "Loading service requests…",
@@ -659,10 +855,59 @@
       "emptyTitle": "No service requests yet",
       "emptyMessage": "Request a repair or a preventive maintenance for any of your equipment.",
       "noMatchesTitle": "No requests match the filters",
-      "noMatchesMessage": "Try another status, priority or service type.",
+      "noMatchesMessage": "Try another status, type or priority.",
       "assignFor": "Assign a technician to request #{{id}}",
-      "reviewFor": "Rate the service of request #{{id}}",
-      "viewFor": "View request #{{id}}"
+      "viewFor": "View request #{{id}}",
+      "allTypes": "All types",
+      "allPriorities": "All priorities"
+    },
+    "interventions": {
+      "title": "Service history",
+      "subtitle": "Interventions that completed service requests on this equipment, most recent first.",
+      "panelTitle": "Interventions",
+      "viewEquipment": "View equipment",
+      "loading": "Loading the intervention history…",
+      "errorTitle": "We couldn't load the intervention history.",
+      "notFoundTitle": "Equipment not found",
+      "notFoundMessage": "This equipment doesn't exist or doesn't belong to your account.",
+      "emptyTitle": "No interventions yet",
+      "emptyMessage": "Interventions appear here once a technician completes a service on this equipment."
+    },
+    "intervention": {
+      "startedAt": "Started {{date}}",
+      "completedAt": "completed {{date}}",
+      "duration": "Duration {{hours}} h {{minutes}} min",
+      "diagnosis": "Diagnosis",
+      "actionsTaken": "Actions taken",
+      "spareParts": "Spare parts",
+      "photos": "Photo evidence",
+      "photo": "Photo {{number}}",
+      "photoUnavailable": "Photo {{number}} (link not available)",
+      "opensInNewTab": "(opens in a new tab)"
+    },
+    "history": {
+      "empty": "No status changes have been recorded yet.",
+      "byOwner": "by you",
+      "byTechnician": "by {{technician}}",
+      "reason": "Reason: {{reason}}",
+      "kind": {
+        "CREATED": "Request created",
+        "ASSIGNED": "Technician assigned",
+        "REJECTED": "Rejected by the technician",
+        "ACCEPTED": "Accepted by the technician",
+        "STARTED": "Work started",
+        "COMPLETED": "Service completed",
+        "CANCELED": "Request canceled"
+      }
+    },
+    "maintenanceWindow": {
+      "period": "{{start}} – {{end}}",
+      "open": "still open",
+      "origin": {
+        "APP": "Started from the mobile app",
+        "BUTTON": "Started with the device button",
+        "OTHER": "Started from another source"
+      }
     },
     "form": {
       "title": "New service request",
@@ -670,20 +915,26 @@
       "back": "Back to service requests",
       "fromAlert": "This draft comes from alert #{{id}}. Review the details and confirm to send it.",
       "viewAlert": "View alert",
+      "equipmentLoading": "Loading your equipment…",
+      "equipmentErrorTitle": "We couldn't load your equipment.",
+      "noEquipmentTitle": "You have no equipment yet",
+      "noEquipmentMessage": "Register an equipment item before requesting a service for it.",
+      "goToEquipment": "Go to equipment",
       "selectEquipment": "Select an equipment item",
       "siteHint": "The site is taken from the selected equipment.",
       "siteOf": "Site: {{site}}",
       "selectType": "Select a service type",
       "selectRequired": "Select an option.",
       "descriptionPlaceholder": "What is happening and since when?",
-      "descriptionHint": "{{count}} of {{max}} characters. Write at least 10.",
-      "descriptionTooShort": "Describe the issue in at least 10 characters.",
+      "descriptionHint": "{{count}} of {{max}} characters.",
       "submit": "Create request",
       "submitting": "Creating request…",
       "createdTitle": "Request #{{id}} created",
-      "createdMessage": "The request is pending. Assign a technician from the service request list.",
+      "createdMessage": "The request is pending. Open it to assign a technician.",
       "createAnother": "Create another request",
-      "goToList": "Go to service requests"
+      "goToList": "Go to service requests",
+      "viewRequest": "View request",
+      "alertEquipmentMismatch": "Alert #{{id}} was raised on another equipment item, so this request will not be linked to it. Select that equipment again to keep the link."
     },
     "detail": {
       "title": "Service request detail",
@@ -695,36 +946,50 @@
       "summaryTitle": "Request details",
       "equipmentHistory": "View the service history of this equipment",
       "progressTitle": "Progress",
+      "historyTitle": "Status history",
       "technicianTitle": "Assigned technician",
       "noTechnician": "No technician is assigned yet.",
+      "technicianLoading": "Loading the technician profile…",
+      "technicianUnavailable": "We couldn't load the technician profile.",
+      "assignedAt": "Assigned {{date}}",
       "awaitingAcceptance": "Waiting for the technician to accept the request.",
-      "interventionsTitle": "Interventions",
-      "noInterventions": "No interventions have started yet.",
-      "interventionOngoing": "The technician is working on this intervention.",
-      "startedAt": "Started {{date}}",
-      "endedAt": "ended {{date}}",
+      "rejected": "The assigned technician rejected this request. Assign another technician.",
+      "interventionTitle": "Intervention",
+      "noIntervention": "No intervention has been registered yet.",
+      "interventionOngoing": "The technician is working on this request. The intervention report appears here once the work is completed.",
+      "maintenanceWindowsTitle": "Maintenance windows",
       "reviewTitle": "Service review",
+      "reviewLoading": "Loading the review…",
+      "reviewErrorTitle": "We couldn't load the review.",
       "notReviewed": "You haven't rated this service yet.",
       "reviewAfterCompletion": "You can rate the service once it is completed.",
+      "reviewedAt": "Rated {{date}}",
+      "reviewEditableUntil": "You can edit it until {{date}}.",
+      "reviewEditClosed": "The edit period ended on {{date}}.",
       "dialogLabel": "Request #{{id}} · {{equipment}}",
       "reviewDialogLabel": "Request #{{id}} · {{technician}}",
       "assigned": "The technician was assigned and will be notified.",
       "canceled": "The request was canceled.",
-      "reviewed": "Thank you. Your review was saved."
+      "reviewed": "Thank you. Your review was saved.",
+      "reviewUpdated": "Your review was updated.",
+      "sourceAlert": "Opened for alert #{{id}}",
+      "viewSourceAlert": "View alert"
     },
     "progress": {
       "done": "completed",
       "current": "current step",
       "upcoming": "upcoming",
-      "offPath": {
-        "CANCELED": "This request was canceled.",
-        "REJECTED": "The assigned technician rejected this request. Assign another technician."
-      },
-      "canceledAt": "Canceled {{date}}."
+      "canceled": "This request was canceled.",
+      "canceledAt": "Canceled {{date}}.",
+      "cancelReason": "Reason: {{reason}}"
     },
     "assign": {
       "title": "Assign technician",
       "legend": "Technicians",
+      "loading": "Loading technicians…",
+      "errorTitle": "We couldn't load the technicians.",
+      "emptyTitle": "No technicians available",
+      "emptyMessage": "There are no registered technicians to assign yet.",
       "specialtyFilter": "Filter by specialty",
       "allSpecialties": "All specialties",
       "certification": "Certification {{number}}",
@@ -732,8 +997,14 @@
       "noRatings": "No ratings yet",
       "completedServices": "Completed services: {{count}}",
       "current": "Currently assigned",
+      "profileUnavailable": "This technician's profile couldn't be loaded, so they can't be assigned.",
       "noCandidates": "No technicians have this specialty.",
       "required": "Select a technician to assign.",
+      "continue": "Continue",
+      "back": "Back",
+      "confirmText": "Assign {{technician}} to this request?",
+      "replaceWarning": "The currently assigned technician will be replaced.",
+      "acceptanceNote": "The request stays pending until the technician accepts it.",
       "confirm": "Assign technician",
       "pending": "Assigning…"
     },
@@ -742,15 +1013,16 @@
       "warning": "Canceling can't be undone. The assigned technician will be notified.",
       "reason": "Reason for canceling",
       "reasonPlaceholder": "Why is this service no longer needed?",
-      "reasonHint": "Write at least 10 characters.",
+      "reasonHint": "Required. Up to {{max}} characters.",
       "reasonRequired": "Give a reason to cancel the request.",
-      "reasonTooShort": "The reason must have at least 10 characters.",
       "keep": "Keep request",
       "confirm": "Cancel request",
       "pending": "Canceling…"
     },
     "review": {
       "title": "Rate service",
+      "editTitle": "Edit review",
+      "editableUntil": "You can edit this review until {{date}}.",
       "criteria": {
         "communication": "Communication",
         "efficacy": "Technical efficacy",
@@ -759,7 +1031,7 @@
       "hints": {
         "communication": "Updates, punctuality and clarity.",
         "efficacy": "Diagnosis and quality of the fix.",
-        "performance": "Would you hire this technician again?"
+        "performance": "How well the work itself was carried out."
       },
       "scoreOption": "{{score}} of 5",
       "scoreOf": "{{score}} / 5",
@@ -777,7 +1049,8 @@
       "commentPlaceholder": "Tell us more about the service",
       "later": "Later",
       "submit": "Submit review",
-      "pending": "Submitting…"
+      "save": "Save changes",
+      "pending": "Saving…"
     }
   },
   "notifications": {
@@ -788,11 +1061,13 @@
     },
     "types": {
       "MAINTENANCE_REMINDER": "Maintenance reminder",
+      "TEMPERATURE_EXCURSION": "Temperature excursion",
       "DEVICE_OFFLINE": "Device offline",
       "LOW_BATTERY": "Low battery",
       "SENSOR_FAILURE": "Sensor failure",
       "SERVICE_REQUEST_UPDATE": "Service request update",
-      "OUT_OF_RANGER_TEMPERATURE": "Temperature out of range"
+      "MAINTENANCE_WINDOW": "Maintenance window",
+      "UNLINKED_MAINTENANCE_WINDOW": "Maintenance without a service request"
     },
     "bell": {
       "label": "Notifications",
@@ -802,21 +1077,14 @@
       "eyebrow": "Notification center",
       "title": "Notifications",
       "unreadSummary": "Unread notifications: {{count}}",
-      "markAllAsRead": "Mark all as read",
       "listTitle": "Active notifications",
       "readFilter": "Filter by read state",
       "all": "All",
       "unreadOnly": "Unread",
-      "severityFilter": "Severity",
-      "allSeverities": "All severities",
-      "typeFilter": "Type",
-      "allTypes": "All types",
       "loading": "Loading notifications…",
       "errorTitle": "We couldn't load your notifications.",
       "emptyTitle": "You're all caught up",
       "emptyMessage": "New alerts and service updates will appear here.",
-      "noMatchesTitle": "No notifications match the filters",
-      "noMatchesMessage": "Try another read state, severity or type.",
       "read": "Read",
       "unread": "Unread",
       "readAt": "read {{date}}",
@@ -826,8 +1094,28 @@
       "markAsRead": "Mark as read",
       "dismiss": "Dismiss",
       "markedAsRead": "The notification was marked as read.",
-      "allMarkedAsRead": "All notifications were marked as read.",
-      "dismissed": "The notification was dismissed."
+      "dismissed": "The notification was dismissed.",
+      "refreshFailed": "We couldn't refresh your notifications. The list may be out of date.",
+      "noUnreadTitle": "No unread notifications",
+      "noUnreadMessage": "You've read every active notification.",
+      "showAll": "Show all notifications",
+      "severityFilter": "Severity",
+      "typeFilter": "Type",
+      "allSeverities": "All severities",
+      "allTypes": "All types",
+      "markAllAsRead": "Mark all as read",
+      "markFilteredAsRead": "Mark matching as read",
+      "markingAllAsRead": "Marking as read…",
+      "markedAllAsRead": "Notifications marked as read: {{count}}.",
+      "noMatchesTitle": "No notifications match the filters",
+      "noMatchesMessage": "Try another severity or type.",
+      "receivedAt": "Received {{date}}",
+      "viewServiceRequest": "View service request"
+    },
+    "errors": {
+      "notificationChanged": "This notification is no longer available or already changed. The list was refreshed.",
+      "accessDenied": "You aren't allowed to do this.",
+      "unexpected": "We couldn't complete the action. Check your connection and try again."
     }
   },
   "reporting": {
@@ -846,12 +1134,11 @@
     },
     "format": {
       "PDF": "PDF",
-      "EXCEL": "Excel",
+      "XLSX": "Excel (XLSX)",
       "CSV": "CSV"
     },
     "fields": {
       "report": "Report",
-      "title": "Report title",
       "type": "Report type",
       "status": "Status",
       "format": "Format",
@@ -859,7 +1146,8 @@
       "equipment": "Equipment",
       "dateRange": "Period",
       "requestedAt": "Requested",
-      "completedAt": "Completed"
+      "completedAt": "Completed",
+      "name": "Report name"
     },
     "actions": {
       "view": "View",
@@ -869,7 +1157,11 @@
       "invalidRange": "The start date must be on or before the end date."
     },
     "download": {
-      "simulated": "The download will start once the reporting service is connected."
+      "open": "Open {{format}} file",
+      "openFor": "Open the {{format}} file of {{name}}",
+      "prepareFor": "Get the download link of {{name}}",
+      "preparing": "Preparing…",
+      "linkValidity": "The link is valid for 15 minutes."
     },
     "list": {
       "title": "Reports",
@@ -878,7 +1170,7 @@
       "archiveTitle": "Report archive",
       "showing": "Showing {{shown}} of {{total}} reports",
       "search": "Search",
-      "searchPlaceholder": "Report title",
+      "searchPlaceholder": "Report name",
       "allTypes": "All types",
       "allStatuses": "All statuses",
       "requestedFrom": "Requested from",
@@ -890,13 +1182,15 @@
       "noMatchesTitle": "No reports match the filters",
       "noMatchesMessage": "Try another search, type, status or period.",
       "downloadFor": "Download {{title}}",
-      "viewFor": "View {{title}}"
+      "viewFor": "View {{title}}",
+      "refresh": "Refresh",
+      "refreshing": "Refreshing…",
+      "refreshFailed": "We couldn't refresh your reports. The list may be out of date."
     },
     "form": {
       "title": "Generate report",
       "subtitle": "Choose what to analyze and the period to cover.",
       "back": "Back to reports",
-      "titlePlaceholder": "e.g. Cold-chain compliance · October 2026",
       "selectType": "Select a report type",
       "typeHint": "Each type computes different indicators.",
       "typeRequired": "Select the report type.",
@@ -910,7 +1204,10 @@
       "requestedTitle": "Report requested",
       "requestedMessage": "The report is being prepared. It will be available to download once it is completed.",
       "requestAnother": "Request another report",
-      "goToReports": "Go to reports"
+      "goToReports": "Go to reports",
+      "namePlaceholder": "e.g. Cold-chain compliance · October 2026",
+      "followReport": "Follow the report",
+      "scopeUnavailable": "We couldn't load your sites and equipment, so the report can only cover all of them."
     },
     "detail": {
       "title": "Report detail",
@@ -928,15 +1225,25 @@
       "generatingHint": "Generation runs in the background. Check the status again in a few moments.",
       "checkStatus": "Check status",
       "checking": "Checking…",
-      "stillGenerating": "The report is still being generated.",
-      "nowCompleted": "The report is ready to download.",
       "failedTitle": "The report couldn't be generated.",
       "failedMessage": "Request it again. If the problem continues, try a shorter period.",
       "requestAgain": "Request again",
       "completedMessage": "Generated on {{date}}.",
       "notCompleted": "Not completed yet",
       "kpisTitle": "Key indicators",
-      "noKpis": "This report has no indicators to show."
+      "noKpis": "This report has no indicators to show.",
+      "watchingHint": "The status updates automatically while the report is generated.",
+      "refreshFailed": "We couldn't check the report status. The information shown may be out of date.",
+      "failureReason": "Reason:",
+      "period": "{{from}} – {{to}}"
+    },
+    "errors": {
+      "invalidRequest": "Check the report data: it needs a name, a type and a valid period.",
+      "scopeNotFound": "The selected site or equipment doesn't exist or isn't yours.",
+      "reportNotFound": "This report doesn't exist or doesn't belong to your account.",
+      "accessDenied": "You aren't allowed to do this.",
+      "downloadUnavailable": "We couldn't get the download link. Try again in a moment.",
+      "unexpected": "We couldn't complete the request. Check your connection and try again."
     }
   },
   "profiles": {
@@ -960,61 +1267,36 @@
       "generateReport": "Generate report",
       "loading": "Loading your dashboard…",
       "errorTitle": "We couldn't load your dashboard.",
+      "unavailable": "Dashboard information is not available.",
       "scope": "Site",
       "allSites": "All sites",
       "defaultMark": "default",
-      "referenceRange": "Reference range:",
       "referenceRangeNamed": "Reference range ({{label}}):",
       "noCardsTitle": "All cards are hidden",
       "noCardsMessage": "Customize the layout to choose which cards your dashboard shows.",
       "saved": "Your dashboard layout was saved.",
-      "state": {
-        "outside": "Outside threshold",
-        "offline": "No recent readings",
-        "within": "Within threshold",
-        "none": "No telemetry yet"
+      "cardUnavailable": "The data for this card isn't available yet.",
+      "cardLink": {
+        "MONITORED_EQUIPMENT": "View equipment",
+        "OPEN_ALERTS": "View all alerts",
+        "ACTIVE_ORDERS": "View service requests",
+        "EQUIPMENT_STATUS": "Open monitoring"
       },
-      "severity": {
-        "INFO": "Info",
-        "WARNING": "Warning",
-        "CRITICAL": "Critical"
+      "setup": {
+        "title": "Set up your dashboard",
+        "message": "Choose the site and the reference temperature range your dashboard opens on.",
+        "action": "Set up dashboard",
+        "noSitesTitle": "Register a site first",
+        "noSitesMessage": "Your dashboard opens on one of your sites. Register your first site to set it up.",
+        "noSitesAction": "Register site",
+        "created": "Your dashboard is ready."
       },
-      "alertType": {
-        "TEMPERATURE_EXCURSION": "Temperature excursion",
-        "DEVICE_OFFLINE": "Device offline"
-      },
-      "orderStatus": {
-        "PENDING": "Pending",
-        "ACCEPTED": "Accepted",
-        "IN_PROGRESS": "In progress"
-      },
-      "monitored": {
-        "unit": "equipment items",
-        "empty": "No equipment is monitored at this site yet.",
-        "link": "View equipment"
-      },
-      "alerts": {
-        "critical": "Critical: {{count}}",
-        "empty": "No open alerts at this site.",
-        "link": "View all alerts"
-      },
-      "orders": {
-        "unit": "not finished yet",
-        "number": "Request #{{id}}",
-        "unassigned": "No technician assigned",
-        "empty": "No active service requests at this site.",
-        "link": "View service requests"
-      },
-      "status": {
-        "subtitle": "Last reading of each item, the most urgent first.",
-        "threshold": "Safe range {{min}} to {{max}}",
-        "readingAge": "Reported {{age}}",
-        "empty": "No equipment at this site yet.",
-        "link": "Open monitoring"
-      },
+      "sitesError": "Your sites couldn't be loaded, so the site selector and layout customization are unavailable.",
       "customize": {
         "title": "Customize dashboard",
         "description": "Choose which cards your dashboard shows, in what order, and its defaults.",
+        "setupTitle": "Set up your dashboard",
+        "setupDescription": "Choose the site and the reference temperature range your dashboard opens on. Every card starts visible; you can customize them afterwards.",
         "cardsTitle": "Cards",
         "visibleCount": "{{visible}} of {{total}} visible",
         "cardsHint": "Use the arrows to change the order. Hidden cards keep their data.",
@@ -1025,13 +1307,18 @@
         "restored": "Every card is visible again, in the default order.",
         "defaultsTitle": "Defaults",
         "defaultSite": "Site the dashboard opens on",
+        "chooseSite": "Choose a site",
         "rangeLegend": "Reference temperature range",
-        "min": "Minimum (°C)",
-        "max": "Maximum (°C)",
+        "min": "Minimum ({{unit}})",
+        "max": "Maximum ({{unit}})",
+        "wholeNumber": "Enter a whole number.",
         "rangeLabel": "Range name",
         "rangeLabelPlaceholder": "e.g. Frozen goods",
-        "minBelowMax": "The minimum temperature must be lower than the maximum temperature.",
-        "save": "Save layout"
+        "minAboveMax": "The minimum temperature can't be higher than the maximum temperature.",
+        "save": "Save layout",
+        "create": "Create dashboard",
+        "invalid": "Some values were rejected. Review them and try again.",
+        "saveFailed": "We couldn't save your dashboard. Try again."
       }
     },
     "ownerProfile": {
@@ -1043,7 +1330,28 @@
       "ruc": "RUC",
       "loading": "Loading your profile…",
       "errorTitle": "Your profile could not be loaded",
-      "unavailable": "Profile information is not available."
+      "unavailable": "Profile information is not available.",
+      "edit": "Edit profile",
+      "save": "Save changes",
+      "saved": "Your profile was saved.",
+      "saveFailed": "We couldn't save your profile. Try again.",
+      "invalid": "Some of your details were rejected. Review them and try again.",
+      "notAllowed": "You can't edit this profile.",
+      "notFound": "No owner profile is linked to your account.",
+      "emailNote": "Your email belongs to your account and can't be changed here.",
+      "rucHint": "11 digits, numbers only.",
+      "addressSection": "Address",
+      "addressNote": "Enter your complete address every time you save. Current address: {{address}}",
+      "street": "Street",
+      "number": "Number",
+      "numberHint": "Optional.",
+      "city": "City",
+      "postalCode": "Postal code",
+      "country": "Country",
+      "validation": {
+        "phone": "Enter a valid phone number: digits, spaces, hyphens or parentheses, with an optional leading +.",
+        "ruc": "The RUC must have exactly 11 digits."
+      }
     }
   }
 }

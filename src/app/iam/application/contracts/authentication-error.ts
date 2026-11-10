@@ -2,13 +2,17 @@
  * Machine-readable authentication error codes confirmed by the backend contract.
  */
 export const AUTHENTICATION_ERROR_CODES = [
-  // Local sign-in
+  // Credential, registration and Google onboarding requests (standard error body)
   'VALIDATION_ERROR',
-  'USER_NOT_FOUND',
-  'BUSINESS_RULE_VIOLATION',
-  // Google sign-in
+  'BAD_CREDENTIALS',
+  'INVALID_TOKEN',
+  'ROLE_CHANNEL_MISMATCH',
   'GOOGLE_ACCOUNT_NOT_FOUND',
-  // Refresh token
+  'ACCOUNT_LINK_REQUIRED',
+  'USER_CONFLICT',
+  'PROFILE_CONFLICT',
+  'TOO_MANY_REQUESTS',
+  // Refresh token (refresh-token error body)
   'REFRESH_TOKEN_RECENTLY_ROTATED',
   'REFRESH_TOKEN_REPLAY_DETECTED',
   'REFRESH_TOKEN_EXPIRED',
@@ -28,8 +32,9 @@ export function isAuthenticationErrorCode(value: unknown): value is Authenticati
 }
 
 /**
- * AuthenticationError means the backend definitively rejected an authentication operation, such as
- * invalid local credentials, an unknown Google account or an unusable refresh token.
+ * AuthenticationError means the backend definitively rejected an authentication operation (any 4xx
+ * answer), such as invalid credentials, an unknown Google account, an account that must use the mobile
+ * application or an unusable refresh token.
  *
  * Errors of any other type (network failures, server errors) are transient and must not end the session.
  */
@@ -38,8 +43,8 @@ export class AuthenticationError extends Error {
 
   /**
    * @param code - The confirmed error code, or null when the backend returned an unrecognized one.
-   * @param message - A human-readable description (the backend message when available), for display
-   *  only; never used to branch on the error condition.
+   * @param message - A fixed technical description for diagnostics. It never contains backend text and
+   *  is never used to branch on the error condition; views translate the code instead.
    */
   constructor(
     readonly code: AuthenticationErrorCode | null,

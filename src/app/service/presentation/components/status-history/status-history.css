@@ -1,0 +1,36 @@
+.status-history {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.status-history__entry {
+  display: grid;
+  gap: 2px;
+  padding-inline-start: var(--space-2);
+  border-inline-start: 3px solid var(--brand-100);
+}
+
+.status-history__title,
+.status-history__meta,
+.status-history__reason,
+.status-history__empty {
+  margin: 0;
+}
+
+.status-history__title {
+  font-weight: 600;
+}
+
+.status-history__meta,
+.status-history__empty {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.status-history__reason {
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}

@@ -1,77 +1,98 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Site } from '@assets/domain/model/site.entity';
-import {
-  SiteFormDialog,
-  type SiteFormValue,
-} from '@assets/presentation/components/site-form-dialog/site-form-dialog';
-import { createSitesMock, MOCK_OWNER_ID } from '@assets/presentation/mocks/assets.mock';
+import type { SiteDetails } from '@assets/application/contracts/site-registration';
+import { AssetsStore } from '@assets/application/assets-store';
+import { SITE_ACTION_SUCCESS_KEYS, siteActionErrorKey } from '@assets/presentation/assets-feedback';
+import { SiteAddressDialog } from '@assets/presentation/components/site-address-dialog/site-address-dialog';
+import { SiteFormDialog } from '@assets/presentation/components/site-form-dialog/site-form-dialog';
 import { Icon } from '@shared/presentation/components/icon/icon';
 import { StatePanel } from '@shared/presentation/components/state-panel/state-panel';
-import { injectMockDataSource } from '@shared/presentation/mock/mock-data-source';
 
-/** The site form being shown: a new site, or the site being updated. */
-type SiteFormTarget = { readonly site: Site | null };
+/** The site dialog being shown: register a site, edit a site, or move a site to another address. */
+type SiteDialog =
+  | { readonly kind: 'form'; readonly site: Site | null }
+  | { readonly kind: 'address'; readonly site: Site };
+
+/** The asynchronous states of the site list while it is not populated. */
+type ListStatus = 'loading' | 'error' | 'ready';
 
 /**
- * Sites of the owner with their contact and equipment count. The owner registers sites and updates their
- * contact from here, and opens the equipment of a site.
+ * Sites of the owner with their address, contact and equipment count. The owner registers sites at a
+ * verified address, edits their name and contact, moves them to another verified address, and opens the
+ * equipment of a site from here.
  */
 @Component({
-  imports: [RouterLink, TranslatePipe, Icon, StatePanel, SiteFormDialog],
+  imports: [RouterLink, TranslatePipe, Icon, StatePanel, SiteFormDialog, SiteAddressDialog],
   selector: 'app-site-list',
   styleUrl: './site-list.css',
   templateUrl: './site-list.html',
 })
 export class SiteList {
-  protected readonly source = injectMockDataSource();
-  protected readonly sites = signal<Site[]>([]);
-  protected readonly formTarget = signal<SiteFormTarget | null>(null);
-  /** The translation key of the outcome of the last save, announced to assistive technologies. */
-  protected readonly announcement = signal<string | null>(null);
+  protected readonly store = inject(AssetsStore);
+  protected readonly dialog = signal<SiteDialog | null>(null);
 
-  protected readonly equipmentTotal = computed(() =>
-    this.sites().reduce((total, site) => total + site.equipment_count, 0),
-  );
+  /** Sites already in memory stay shown while they are refreshed. */
+  protected readonly status = computed<ListStatus>(() => {
+    if (this.store.sitesLoaded()) {
+      return 'ready';
+    }
+    return this.store.sitesFailure() === null ? 'loading' : 'error';
+  });
+  /** The confirmation of the last site action, announced once its dialog is closed. */
+  protected readonly announcement = computed(() => {
+    const state = this.store.siteActionState();
+    return this.dialog() === null && state?.status === 'succeeded'
+      ? SITE_ACTION_SUCCESS_KEYS[state.action]
+      : null;
+  });
+  /** The failure of the last site action, shown in its dialog. */
+  protected readonly dialogErrorKey = computed(() => {
+    const state = this.store.siteActionState();
+    return state?.status === 'failed' && state.failure !== null
+      ? siteActionErrorKey(state.failure)
+      : null;
+  });
 
   constructor() {
-    this.load();
+    this.store.clearSiteActionState();
+    this.store.loadSites();
+
+    // A successful action closes its dialog.
+    effect(() => {
+      if (this.store.siteActionState()?.status === 'succeeded') {
+        untracked(() => this.dialog.set(null));
+      }
+    });
   }
 
   protected load(): void {
-    this.source.load((empty) => this.sites.set(empty ? [] : createSitesMock()));
+    this.store.loadSites();
   }
 
   protected openForm(site: Site | null): void {
-    this.announcement.set(null);
-    this.formTarget.set({ site });
+    this.store.clearSiteActionState();
+    this.dialog.set({ kind: 'form', site });
   }
 
-  protected save(value: SiteFormValue): void {
-    const site = this.formTarget()?.site ?? null;
-    // TODO: Delegate to the assets store (register site / update site contact use cases).
-    this.source.mutate(() => {
-      if (site) {
-        site.contact_name = value.contactName;
-        site.phone = { value: value.phone };
-        this.sites.update((sites) => [...sites]);
-        this.announcement.set('assets.siteList.updated');
-      } else {
-        const id = Math.max(0, ...this.sites().map((existing) => existing.id)) + 1;
-        const created = new Site({
-          id,
-          owner_id: MOCK_OWNER_ID,
-          name: value.name,
-          address: value.address,
-          contact_name: value.contactName,
-          phone: { value: value.phone },
-          equipment_count: 0,
-        });
-        this.sites.update((sites) => [...sites, created]);
-        this.announcement.set('assets.siteList.registered');
-      }
-      this.formTarget.set(null);
-    });
+  protected openAddress(site: Site): void {
+    this.store.clearSiteActionState();
+    this.dialog.set({ kind: 'address', site });
+  }
+
+  protected closeDialog(): void {
+    this.dialog.set(null);
+    if (this.store.siteActionState()?.status !== 'succeeded') {
+      this.store.clearSiteActionState();
+    }
+  }
+
+  protected save(site: Site | null, details: SiteDetails): void {
+    if (site === null) {
+      this.store.registerSite(details);
+    } else {
+      this.store.updateSite(site.id, details);
+    }
   }
 }

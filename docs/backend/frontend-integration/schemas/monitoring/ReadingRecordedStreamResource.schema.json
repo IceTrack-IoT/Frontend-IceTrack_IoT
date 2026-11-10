@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ReadingRecordedStreamResource",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "READING_RECORDED"
+      ],
+      "description": "Kind of update; always READING_RECORDED for this data"
+    },
+    "reading_uid": {
+      "type": "string",
+      "description": "Client-generated identifier of the batch, unique across the platform"
+    },
+    "equipment_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Identifier of the unit the batch was taken on"
+    },
+    "device_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Identifier of the device that produced the batch"
+    },
+    "min_temperature": {
+      "type": "number",
+      "format": "double",
+      "description": "Calibrated minimum temperature, in Celsius"
+    },
+    "max_temperature": {
+      "type": "number",
+      "format": "double",
+      "description": "Calibrated maximum temperature, in Celsius"
+    },
+    "avg_temperature": {
+      "type": "number",
+      "format": "double",
+      "description": "Calibrated average temperature, in Celsius"
+    },
+    "humidity": {
+      "type": "number",
+      "format": "double",
+      "description": "Average relative humidity, as a percentage"
+    },
+    "sample_count": {
+      "type": "integer",
+      "format": "int32",
+      "description": "Number of raw samples folded into the batch"
+    },
+    "recorded_at": {
+      "type": "string",
+      "description": "Format: date-time (ISO 8601 UTC with Z, e.g. 2026-09-29T08:30:00Z) When the batch was taken, by the device clock"
+    },
+    "received_at": {
+      "type": "string",
+      "description": "Format: date-time (ISO 8601 UTC with Z, e.g. 2026-09-29T08:30:00Z) When the platform received the batch"
+    },
+    "under_maintenance": {
+      "type": "boolean",
+      "description": "Whether a maintenance window covered recorded_at"
+    }
+  },
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/monitoring/interfaces/rest/resources/ReadingRecordedStreamResource.java"
+}

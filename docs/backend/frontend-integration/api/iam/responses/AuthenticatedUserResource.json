@@ -1,0 +1,8 @@
+{
+  "id": 1,
+  "username": "john.doe",
+  "role": "OWNER_ROLE",
+  "provider": "LOCAL",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh_token": "x6Kx3Jm0m3o6bRz9P4lXg0f1a2Y8sQ7cV5nT1wE9rU4"
+}

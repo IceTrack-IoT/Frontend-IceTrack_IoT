@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CreateDashboardConfigResource",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Identifier of the platform account the configuration belongs to"
+    },
+    "default_site_id": {
+      "type": "integer",
+      "format": "int64",
+      "exclusiveMinimum": 0,
+      "description": "Identifier of the site the dashboard opens on"
+    },
+    "default_temperature_range": {
+      "$ref": "TemperatureRangeResource.schema.json",
+      "description": "Temperature range the dashboard opens on"
+    }
+  },
+  "required": [
+    "user_id",
+    "default_site_id",
+    "default_temperature_range"
+  ],
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/profiles/interfaces/rest/resources/CreateDashboardConfigResource.java"
+}

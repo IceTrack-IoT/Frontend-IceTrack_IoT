@@ -1,22 +1,23 @@
 import { Component, inject, input, type OnInit, output } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, type ValidatorFn, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
-import type { TemperatureThreshold } from '@assets/domain/value-objects/temperature-threshold';
-
-/** The minimum temperature must be strictly lower than the maximum temperature. */
-const minBelowMax: ValidatorFn = (group) => {
-  const min: unknown = group.get('minCelsius')?.value;
-  const max: unknown = group.get('maxCelsius')?.value;
-  return typeof min === 'number' && typeof max === 'number' && min >= max
-    ? { minNotBelowMax: true }
-    : null;
-};
+import {
+  THRESHOLD_HIGHEST_CELSIUS,
+  THRESHOLD_LOWEST_CELSIUS,
+  type TemperatureThreshold,
+} from '@assets/domain/value-objects/temperature-threshold';
+import {
+  minBelowMax,
+  THRESHOLD_BOUND_VALIDATORS,
+  thresholdBoundErrorKey,
+} from '@assets/presentation/threshold-validation';
 
 type ThresholdControl = 'minCelsius' | 'maxCelsius';
 
 /**
- * Form of the temperature threshold of an equipment item, in degrees Celsius. It only checks that both
- * limits are present and that the minimum is lower than the maximum; the backend stays authoritative.
+ * Form of the temperature threshold of an equipment item, in degrees Celsius. It checks that both limits
+ * are present, within the accepted range, and that the minimum is lower than the maximum; the backend
+ * stays authoritative.
  */
 @Component({
   imports: [ReactiveFormsModule, TranslatePipe],
@@ -30,11 +31,14 @@ export class EquipmentThresholdForm implements OnInit {
   readonly pending = input(false);
   readonly saved = output<TemperatureThreshold>();
 
+  protected readonly lowestCelsius = THRESHOLD_LOWEST_CELSIUS;
+  protected readonly highestCelsius = THRESHOLD_HIGHEST_CELSIUS;
+
   private readonly formBuilder = inject(FormBuilder);
   protected readonly form = this.formBuilder.group(
     {
-      minCelsius: this.formBuilder.control<number | null>(null, Validators.required),
-      maxCelsius: this.formBuilder.control<number | null>(null, Validators.required),
+      minCelsius: this.formBuilder.control<number | null>(null, THRESHOLD_BOUND_VALIDATORS),
+      maxCelsius: this.formBuilder.control<number | null>(null, THRESHOLD_BOUND_VALIDATORS),
     },
     { validators: minBelowMax },
   );
@@ -61,8 +65,7 @@ export class EquipmentThresholdForm implements OnInit {
   }
 
   protected fieldErrorKey(name: ThresholdControl): string | null {
-    const control = this.form.controls[name];
-    return control.touched && control.hasError('required') ? 'shared.validation.required' : null;
+    return thresholdBoundErrorKey(this.form.controls[name]);
   }
 
   /** Whether the limits are inverted, once the owner has edited either of them. */

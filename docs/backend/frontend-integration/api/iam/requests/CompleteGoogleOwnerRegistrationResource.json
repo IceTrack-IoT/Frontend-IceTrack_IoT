@@ -1,0 +1,11 @@
+{
+  "id_token": "eyJhbGciOiJSUzI1NiIs...",
+  "username": "john.doe",
+  "phone": "+51 987654321",
+  "street": "Av. Primavera",
+  "number": "123",
+  "city": "Lima",
+  "postal_code": "15023",
+  "country": "Peru",
+  "ruc": 20123456789
+}

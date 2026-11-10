@@ -2,11 +2,8 @@
  * ServiceType enum represents the kinds of service an owner can request.
  */
 export enum ServiceType {
-  REPAIR = 'REPAIR',
   PREVENTIVE_MAINTENANCE = 'PREVENTIVE_MAINTENANCE',
-  INSTALLATION = 'INSTALLATION',
-  INSPECTION = 'INSPECTION',
-  OTHER = 'OTHER',
+  REPAIR = 'REPAIR',
 }
 
 /**

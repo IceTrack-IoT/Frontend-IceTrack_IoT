@@ -1,0 +1,16 @@
+{
+  "config_version": 7,
+  "min_celsius": 2.0,
+  "max_celsius": 8.0,
+  "sustained_excursion_minutes": 2,
+  "hysteresis_margin_celsius": 1.0,
+  "missed_sync_windows_for_offline": 3,
+  "grants": [
+    {
+      "sha256": "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8",
+      "technician_id": 7,
+      "service_request_id": 42,
+      "expires_at": "2026-11-08T14:00:00Z"
+    }
+  ]
+}

@@ -1,46 +1,45 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, effect, inject, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { Intervention } from '@service/domain/model/intervention.entity';
-import { Review } from '@service/domain/model/review.entity';
-import { ServiceRequest } from '@service/domain/model/service-request.entity';
-import { InterventionStatus } from '@service/domain/value-objects/intervention-status';
 import { ServiceStatus } from '@service/domain/value-objects/service-status';
+import type { ReviewScores } from '@service/application/contracts/review-scores';
+import { isStaleStateFailure } from '@service/application/contracts/service-requests-error';
+import { ServiceRequestsStore } from '@service/application/service-requests-store';
 import { AssignTechnicianDialog } from '@service/presentation/components/assign-technician-dialog/assign-technician-dialog';
 import { CancelRequestDialog } from '@service/presentation/components/cancel-request-dialog/cancel-request-dialog';
+import { InterventionSummary } from '@service/presentation/components/intervention-summary/intervention-summary';
 import { RequestProgress } from '@service/presentation/components/request-progress/request-progress';
+import { ReviewDialog } from '@service/presentation/components/review-dialog/review-dialog';
+import { StatusHistory } from '@service/presentation/components/status-history/status-history';
 import {
-  ReviewDialog,
-  type ReviewSubmission,
-} from '@service/presentation/components/review-dialog/review-dialog';
-import {
-  createInterventionsMock,
-  createReviewsMock,
-  createServiceRequestsMock,
-  SERVICE_EQUIPMENT,
-  TECHNICIAN_CANDIDATES,
-} from '@service/presentation/mocks/service-requests.mock';
-import {
-  ASSIGNABLE_STATUSES,
-  CANCELABLE_STATUSES,
   SERVICE_PRIORITY_APPEARANCE,
   SERVICE_STATUS_APPEARANCE,
 } from '@service/presentation/service-request-appearance';
+import {
+  ACTION_SUCCESS_KEYS,
+  actionErrorKey,
+} from '@service/presentation/service-requests-feedback';
 import { Icon } from '@shared/presentation/components/icon/icon';
 import { StatePanel } from '@shared/presentation/components/state-panel/state-panel';
 import { StatusTag } from '@shared/presentation/components/status-tag/status-tag';
-import { injectMockDataSource } from '@shared/presentation/mock/mock-data-source';
 import { LocalizedDatePipe } from '@shared/presentation/pipes/localized-date.pipe';
 import { LocalizedNumberPipe } from '@shared/presentation/pipes/localized-number.pipe';
 
 type DetailDialog = 'assign' | 'cancel' | 'review';
 
+/** The states of the view while the request is not shown. */
+type DetailStatus = 'loading' | 'error' | 'not-found' | 'ready';
+
+/** How often the review edit window is checked against the clock, in milliseconds. */
+const CLOCK_TICK_MS = 30_000;
+
 /**
- * Detail of a service request: equipment and site, description, progress, assigned technician,
- * interventions and review. The owner assigns a technician, cancels the request with a reason or reviews
- * the completed service, when the request allows it. The `action` query parameter (`assign` or `review`)
- * opens the matching dialog.
+ * Detail of a service request: equipment and site, description, progress, status history, assigned
+ * technician, intervention, maintenance windows and review. The owner assigns a technician, cancels the
+ * request with a reason, or reviews the completed service and edits the review while the backend allows
+ * it. Only the actions the request's state permits are offered; the backend remains the authority. The
+ * `action` query parameter (`assign` or `review`) opens the matching dialog once the request allows it.
  */
 @Component({
   imports: [
@@ -49,9 +48,11 @@ type DetailDialog = 'assign' | 'cancel' | 'review';
     AssignTechnicianDialog,
     CancelRequestDialog,
     Icon,
+    InterventionSummary,
     RequestProgress,
     ReviewDialog,
     StatePanel,
+    StatusHistory,
     StatusTag,
     LocalizedDatePipe,
     LocalizedNumberPipe,
@@ -62,143 +63,186 @@ type DetailDialog = 'assign' | 'cancel' | 'review';
 })
 export class ServiceRequestDetail {
   private readonly route = inject(ActivatedRoute);
-  protected readonly source = injectMockDataSource();
+  protected readonly store = inject(ServiceRequestsStore);
   protected readonly statusAppearance = SERVICE_STATUS_APPEARANCE;
   protected readonly priorityAppearance = SERVICE_PRIORITY_APPEARANCE;
-  protected readonly candidates = TECHNICIAN_CANDIDATES;
-  protected readonly completedIntervention = InterventionStatus.COMPLETED;
 
-  // The mocked mutations update the entity in place, so setting the same instance must notify.
-  protected readonly request = signal<ServiceRequest | null>(null, { equal: () => false });
-  protected readonly interventions = signal<Intervention[]>([]);
-  protected readonly review = signal<Review | null>(null);
+  private readonly requestId = signal(0);
   protected readonly dialog = signal<DetailDialog | null>(null);
-  /** The translation key of the outcome of the last action, announced to assistive technologies. */
-  protected readonly announcement = signal<string | null>(null);
+  /** The dialog asked for by the `action` query parameter, until the request allows or refuses it. */
+  private readonly requestedDialog = signal<DetailDialog | null>(null);
+  private readonly now = signal(new Date());
 
-  protected readonly equipment = computed(() => {
-    const request = this.request();
-    return SERVICE_EQUIPMENT.find((item) => item.id === request?.equipment_id) ?? null;
+  /** The loaded request when it is the one of the route; a request of another id is never shown. */
+  protected readonly request = computed(() => {
+    const request = this.store.selectedRequest();
+    return request !== null && request.id === this.requestId() ? request : null;
   });
+  protected readonly status = computed<DetailStatus>(() => {
+    if (this.request() !== null) {
+      return 'ready';
+    }
+    const failure = this.store.selectedRequestFailure();
+    if (failure === 'NOT_FOUND') {
+      return 'not-found';
+    }
+    return failure !== null && !this.store.selectedRequestLoading() ? 'error' : 'loading';
+  });
+
+  protected readonly equipmentName = computed(() => this.request()?.equipment_name ?? null);
+  protected readonly siteName = computed(() => this.request()?.site_name ?? null);
+  /** The public profile of the assigned technician, when it is the current one. */
   protected readonly technician = computed(() => {
-    const request = this.request();
+    const technician = this.store.assignedTechnician();
+    return technician !== null && technician.technicianId === this.request()?.technician_id
+      ? technician
+      : null;
+  });
+  /** The best known name of the assigned technician. */
+  protected readonly technicianName = computed(() => {
+    const technicianId = this.request()?.technician_id ?? null;
+    if (technicianId === null) {
+      return null;
+    }
     return (
-      TECHNICIAN_CANDIDATES.find(
-        (candidate) => candidate.technicianProfileId === request?.technician_profile_id,
-      ) ?? null
+      this.technician()?.fullName ??
+      this.request()?.technician_name ??
+      this.store.technicianById().get(technicianId)?.fullName ??
+      null
     );
   });
-  protected readonly canCancel = computed(() => {
-    const request = this.request();
-    return request !== null && CANCELABLE_STATUSES.has(request.status);
-  });
-  protected readonly canAssign = computed(() => {
-    const request = this.request();
-    return request !== null && ASSIGNABLE_STATUSES.has(request.status);
-  });
-  protected readonly canReview = computed(
-    () => this.request()?.status === ServiceStatus.COMPLETED && this.review() === null,
+  protected readonly acceptedAt = computed(
+    () => this.request()?.reachedAt(ServiceStatus.ACCEPTED) ?? null,
   );
-  protected readonly completed = computed(() => this.request()?.status === ServiceStatus.COMPLETED);
-  protected readonly awaitingAcceptance = computed(
-    () => this.request()?.status === ServiceStatus.PENDING && this.technician() !== null,
-  );
-  protected readonly startedAt = computed(() => this.interventions()[0]?.start_time ?? null);
 
-  private requestId = 0;
+  protected readonly review = computed(() => {
+    const review = this.store.review();
+    return review !== null && review.service_request_id === this.requestId() ? review : null;
+  });
+  protected readonly reviewEditable = computed(
+    () => this.review()?.isEditableAt(this.now()) ?? false,
+  );
+  /** Whether the completed request can be reviewed: its review is known not to exist yet. */
+  protected readonly canReview = computed(
+    () =>
+      this.request()?.canBeReviewed() === true &&
+      !this.store.reviewLoading() &&
+      this.store.reviewFailure() === null &&
+      this.review() === null,
+  );
+  protected readonly reviewInitial = computed<ReviewScores | null>(() => {
+    const review = this.review();
+    return review === null ? null : { rating: review.rating, comment: review.comment };
+  });
+
+  /** The confirmation of the last successful action. */
+  protected readonly announcementKey = computed(() => {
+    const state = this.store.actionState();
+    return state?.status === 'succeeded' ? ACTION_SUCCESS_KEYS[state.action] : null;
+  });
+  private readonly actionFailureKey = computed(() => {
+    const state = this.store.actionState();
+    return state?.status === 'failed' && state.failure !== null
+      ? actionErrorKey(state.action, state.failure)
+      : null;
+  });
+  /** The failure of the last action, shown in its dialog while it is open. */
+  protected readonly dialogErrorKey = computed(() =>
+    this.dialog() === null ? null : this.actionFailureKey(),
+  );
+  /** The failure of the last action, shown on the page once its dialog is closed. */
+  protected readonly pageErrorKey = computed(() =>
+    this.dialog() === null ? this.actionFailureKey() : null,
+  );
 
   constructor() {
+    // The status history and the intervention name their technicians from the directory.
+    this.store.loadTechnicianDirectory();
+
     this.route.paramMap.pipe(takeUntilDestroyed()).subscribe((params) => {
-      this.requestId = Number(params.get('requestId'));
+      this.requestId.set(Number(params.get('requestId')));
       this.load();
     });
+
+    const action = this.route.snapshot.queryParamMap.get('action');
+    this.requestedDialog.set(action === 'assign' || action === 'review' ? action : null);
+
+    // A successful action, or a failure that made the request stale, closes its dialog.
+    effect(() => {
+      const state = this.store.actionState();
+      if (
+        state !== null &&
+        (state.status === 'succeeded' ||
+          (state.status === 'failed' &&
+            state.failure !== null &&
+            isStaleStateFailure(state.failure)))
+      ) {
+        untracked(() => this.dialog.set(null));
+      }
+    });
+
+    // The dialog requested through the URL opens once the request (and its review) are known.
+    effect(() => {
+      const requested = this.requestedDialog();
+      const request = this.request();
+      if (requested === null || request === null) {
+        return;
+      }
+      if (requested === 'assign') {
+        untracked(() => this.openRequested(request.canBeAssigned() ? 'assign' : null));
+      } else if (!request.canBeReviewed()) {
+        untracked(() => this.openRequested(null));
+      } else if (!this.store.reviewLoading()) {
+        const canReview = this.canReview();
+        untracked(() => this.openRequested(canReview ? 'review' : null));
+      }
+    });
+
+    const clock = setInterval(() => this.now.set(new Date()), CLOCK_TICK_MS);
+    inject(DestroyRef).onDestroy(() => clearInterval(clock));
   }
 
   protected load(): void {
     this.dialog.set(null);
-    this.announcement.set(null);
-    this.source.load((empty) => {
-      const request = empty
-        ? undefined
-        : createServiceRequestsMock().find((item) => item.id === this.requestId);
-      this.request.set(request ?? null);
-      this.interventions.set(
-        createInterventionsMock().filter((item) => item.service_request_id === this.requestId),
-      );
-      this.review.set(
-        createReviewsMock().find((item) => item.service_request_id === this.requestId) ?? null,
-      );
-      this.openRequestedDialog();
-    });
+    this.store.loadServiceRequest(this.requestId());
   }
 
   protected openDialog(dialog: DetailDialog): void {
-    this.announcement.set(null);
+    this.store.clearActionState();
+    this.now.set(new Date());
+    if (dialog === 'assign') {
+      this.store.loadTechnicianCandidates();
+    }
     this.dialog.set(dialog);
   }
 
-  protected assign(technicianProfileId: number): void {
-    const request = this.request();
-    if (!request) {
-      return;
+  protected closeDialog(): void {
+    this.dialog.set(null);
+    if (this.store.actionState()?.status === 'failed') {
+      this.store.clearActionState();
     }
-    // TODO: Delegate to the service requests store (assign technician use case). The request waits for
-    // the technician to accept it, so the mock leaves it pending.
-    this.source.mutate(() => {
-      request.technician_profile_id = technicianProfileId;
-      request.status = ServiceStatus.PENDING;
-      this.request.set(request);
-      this.dialog.set(null);
-      this.announcement.set('serviceRequests.detail.assigned');
-    });
   }
 
-  /**
-   * TODO: Delegate to the service requests store (cancel service request use case). The class diagram
-   * has no field for the cancellation reason, so it is collected but not kept yet.
-   */
+  protected assign(technicianId: number): void {
+    this.store.assignTechnician(technicianId);
+  }
+
   protected cancel(reason: string): void {
-    const request = this.request();
-    if (!request || reason === '') {
-      return;
-    }
-    this.source.mutate(() => {
-      request.status = ServiceStatus.CANCELED;
-      request.canceled_at = new Date();
-      this.request.set(request);
-      this.dialog.set(null);
-      this.announcement.set('serviceRequests.detail.canceled');
-    });
+    this.store.cancelServiceRequest(reason);
   }
 
-  protected submitReview(submission: ReviewSubmission): void {
-    const request = this.request();
-    if (!request || request.technician_profile_id === null) {
-      return;
+  protected saveReview(scores: ReviewScores): void {
+    if (this.review() === null) {
+      this.store.submitReview(scores);
+    } else {
+      this.store.updateReview(scores);
     }
-    const technicianProfileId = request.technician_profile_id;
-    // TODO: Delegate to the service requests store (create review use case).
-    this.source.mutate(() => {
-      this.review.set(
-        new Review({
-          id: request.id * 10 + 1,
-          service_request_id: request.id,
-          technician_profile_id: technicianProfileId,
-          rating: submission.rating,
-          comment: submission.comment,
-        }),
-      );
-      this.dialog.set(null);
-      this.announcement.set('serviceRequests.detail.reviewed');
-    });
   }
 
-  private openRequestedDialog(): void {
-    const action = this.route.snapshot.queryParamMap.get('action');
-    if (action === 'assign' && this.canAssign()) {
-      this.dialog.set('assign');
-    } else if (action === 'review' && this.canReview()) {
-      this.dialog.set('review');
+  private openRequested(dialog: DetailDialog | null): void {
+    this.requestedDialog.set(null);
+    if (dialog !== null) {
+      this.openDialog(dialog);
     }
   }
 }

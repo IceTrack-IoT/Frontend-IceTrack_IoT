@@ -9,7 +9,7 @@ import {
   signal,
 } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
-import { SensorReading } from '@monitoring/domain/model/sensor-reading.entity';
+import type { TelemetryPoint } from '@monitoring/application/contracts/telemetry-history';
 import {
   type DateDisplay,
   LocalizedDatePipe,
@@ -20,14 +20,20 @@ import { TemperaturePipe } from '@shared/presentation/pipes/temperature.pipe';
 const HEIGHT = 280;
 const MARGIN = { top: 16, right: 20, bottom: 32, left: 48 } as const;
 const MIN_WIDTH = 320;
-/** Consecutive readings further apart than this many intervals are a data gap: the line breaks. */
-const GAP_INTERVALS = 1.5;
 
 interface ChartPoint {
   readonly x: number;
   readonly y: number;
-  readonly reading: SensorReading;
+  readonly sample: TelemetryPoint;
   readonly outside: boolean;
+  /** Whether the point lies within an excursion period the backend reported. */
+  readonly inExcursion: boolean;
+}
+
+/** A period during which the backend reports a temperature excursion alert; `to` is null while open. */
+export interface ExcursionPeriod {
+  readonly from: Date;
+  readonly to: Date | null;
 }
 
 /**
@@ -51,10 +57,10 @@ function niceTicks(low: number, high: number, count: number): number[] {
 
 /**
  * Historical temperature chart of an equipment item: the average temperature as a line over the min–max
- * range of each reading, the threshold limits, and markers on the readings outside the threshold. The line
- * breaks on data gaps instead of interpolating. Pointer users get a crosshair and tooltip; keyboard and
- * screen reader users move through the readings as a slider with arrow keys. The parent provides a table
- * view of the same readings.
+ * range of each reading, the threshold limits, markers on the readings outside the threshold, and hatched
+ * areas over the excursion periods the backend reports. The line breaks on data gaps instead of
+ * interpolating. Pointer users get a crosshair and tooltip; keyboard and screen reader users move through
+ * the readings as a slider with arrow keys. The parent provides a table view of the same readings.
  */
 @Component({
   imports: [TranslatePipe, LocalizedDatePipe, LocalizedNumberPipe, TemperaturePipe],
@@ -63,14 +69,16 @@ function niceTicks(low: number, high: number, count: number): number[] {
   templateUrl: './temperature-chart.html',
 })
 export class TemperatureChart {
-  /** The readings to chart, oldest first. */
-  readonly readings = input.required<readonly SensorReading[]>();
+  /** The reading batches or aggregated periods to chart, oldest first. */
+  readonly points = input.required<readonly TelemetryPoint[]>();
   readonly minCelsius = input.required<number>();
   readonly maxCelsius = input.required<number>();
-  /** The aggregation interval of the readings, used to detect data gaps. */
-  readonly intervalMinutes = input.required<number>();
+  /** Consecutive readings further apart than this many seconds are a data gap: the line breaks. */
+  readonly gapSeconds = input.required<number>();
   /** How the time axis labels are shown. */
   readonly timeDisplay = input<DateDisplay>('time');
+  /** The excursion periods the backend reports for the equipment. */
+  readonly excursions = input<readonly ExcursionPeriod[]>([]);
 
   protected readonly height = HEIGHT;
   protected readonly margin = MARGIN;
@@ -78,20 +86,17 @@ export class TemperatureChart {
   protected readonly activeIndex = signal<number | null>(null);
 
   protected readonly layout = computed(() => {
-    const readings = this.readings();
+    const samples = this.points();
     const width = this.width();
     const left = MARGIN.left;
     const right = width - MARGIN.right;
     const top = MARGIN.top;
     const bottom = HEIGHT - MARGIN.bottom;
-    const first = readings[0]?.recorded_at.getTime() ?? 0;
-    const last = readings.at(-1)?.recorded_at.getTime() ?? 1;
+    const first = samples[0]?.at.getTime() ?? 0;
+    const last = samples.at(-1)?.at.getTime() ?? 1;
     const span = Math.max(last - first, 1);
 
-    const values = readings.flatMap((reading) => [
-      reading.min_temperature,
-      reading.max_temperature,
-    ]);
+    const values = samples.flatMap((sample) => [sample.minTemperature, sample.maxTemperature]);
     const low = Math.min(...values, this.minCelsius());
     const high = Math.max(...values, this.maxCelsius());
     const padding = (high - low) * 0.1 || 1;
@@ -103,21 +108,34 @@ export class TemperatureChart {
     const y = (value: number): number =>
       bottom - ((value - domainLow) / (domainHigh - domainLow)) * (bottom - top);
 
-    const points: ChartPoint[] = readings.map((reading) => ({
-      x: x(reading.recorded_at.getTime()),
-      y: y(reading.average_temperature),
-      reading,
-      outside:
-        reading.average_temperature < this.minCelsius() ||
-        reading.average_temperature > this.maxCelsius(),
+    const periods = this.excursions().map((period) => ({
+      from: period.from.getTime(),
+      to: period.to?.getTime() ?? Number.POSITIVE_INFINITY,
     }));
+    const points: ChartPoint[] = samples.map((sample) => {
+      const time = sample.at.getTime();
+      return {
+        x: x(time),
+        y: y(sample.avgTemperature),
+        sample,
+        outside:
+          sample.avgTemperature < this.minCelsius() || sample.avgTemperature > this.maxCelsius(),
+        inExcursion: periods.some((period) => time >= period.from && time <= period.to),
+      };
+    });
+    const excursionAreas = periods
+      .map((period) => ({
+        start: Math.max(period.from, first),
+        end: Math.min(period.to, last),
+      }))
+      .filter((area) => area.start <= area.end)
+      .map((area) => ({ x: x(area.start), width: Math.max(x(area.end) - x(area.start), 2) }));
 
-    const gapMs = this.intervalMinutes() * 60_000 * GAP_INTERVALS;
+    const gapMs = this.gapSeconds() * 1000;
     const segments: ChartPoint[][] = [];
     points.forEach((point, index) => {
-      const previous = readings[index - 1];
-      const gap =
-        previous && point.reading.recorded_at.getTime() - previous.recorded_at.getTime() > gapMs;
+      const previous = samples[index - 1];
+      const gap = previous && point.sample.at.getTime() - previous.at.getTime() > gapMs;
       if (index === 0 || gap) {
         segments.push([]);
       }
@@ -127,7 +145,7 @@ export class TemperatureChart {
     const xTickCount = Math.min(points.length, Math.max(2, Math.floor((right - left) / 110)));
     const xTicks = Array.from({ length: xTickCount }, (_, index) => {
       const point = points[Math.round((index * (points.length - 1)) / Math.max(xTickCount - 1, 1))];
-      return { x: point.x, time: point.reading.recorded_at };
+      return { x: point.x, time: point.sample.at };
     });
 
     return {
@@ -140,14 +158,15 @@ export class TemperatureChart {
         (segment) => 'M' + segment.map((point) => `${point.x},${point.y}`).join('L'),
       ),
       bands: segments.map((segment) => {
-        const upper = segment.map((point) => `${point.x},${y(point.reading.max_temperature)}`);
+        const upper = segment.map((point) => `${point.x},${y(point.sample.maxTemperature)}`);
         const lower = [...segment]
           .reverse()
-          .map((point) => `${point.x},${y(point.reading.min_temperature)}`);
+          .map((point) => `${point.x},${y(point.sample.minTemperature)}`);
         return `M${[...upper, ...lower].join('L')}Z`;
       }),
       yTicks: ticks.map((value) => ({ value, y: y(value) })),
       xTicks,
+      excursionAreas,
       maxY: y(this.maxCelsius()),
       minY: y(this.minCelsius()),
     };

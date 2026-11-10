@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SignInWithGoogleResource",
+  "type": "object",
+  "properties": {
+    "id_token": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Google OIDC id_token issued to the frontend"
+    },
+    "channel": {
+      "type": "string",
+      "enum": [
+        "WEB",
+        "MOBILE"
+      ],
+      "description": "Client application: WEB for owners, MOBILE for technicians"
+    }
+  },
+  "required": [
+    "id_token",
+    "channel"
+  ],
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/iam/interfaces/rest/resources/SignInWithGoogleResource.java"
+}

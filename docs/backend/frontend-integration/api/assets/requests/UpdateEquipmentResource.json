@@ -1,0 +1,5 @@
+{
+  "name": "Refrigerador Principal",
+  "equipment_type": "REFRIGERATOR",
+  "reminder_interval_days": 120
+}

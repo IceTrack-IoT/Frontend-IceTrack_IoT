@@ -1,0 +1,17 @@
+<section class="ui-panel dashboard-card" [attr.aria-labelledby]="titleId()">
+  <div class="dashboard-card__header">
+    <span class="dashboard-card__icon"><app-icon [name]="icon()" /></span>
+    <h2 class="dashboard-card__title" [id]="titleId()">
+      {{ 'profiles.cardType.' + cardType() | translate }}
+    </h2>
+  </div>
+
+  <p class="dashboard-card__description">
+    {{ 'profiles.cardTypeDescription.' + cardType() | translate }}
+  </p>
+  <p class="dashboard-card__empty">{{ 'profiles.dashboard.cardUnavailable' | translate }}</p>
+
+  <a class="ui-link dashboard-card__footer" [routerLink]="route()">
+    {{ 'profiles.dashboard.cardLink.' + cardType() | translate }}
+  </a>
+</section>

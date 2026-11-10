@@ -1,0 +1,7 @@
+{
+  "equipment_id": 10,
+  "type": "REPAIR",
+  "priority": "HIGH",
+  "description": "The display case does not hold 2 to 8 °C",
+  "source_alert_id": 301
+}

@@ -1,69 +1,66 @@
-import { Injectable } from '@angular/core';
-import { BaseApi } from '@shared/infrastructure/api/base-api';
-import { NotificationApiEndpoint } from '@notifications/infrastructure/api/notification-api-endpoint';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { Notification } from '@notifications/domain/model/notification.entity';
+import { inject, Injectable } from '@angular/core';
+import { map, type Observable } from 'rxjs';
+import { BaseApi } from '@shared/infrastructure/api/base-api';
+import type { Notification } from '@notifications/domain/model/notification.entity';
+import type {
+  BulkReadResult,
+  NotificationFilters,
+  NotificationPage,
+  NotificationQuery,
+} from '@notifications/application/contracts/notification-page';
+import type { NotificationsPort } from '@notifications/application/ports/notifications.port';
+import { NotificationAssembler } from '@notifications/infrastructure/api/notification-assembler';
+import { NotificationsApiEndpoint } from '@notifications/infrastructure/api/notifications-api-endpoint';
+import { mapNotificationsErrors } from '@notifications/infrastructure/api/notifications-error-mapping';
 
 /**
- * NotificationsApi is a service that provides methods for interacting with the API endpoints.
+ * NotificationsApi implements the NotificationsPort against the inbox endpoints of Notifications.
  */
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
-export class NotificationsApi extends BaseApi {
-  private readonly notificationsEndpoint: NotificationApiEndpoint;
+export class NotificationsApi extends BaseApi implements NotificationsPort {
+  private readonly endpoint = new NotificationsApiEndpoint(inject(HttpClient));
+  private readonly assembler = new NotificationAssembler();
 
-  /**
-   * Creates an instance of NotificationsApi.
-   * @param http - The HttpClient used for making HTTP requests.
-   */
-  constructor(http: HttpClient) {
-    super();
-    this.notificationsEndpoint = new NotificationApiEndpoint(http);
+  listNotifications(query: NotificationQuery): Observable<NotificationPage> {
+    return this.endpoint
+      .listNotifications(query.page, query.size, query.unreadOnly, query.filters)
+      .pipe(
+        mapNotificationsErrors(),
+        map((resource) => this.assembler.toNotificationPageFromResource(resource)),
+      );
   }
 
-  /**
-   * Fetches a notification by its ID from the API.
-   * @param id - The ID of the Notification entity to be fetched.
-   * @returns An Observable that emits the Notification entity.
-   */
-  getNotification(id: number): Observable<Notification> {
-    return this.notificationsEndpoint.getById(id);
+  markAllAsRead(filters: NotificationFilters): Observable<BulkReadResult> {
+    return this.endpoint.markAllAsRead(filters).pipe(
+      mapNotificationsErrors(),
+      map((resource) => ({
+        updatedCount: resource.updated_count,
+        unreadCount: resource.unread_count,
+      })),
+    );
   }
 
-  /**
-   * Fetches all notifications from the API.
-   * @returns An Observable that emits an array of Notification entities.
-   */
-  getNotifications(): Observable<Notification[]> {
-    return this.notificationsEndpoint.getAll();
+  countUnread(): Observable<number> {
+    return this.endpoint.countUnread().pipe(
+      mapNotificationsErrors(),
+      map((resource) => resource.unread_count),
+    );
   }
 
-  /**
-   * Creates a new notification by sending a POST request to the API.
-   * @param notification - The Notification entity to be created.
-   * @returns An Observable that emits the created Notification entity.
-   */
-  createNotification(notification: Notification): Observable<Notification> {
-    return this.notificationsEndpoint.create(notification);
+  markAsRead(notificationId: number): Observable<Notification> {
+    return this.endpoint.markAsRead(notificationId).pipe(
+      mapNotificationsErrors(),
+      map((resource) => this.assembler.toNotificationFromResource(resource)),
+    );
   }
 
-  /**
-   * Updates an existing notification by sending a PUT request to the API.
-   * @param notification - The Notification entity to be updated.
-   * @returns An Observable that emits the updated Notification entity.
-   */
-  updateNotification(notification: Notification): Observable<Notification> {
-    return this.notificationsEndpoint.update(notification, notification.id);
-  }
-
-  /**
-   * Deletes a notification by sending a DELETE request to the API.
-   * @param id - The ID of the Notification entity to be deleted.
-   * @returns An Observable that emits void upon successful deletion.
-   */
-  deleteNotification(id: number): Observable<void> {
-    return this.notificationsEndpoint.delete(id);
+  dismiss(notificationId: number): Observable<Notification> {
+    return this.endpoint.dismiss(notificationId).pipe(
+      mapNotificationsErrors(),
+      map((resource) => this.assembler.toNotificationFromResource(resource)),
+    );
   }
 }

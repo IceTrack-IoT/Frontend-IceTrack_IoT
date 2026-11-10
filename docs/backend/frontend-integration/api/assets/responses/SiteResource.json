@@ -1,0 +1,16 @@
+{
+  "id": 1,
+  "owner_id": 42,
+  "name": "Sede Central",
+  "address": "Av. Primavera 123, Lima",
+  "contact_name": "Maria Lopez",
+  "phone": "+51 987654321",
+  "equipment_count": 3,
+  "geocoding_status": "RESOLVED",
+  "location": {
+    "latitude": -12.0931,
+    "longitude": -77.0465,
+    "place_id": "ChIJ8e8c9yLIBZERt0P0wP0xV5A"
+  },
+  "navigation_url": "https://www.google.com/maps/dir/?api=1&destination=-12.0931,-77.0465&destination_place_id=ChIJ8e8c9yLIBZERt0P0wP0xV5A"
+}

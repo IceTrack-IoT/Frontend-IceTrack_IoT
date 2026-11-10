@@ -1,12 +1,18 @@
-@if (offPath()) {
-  <p class="ui-alert" [class.ui-alert--warning]="rejected()" role="note">
-    <app-icon class="ui-alert__icon" [name]="rejected() ? 'circle-x' : 'x'" />
+@if (canceled()) {
+  <p class="ui-alert" role="note">
+    <app-icon class="ui-alert__icon" name="x" />
     <span>
-      {{ 'serviceRequests.progress.offPath.' + status() | translate }}
-      @if (canceledAt(); as canceled) {
+      {{ 'serviceRequests.progress.canceled' | translate }}
+      @if (canceledAt(); as canceledMoment) {
         {{
-          'serviceRequests.progress.canceledAt' | translate: { date: (canceled | localizedDate) }
+          'serviceRequests.progress.canceledAt'
+            | translate: { date: (canceledMoment | localizedDate) }
         }}
+      }
+      @if (cancelReason(); as reason) {
+        <span class="request-progress__reason">
+          {{ 'serviceRequests.progress.cancelReason' | translate: { reason: reason } }}
+        </span>
       }
     </span>
   </p>

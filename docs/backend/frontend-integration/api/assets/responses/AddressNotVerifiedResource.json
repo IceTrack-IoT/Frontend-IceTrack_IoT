@@ -1,0 +1,7 @@
+{
+  "code": "ADDRESS_NOT_VERIFIED",
+  "message": "The address could not be verified as a single location",
+  "candidates": [
+    "Av. Primavera 123, Santiago de Surco 15023, Peru"
+  ]
+}

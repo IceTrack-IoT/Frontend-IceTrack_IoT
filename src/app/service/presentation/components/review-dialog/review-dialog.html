@@ -1,8 +1,21 @@
 <app-dialog
-  [heading]="'serviceRequests.review.title' | translate"
+  [heading]="
+    (editing() ? 'serviceRequests.review.editTitle' : 'serviceRequests.review.title') | translate
+  "
   [description]="requestLabel()"
   (closed)="closed.emit()"
 >
+  @if (editing() && editableUntil(); as until) {
+    <p class="ui-alert ui-alert--info">
+      <app-icon class="ui-alert__icon" name="clock" />
+      {{ 'serviceRequests.review.editableUntil' | translate: { date: (until | localizedDate) } }}
+    </p>
+  }
+
+  @if (errorKey(); as failureKey) {
+    <p class="ui-alert ui-alert--critical" role="alert">{{ failureKey | translate }}</p>
+  }
+
   <form class="ui-form" id="review-form" novalidate [formGroup]="form" (ngSubmit)="submit()">
     @for (criterion of criteria; track criterion) {
       <fieldset
@@ -79,7 +92,7 @@
 
   <div dialogActions class="ui-form__actions">
     <button class="ui-button ui-button--secondary" type="button" (click)="closed.emit()">
-      {{ 'serviceRequests.review.later' | translate }}
+      {{ (editing() ? 'shared.actions.cancel' : 'serviceRequests.review.later') | translate }}
     </button>
     <button
       class="ui-button ui-button--primary"
@@ -88,7 +101,12 @@
       [disabled]="pending()"
     >
       {{
-        (pending() ? 'serviceRequests.review.pending' : 'serviceRequests.review.submit') | translate
+        (pending()
+          ? 'serviceRequests.review.pending'
+          : editing()
+            ? 'serviceRequests.review.save'
+            : 'serviceRequests.review.submit'
+        ) | translate
       }}
     </button>
   </div>

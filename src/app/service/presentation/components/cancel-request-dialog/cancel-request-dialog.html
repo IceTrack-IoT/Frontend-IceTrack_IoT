@@ -5,7 +5,11 @@
 >
   <p class="ui-alert ui-alert--warning">{{ 'serviceRequests.cancel.warning' | translate }}</p>
 
-  @let error = errorKey();
+  @if (errorKey(); as failureKey) {
+    <p class="ui-alert ui-alert--critical" role="alert">{{ failureKey | translate }}</p>
+  }
+
+  @let error = reasonErrorKey();
   <form
     class="ui-form"
     id="cancel-request-form"
@@ -30,7 +34,7 @@
         "
       ></textarea>
       <p class="ui-field__hint" id="cancel-reason-hint">
-        {{ 'serviceRequests.cancel.reasonHint' | translate }}
+        {{ 'serviceRequests.cancel.reasonHint' | translate: { max: reasonMaxLength } }}
       </p>
       @if (error) {
         <p class="ui-field__error" id="cancel-reason-error">{{ error | translate }}</p>

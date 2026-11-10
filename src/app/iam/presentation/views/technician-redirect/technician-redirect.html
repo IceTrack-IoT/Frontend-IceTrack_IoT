@@ -38,8 +38,14 @@
       {{ 'iam.technicianRedirect.alternative' | translate }}
     </p>
 
-    <button class="iam-button iam-button--secondary" type="button" (click)="signOut()">
-      {{ 'iam.actions.signOut' | translate }}
-    </button>
+    @if (iamStore.isAuthenticated()) {
+      <button class="iam-button iam-button--secondary" type="button" (click)="signOut()">
+        {{ 'iam.actions.signOut' | translate }}
+      </button>
+    } @else {
+      <a class="iam-button iam-button--secondary" routerLink="/iam/login">
+        {{ 'iam.actions.backToSignIn' | translate }}
+      </a>
+    }
   </section>
 </app-public-layout>

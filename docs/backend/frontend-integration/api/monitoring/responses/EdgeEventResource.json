@@ -1,0 +1,8 @@
+{
+  "event_uid": "6f1c2d34-8a7b-4c1e-9f00-1a2b3c4d5e6f",
+  "type": "THERMAL_EXCURSION_DETECTED",
+  "occurred_at": "2026-11-07T08:32:00Z",
+  "result": "ALERT_OPENED",
+  "alert_id": 301,
+  "maintenance_window_id": null
+}

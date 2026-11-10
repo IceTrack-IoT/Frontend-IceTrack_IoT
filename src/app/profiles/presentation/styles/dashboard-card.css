@@ -1,4 +1,4 @@
-/* Frame shared by the dashboard cards: header, headline figure, item list and footer link. */
+/* Frame of the dashboard cards: header, description, state and footer link. */
 
 :host {
   display: block;
@@ -36,59 +36,14 @@
   line-height: var(--text-h3-line);
 }
 
-.dashboard-card__figure {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--space-1);
-  margin: 0;
-}
-
-.dashboard-card__value {
-  font-size: 2.5rem;
-  font-weight: 700;
-  line-height: 1.1;
-}
-
-.dashboard-card__unit,
-.dashboard-card__meta,
+.dashboard-card__description,
 .dashboard-card__empty {
-  color: var(--text-secondary);
-}
-
-.dashboard-card__unit {
-  font-weight: 600;
-}
-
-.dashboard-card__meta {
-  font-size: 0.8125rem;
-}
-
-.dashboard-card__list {
-  display: grid;
+  max-width: 72ch;
   margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.dashboard-card__item {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 4px var(--space-1);
-  padding-block: 12px;
-  border-block-start: 1px solid var(--border-subtle);
-}
-
-.dashboard-card__item-text {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
 }
 
 .dashboard-card__empty {
-  margin: 0;
+  color: var(--text-secondary);
 }
 
 .dashboard-card__footer {

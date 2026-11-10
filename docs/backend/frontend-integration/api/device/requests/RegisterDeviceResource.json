@@ -1,0 +1,6 @@
+{
+  "equipment_id": 21,
+  "device_uid": "ESP32-ICE-001",
+  "board_model": "ESP32-DevKitC",
+  "firmware_version": "1.0.0"
+}

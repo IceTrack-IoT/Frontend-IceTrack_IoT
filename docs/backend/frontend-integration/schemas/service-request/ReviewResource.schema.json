@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ReviewResource",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Review unique identifier"
+    },
+    "service_request_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Reviewed service request"
+    },
+    "owner_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Owner who wrote the review"
+    },
+    "technician_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Technician the review is about"
+    },
+    "communication": {
+      "type": "integer",
+      "format": "int32",
+      "description": "Communication score, from 1 to 5"
+    },
+    "efficacy": {
+      "type": "integer",
+      "format": "int32",
+      "description": "Efficacy score, from 1 to 5"
+    },
+    "performance": {
+      "type": "integer",
+      "format": "int32",
+      "description": "Performance score, from 1 to 5"
+    },
+    "average_rating": {
+      "type": "number",
+      "format": "double",
+      "description": "Mean of the three scores, rounded to two decimals"
+    },
+    "comment": {
+      "type": "string",
+      "description": "Free-text comment"
+    },
+    "created_at": {
+      "type": "string",
+      "description": "When the review was submitted, ISO-8601 UTC"
+    },
+    "editable_until": {
+      "type": "string",
+      "description": "Until when the review may be edited, ISO-8601 UTC"
+    }
+  },
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/service/request/interfaces/rest/resources/ReviewResource.java"
+}

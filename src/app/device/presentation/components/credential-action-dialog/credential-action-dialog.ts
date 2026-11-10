@@ -1,12 +1,16 @@
-import { Component, DOCUMENT, inject, input, output, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { Component, input, output, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
+import { IssuedApiKey } from '@device/presentation/components/issued-api-key/issued-api-key';
 import { Dialog } from '@shared/presentation/components/dialog/dialog';
 import { Icon } from '@shared/presentation/components/icon/icon';
 
-/** The credential actions an owner can request for a paired device. */
-export type CredentialAction = 'rotate' | 'revoke';
+/**
+ * The credential actions an owner can request for a linked device: `rotate` replaces the key of a PAIRED
+ * device, `reissue` gives a REVOKED device a new key (both rotate it on the backend), and `revoke`
+ * invalidates the key of a PAIRED device.
+ */
+export type CredentialAction = 'rotate' | 'reissue' | 'revoke';
 
 /** The outcome of an applied credential action. */
 export interface CredentialActionResult {
@@ -21,7 +25,7 @@ export interface CredentialActionResult {
  * persisted.
  */
 @Component({
-  imports: [ReactiveFormsModule, TranslatePipe, Dialog, Icon],
+  imports: [ReactiveFormsModule, TranslatePipe, Dialog, Icon, IssuedApiKey],
   selector: 'app-credential-action-dialog',
   styleUrl: './credential-action-dialog.css',
   templateUrl: './credential-action-dialog.html',
@@ -34,15 +38,13 @@ export class CredentialActionDialog {
   readonly pending = input(false);
   /** The outcome of the action once applied; null while it awaits confirmation. */
   readonly result = input<CredentialActionResult | null>(null);
+  /** The translation key of the error of the last attempt, if it failed. */
+  readonly errorKey = input<string | null>(null);
   readonly confirmed = output<void>();
   readonly closed = output<void>();
 
   protected readonly acknowledged = new FormControl(false, { nonNullable: true });
-  protected readonly stored = new FormControl(false, { nonNullable: true });
-  protected readonly keyStored = toSignal(this.stored.valueChanges, { initialValue: false });
-  protected readonly copyState = signal<'idle' | 'copied' | 'failed'>('idle');
-
-  private readonly clipboard = inject(DOCUMENT).defaultView?.navigator.clipboard;
+  protected readonly keyStored = signal(false);
 
   protected confirm(): void {
     if (this.pending()) {
@@ -53,17 +55,5 @@ export class CredentialActionDialog {
       return;
     }
     this.confirmed.emit();
-  }
-
-  protected async copy(key: string): Promise<void> {
-    try {
-      if (!this.clipboard) {
-        throw new Error('Clipboard unavailable');
-      }
-      await this.clipboard.writeText(key);
-      this.copyState.set('copied');
-    } catch {
-      this.copyState.set('failed');
-    }
   }
 }

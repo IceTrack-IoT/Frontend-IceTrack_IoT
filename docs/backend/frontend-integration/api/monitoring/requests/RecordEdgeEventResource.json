@@ -1,0 +1,7 @@
+{
+  "event_uid": "6f1c2d34-8a7b-4c1e-9f00-1a2b3c4d5e6f",
+  "type": "THERMAL_EXCURSION_DETECTED",
+  "occurred_at": "2026-11-07T08:32:00Z",
+  "temperature_celsius": 9.5,
+  "reading_uid": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+}

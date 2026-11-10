@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MaintenanceWindowResource",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Maintenance window unique identifier"
+    },
+    "equipment_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Unit the window was opened on"
+    },
+    "origin": {
+      "type": "string",
+      "enum": [
+        "APP",
+        "BUTTON"
+      ],
+      "description": "How the window was started, or promoted to"
+    },
+    "started_at": {
+      "type": "string",
+      "description": "Format: date-time (UTC instant, e.g. 2026-11-07T13:05:00Z) When the gateway started the window, ISO-8601 UTC"
+    },
+    "expires_at": {
+      "type": "string",
+      "description": "Format: date-time (UTC instant, e.g. 2026-11-07T13:05:00Z) When the window expires, or expired, unless closed earlier"
+    },
+    "ended_at": {
+      "type": "string",
+      "description": "Format: date-time (UTC instant, e.g. 2026-11-07T13:05:00Z) When the window ended; null while active"
+    },
+    "closure_reason": {
+      "type": "string",
+      "enum": [
+        "MANUAL_APP",
+        "MANUAL_BUTTON",
+        "INTERVENTION_COMPLETED",
+        "EXPIRED",
+        "SAFETY_LIMIT"
+      ],
+      "description": "Why the window ended; null while active"
+    },
+    "technician_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Technician attributed to the window; null when unknown"
+    },
+    "service_request_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Service request the window is linked to; null when unlinked"
+    },
+    "unlinked": {
+      "type": "boolean",
+      "description": "Whether no service request is linked to the window"
+    },
+    "active": {
+      "type": "boolean",
+      "description": "Whether the window is still open"
+    }
+  },
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/monitoring/interfaces/rest/resources/MaintenanceWindowResource.java"
+}

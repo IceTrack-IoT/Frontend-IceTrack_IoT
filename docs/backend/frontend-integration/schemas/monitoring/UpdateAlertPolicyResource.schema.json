@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "UpdateAlertPolicyResource",
+  "type": "object",
+  "properties": {
+    "equipment_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Identifier of one of the caller's units this policy applies to. The platform-wide default policy is managed by configuration and cannot be changed here."
+    },
+    "sustained_excursion_minutes": {
+      "type": "integer",
+      "format": "int32",
+      "exclusiveMinimum": 0,
+      "description": "Minutes an out-of-range reading must persist before an alert opens"
+    },
+    "hysteresis_margin_celsius": {
+      "type": "number",
+      "format": "double",
+      "minimum": 1.0,
+      "maximum": 5.0,
+      "description": "Margin, in Celsius, a reading must re-enter range by before the alert closes; at least 1.0, the resolution of the DHT11 sensor"
+    },
+    "missed_sync_windows_for_offline": {
+      "type": "integer",
+      "format": "int32",
+      "exclusiveMinimum": 0,
+      "description": "Number of missed synchronization windows before a device is considered offline"
+    }
+  },
+  "required": [
+    "equipment_id",
+    "sustained_excursion_minutes",
+    "hysteresis_margin_celsius",
+    "missed_sync_windows_for_offline"
+  ],
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/monitoring/interfaces/rest/resources/UpdateAlertPolicyResource.java"
+}

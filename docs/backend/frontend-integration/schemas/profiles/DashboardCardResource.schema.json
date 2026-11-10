@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DashboardCardResource",
+  "type": "object",
+  "properties": {
+    "card_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Card unique identifier"
+    },
+    "card_type": {
+      "type": "string",
+      "enum": [
+        "MONITORED_EQUIPMENT",
+        "OPEN_ALERTS",
+        "ACTIVE_ORDERS",
+        "EQUIPMENT_STATUS"
+      ],
+      "description": "Kind of widget"
+    },
+    "order": {
+      "type": "integer",
+      "format": "int32",
+      "description": "Position of the card on the dashboard: the cards of a dashboard always hold the positions 1 to N, with no gap and no repeat"
+    },
+    "is_visible": {
+      "type": "boolean",
+      "description": "Whether the card is shown; a hidden card keeps its data"
+    }
+  },
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/profiles/interfaces/rest/resources/DashboardCardResource.java"
+}

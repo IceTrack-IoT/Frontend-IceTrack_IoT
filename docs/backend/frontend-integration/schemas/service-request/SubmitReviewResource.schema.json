@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SubmitReviewResource",
+  "type": "object",
+  "properties": {
+    "service_request_id": {
+      "type": "integer",
+      "format": "int64",
+      "exclusiveMinimum": 0,
+      "description": "Identifier of the completed service request"
+    },
+    "communication": {
+      "type": "integer",
+      "format": "int32",
+      "minimum": 1.0,
+      "maximum": 5.0,
+      "description": "How well the technician kept the owner informed, from 1 to 5"
+    },
+    "efficacy": {
+      "type": "integer",
+      "format": "int32",
+      "minimum": 1.0,
+      "maximum": 5.0,
+      "description": "Whether the intervention solved the problem, from 1 to 5"
+    },
+    "performance": {
+      "type": "integer",
+      "format": "int32",
+      "minimum": 1.0,
+      "maximum": 5.0,
+      "description": "How well the work itself was carried out, from 1 to 5"
+    },
+    "comment": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Free-text comment"
+    }
+  },
+  "required": [
+    "service_request_id",
+    "communication",
+    "efficacy",
+    "performance"
+  ],
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/service/request/interfaces/rest/resources/SubmitReviewResource.java"
+}

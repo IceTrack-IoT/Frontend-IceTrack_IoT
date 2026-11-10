@@ -1,0 +1,17 @@
+:host {
+  display: inline-grid;
+  justify-items: end;
+  gap: 4px;
+}
+
+.report-download__hint,
+.ui-field__error {
+  margin: 0;
+  max-width: 22rem;
+  font-size: 0.875rem;
+  text-align: end;
+}
+
+.report-download__hint {
+  color: var(--text-secondary);
+}
