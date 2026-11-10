@@ -31,10 +31,12 @@ export class NotificationAssembler {
       equipment_id: resource.equipment_id ?? null,
       device_id: resource.device_id ?? null,
       source_alert_id: resource.source_alert_id ?? null,
+      service_request_id: resource.service_request_id ?? null,
       message: resource.message,
       type,
       severity,
       is_read: resource.is_read,
+      created_at: toInstant(resource.created_at),
       read_at: toOptionalInstant(resource.read_at),
       dismissed_at: toOptionalInstant(resource.dismissed_at),
     });
@@ -57,9 +59,10 @@ export class NotificationAssembler {
 }
 
 function toOptionalInstant(value: string | null | undefined): Date | null {
-  if (value === null || value === undefined) {
-    return null;
-  }
+  return value === null || value === undefined ? null : toInstant(value);
+}
+
+function toInstant(value: string): Date {
   const instant = new Date(value);
   if (Number.isNaN(instant.getTime())) {
     throw new Error('The notification resource has an unreadable instant.');

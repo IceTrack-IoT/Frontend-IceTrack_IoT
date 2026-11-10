@@ -1,13 +1,18 @@
 import { computed, type DestroyRef, inject, Injectable, signal } from '@angular/core';
 import { catchError, finalize, type Observable, of, type Subscription } from 'rxjs';
 import type { Notification } from '@notifications/domain/model/notification.entity';
-import type { NotificationPage } from '@notifications/application/contracts/notification-page';
+import type {
+  NotificationFilters,
+  NotificationPage,
+} from '@notifications/application/contracts/notification-page';
 import {
   type NotificationsFailure,
   toNotificationsFailure,
 } from '@notifications/application/contracts/notifications-error';
 import { CountUnreadNotificationsUseCase } from '@notifications/application/use-cases/count-unread-notifications.use-case';
 import { DismissNotificationUseCase } from '@notifications/application/use-cases/dismiss-notification.use-case';
+import { MarkAllNotificationsAsReadUseCase } from '@notifications/application/use-cases/mark-all-notifications-as-read.use-case';
+import { WatchNotificationChangesUseCase } from '@notifications/application/use-cases/watch-notification-changes.use-case';
 import { LoadNotificationPageUseCase } from '@notifications/application/use-cases/load-notification-page.use-case';
 import { LoadNotifiedEquipmentUseCase } from '@notifications/application/use-cases/load-notified-equipment.use-case';
 import { MarkNotificationAsReadUseCase } from '@notifications/application/use-cases/mark-notification-as-read.use-case';
@@ -17,6 +22,16 @@ export const NOTIFICATION_PAGE_SIZE = 10;
 
 /** The actions the user runs on a notification. */
 export type NotificationAction = 'read' | 'dismiss';
+
+/** The outcome of marking every matching notification as read, until it is cleared. */
+export interface MarkAllState {
+  readonly status: 'pending' | 'succeeded' | 'failed';
+  readonly failure: NotificationsFailure | null;
+  /** How many notifications changed, once it succeeded. */
+  readonly updatedCount: number | null;
+}
+
+const NO_FILTERS: NotificationFilters = { severities: [], types: [] };
 
 /** The outcome of the last notification action, until it is cleared. */
 export interface NotificationActionState {
@@ -28,8 +43,9 @@ export interface NotificationActionState {
 
 /**
  * Notifications Store manages the signed-in user's notifications: the unread count shown by the badge,
- * the current page of the active inbox with its read filter, the names of the equipment the notifications
- * concern, and the outcome of marking as read and dismissing.
+ * kept current by the live notification feed, the current page of the active inbox with its read,
+ * severity and type filters, the names of the equipment the notifications concern, and the outcome of
+ * marking as read (one or all) and dismissing.
  *
  * It holds signal-based state only and delegates every operation to Notifications use cases. Actions are
  * not applied optimistically: the notification is replaced by the one the backend answers, and the page
@@ -45,21 +61,29 @@ export class NotificationsStore {
   private readonly markNotificationAsReadUseCase = inject(MarkNotificationAsReadUseCase);
   private readonly dismissNotificationUseCase = inject(DismissNotificationUseCase);
   private readonly loadNotifiedEquipmentUseCase = inject(LoadNotifiedEquipmentUseCase);
+  private readonly markAllNotificationsAsReadUseCase = inject(MarkAllNotificationsAsReadUseCase);
+  private readonly watchNotificationChangesUseCase = inject(WatchNotificationChangesUseCase);
 
   // Unread badge.
   private readonly unreadCountSignal = signal<number | null>(null);
   /** The number of unread notifications, or null while it is unknown. */
   readonly unreadCount = this.unreadCountSignal.asReadonly();
+  private readonly liveSignal = signal(false);
+  /** Whether the live feed keeps the unread count current, so it need not be read on navigation. */
+  readonly live = this.liveSignal.asReadonly();
 
   // Inbox.
   private readonly pageIndexSignal = signal(0);
   private readonly unreadOnlySignal = signal(false);
+  private readonly filtersSignal = signal<NotificationFilters>(NO_FILTERS);
   private readonly pageSignal = signal<NotificationPage | null>(null);
   private readonly loadingSignal = signal(false);
   private readonly failureSignal = signal<NotificationsFailure | null>(null);
   private readonly equipmentNamesSignal = signal<ReadonlyMap<number, string>>(new Map());
   /** Whether only unread notifications are listed. */
   readonly unreadOnly = this.unreadOnlySignal.asReadonly();
+  /** The severities and types the inbox is narrowed to. */
+  readonly filters = this.filtersSignal.asReadonly();
   /** The current page of the active inbox, or null until one is loaded. */
   readonly page = this.pageSignal.asReadonly();
   /** The notifications of the current page, most recent first. */
@@ -73,18 +97,55 @@ export class NotificationsStore {
   private readonly actionSignal = signal<NotificationActionState | null>(null);
   readonly actionState = this.actionSignal.asReadonly();
   readonly actionPending = computed(() => this.actionSignal()?.status === 'pending');
+  private readonly markAllSignal = signal<MarkAllState | null>(null);
+  readonly markAllState = this.markAllSignal.asReadonly();
+  readonly markAllPending = computed(() => this.markAllSignal()?.status === 'pending');
 
   private countSubscription: Subscription | null = null;
   private pageSubscription: Subscription | null = null;
   private equipmentSubscription: Subscription | null = null;
   private actionSubscription: Subscription | null = null;
+  private markAllSubscription: Subscription | null = null;
 
   /**
-   * Keeps the unread count while the caller lives; it is discarded once the caller is destroyed.
+   * Keeps the unread count while the caller lives, current with the live notification feed; it is
+   * discarded once the caller is destroyed. A new notification also reloads the first page of an open
+   * inbox, and a feed that may have missed events reads the count and the inbox again.
    * @param destroyRef - The lifetime of the badge.
    */
   attachBadge(destroyRef: DestroyRef): void {
+    const feed = this.watchNotificationChangesUseCase.execute().subscribe({
+      next: (event) => {
+        this.liveSignal.set(true);
+        switch (event.kind) {
+          case 'created':
+            this.unreadCountSignal.set(event.unreadCount);
+            if (this.pageSignal() !== null && this.pageIndexSignal() === 0) {
+              this.loadPage(0);
+            }
+            break;
+          case 'unread-count':
+            this.unreadCountSignal.set(event.unreadCount);
+            break;
+          case 'resync':
+            this.refreshUnreadCount();
+            if (this.pageSignal() !== null) {
+              this.loadPage();
+            }
+            break;
+          case 'interrupted':
+            // The count is read on navigation again until the feed is back.
+            this.liveSignal.set(false);
+            break;
+          case 'restored':
+            break;
+        }
+      },
+      complete: () => this.liveSignal.set(false),
+    });
     destroyRef.onDestroy(() => {
+      feed.unsubscribe();
+      this.liveSignal.set(false);
       this.countSubscription?.unsubscribe();
       this.countSubscription = null;
       this.unreadCountSignal.set(null);
@@ -142,6 +203,7 @@ export class NotificationsStore {
         page: this.pageIndexSignal(),
         size: NOTIFICATION_PAGE_SIZE,
         unreadOnly: this.unreadOnlySignal(),
+        filters: this.filtersSignal(),
       })
       .pipe(finalize(() => this.loadingSignal.set(false)))
       .subscribe({
@@ -166,6 +228,45 @@ export class NotificationsStore {
       this.unreadOnlySignal.set(unreadOnly);
       this.loadPage(0);
     }
+  }
+
+  /**
+   * Narrows the inbox to severities and types, from the first page.
+   * @param filters - The severities and types; empty lists do not narrow.
+   */
+  setFilters(filters: NotificationFilters): void {
+    this.filtersSignal.set(filters);
+    this.loadPage(0);
+  }
+
+  /**
+   * Marks every unread notification matching the severity and type filters as read, in one request,
+   * then reads the page again. Ignored while it is already pending.
+   */
+  markAllAsRead(): void {
+    if (this.markAllPending()) {
+      return;
+    }
+    this.markAllSignal.set({ status: 'pending', failure: null, updatedCount: null });
+    this.markAllSubscription = this.markAllNotificationsAsReadUseCase
+      .execute(this.filtersSignal())
+      .subscribe({
+        next: (result) => {
+          this.unreadCountSignal.set(result.unreadCount);
+          this.markAllSignal.set({
+            status: 'succeeded',
+            failure: null,
+            updatedCount: result.updatedCount,
+          });
+          this.loadPage(0);
+        },
+        error: (error: unknown) =>
+          this.markAllSignal.set({
+            status: 'failed',
+            failure: toNotificationsFailure(error),
+            updatedCount: null,
+          }),
+      });
   }
 
   /**
@@ -204,6 +305,9 @@ export class NotificationsStore {
   clearAction(): void {
     if (!this.actionPending()) {
       this.actionSignal.set(null);
+    }
+    if (!this.markAllPending()) {
+      this.markAllSignal.set(null);
     }
   }
 
@@ -248,9 +352,15 @@ export class NotificationsStore {
   }
 
   private releaseInbox(): void {
-    [this.pageSubscription, this.equipmentSubscription, this.actionSubscription].forEach(
-      (subscription) => subscription?.unsubscribe(),
-    );
+    [
+      this.pageSubscription,
+      this.equipmentSubscription,
+      this.actionSubscription,
+      this.markAllSubscription,
+    ].forEach((subscription) => subscription?.unsubscribe());
+    this.markAllSubscription = null;
+    this.markAllSignal.set(null);
+    this.filtersSignal.set(NO_FILTERS);
     this.pageSubscription = null;
     this.equipmentSubscription = null;
     this.actionSubscription = null;

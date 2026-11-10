@@ -9,10 +9,12 @@ export interface NotificationResource {
   equipment_id?: number | null;
   device_id?: number | null;
   source_alert_id?: number | null;
+  service_request_id?: number | null;
   message: string;
   type: string;
   severity: string;
   is_read: boolean;
+  created_at: string;
   read_at?: string | null;
   dismissed_at?: string | null;
 }
@@ -33,5 +35,13 @@ export interface PagedNotificationResource {
  * UnreadNotificationCountResource is returned by `GET /notifications/unread-count`.
  */
 export interface UnreadNotificationCountResource {
+  unread_count: number;
+}
+
+/**
+ * BulkReadResultResource is returned by `PUT /notifications/read-all` and `PUT /notifications/read`.
+ */
+export interface BulkReadResultResource {
+  updated_count: number;
   unread_count: number;
 }

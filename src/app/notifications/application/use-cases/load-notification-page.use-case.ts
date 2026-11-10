@@ -18,7 +18,7 @@ export class LoadNotificationPageUseCase {
   private readonly notifications = inject(NotificationsPort);
 
   /**
-   * @param query - The page, its size and whether to read only unread notifications.
+   * @param query - The page, its size, whether to read only unread notifications, and the filters.
    * @returns An Observable of the page.
    */
   execute(query: NotificationQuery): Observable<NotificationPage> {
@@ -26,6 +26,7 @@ export class LoadNotificationPageUseCase {
       page: Math.max(0, Math.trunc(query.page)),
       size: Math.min(NOTIFICATION_PAGE_MAX_SIZE, Math.max(1, Math.trunc(query.size))),
       unreadOnly: query.unreadOnly,
+      filters: query.filters,
     });
   }
 }

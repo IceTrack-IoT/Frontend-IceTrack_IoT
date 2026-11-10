@@ -4,6 +4,8 @@ import { map, type Observable } from 'rxjs';
 import { BaseApi } from '@shared/infrastructure/api/base-api';
 import type { Notification } from '@notifications/domain/model/notification.entity';
 import type {
+  BulkReadResult,
+  NotificationFilters,
   NotificationPage,
   NotificationQuery,
 } from '@notifications/application/contracts/notification-page';
@@ -23,9 +25,21 @@ export class NotificationsApi extends BaseApi implements NotificationsPort {
   private readonly assembler = new NotificationAssembler();
 
   listNotifications(query: NotificationQuery): Observable<NotificationPage> {
-    return this.endpoint.listNotifications(query.page, query.size, query.unreadOnly).pipe(
+    return this.endpoint
+      .listNotifications(query.page, query.size, query.unreadOnly, query.filters)
+      .pipe(
+        mapNotificationsErrors(),
+        map((resource) => this.assembler.toNotificationPageFromResource(resource)),
+      );
+  }
+
+  markAllAsRead(filters: NotificationFilters): Observable<BulkReadResult> {
+    return this.endpoint.markAllAsRead(filters).pipe(
       mapNotificationsErrors(),
-      map((resource) => this.assembler.toNotificationPageFromResource(resource)),
+      map((resource) => ({
+        updatedCount: resource.updated_count,
+        unreadCount: resource.unread_count,
+      })),
     );
   }
 

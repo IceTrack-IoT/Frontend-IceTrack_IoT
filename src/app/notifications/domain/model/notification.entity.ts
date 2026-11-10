@@ -16,10 +16,12 @@ export class Notification implements BaseEntity {
   private _equipment_id: number | null;
   private _device_id: number | null;
   private _source_alert_id: number | null;
+  private _service_request_id: number | null;
   private _message: string;
   private _type: NotificationType;
   private _severity: NotificationSeverity;
   private _is_read: boolean;
+  private _created_at: Date;
   private _read_at: Date | null;
   private _dismissed_at: Date | null;
 
@@ -33,10 +35,12 @@ export class Notification implements BaseEntity {
     equipment_id: number | null;
     device_id: number | null;
     source_alert_id: number | null;
+    service_request_id: number | null;
     message: string;
     type: NotificationType;
     severity: NotificationSeverity;
     is_read: boolean;
+    created_at: Date;
     read_at: Date | null;
     dismissed_at: Date | null;
   }) {
@@ -45,10 +49,12 @@ export class Notification implements BaseEntity {
     this._equipment_id = notification.equipment_id;
     this._device_id = notification.device_id;
     this._source_alert_id = notification.source_alert_id;
+    this._service_request_id = notification.service_request_id;
     this._message = notification.message;
     this._type = notification.type;
     this._severity = notification.severity;
     this._is_read = notification.is_read;
+    this._created_at = notification.created_at;
     this._read_at = notification.read_at;
     this._dismissed_at = notification.dismissed_at;
   }
@@ -68,6 +74,10 @@ export class Notification implements BaseEntity {
   get source_alert_id(): number | null {
     return this._source_alert_id;
   }
+  /** The service request the notification is about, or null when it concerns none. */
+  get service_request_id(): number | null {
+    return this._service_request_id;
+  }
   get message(): string {
     return this._message;
   }
@@ -79,6 +89,10 @@ export class Notification implements BaseEntity {
   }
   get is_read(): boolean {
     return this._is_read;
+  }
+  /** When the notification was raised; the inbox is ordered by it, most recent first. */
+  get created_at(): Date {
+    return this._created_at;
   }
   get read_at(): Date | null {
     return this._read_at;

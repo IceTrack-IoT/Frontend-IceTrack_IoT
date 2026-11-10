@@ -1,6 +1,8 @@
 import type { Observable } from 'rxjs';
 import type { Notification } from '@notifications/domain/model/notification.entity';
 import type {
+  BulkReadResult,
+  NotificationFilters,
   NotificationPage,
   NotificationQuery,
 } from '@notifications/application/contracts/notification-page';
@@ -16,11 +18,18 @@ import type {
 export abstract class NotificationsPort {
   /**
    * Reads one page of the active (not dismissed) inbox, most recent first.
-   * Fails with `VALIDATION_ERROR` for a negative page or a size below 1.
+   * Fails with `VALIDATION_ERROR` for a negative page, a size below 1 or an unknown filter value.
    * @param query - The page, its size and whether to read only unread notifications.
    * @returns An Observable of the page.
    */
   abstract listNotifications(query: NotificationQuery): Observable<NotificationPage>;
+
+  /**
+   * Marks every unread notification of the active inbox matching the filters as read.
+   * @param filters - The severities and types to mark; empty lists mark every unread notification.
+   * @returns An Observable of how many changed and the unread count afterward.
+   */
+  abstract markAllAsRead(filters: NotificationFilters): Observable<BulkReadResult>;
 
   /**
    * Counts the notifications that are neither read nor dismissed.
