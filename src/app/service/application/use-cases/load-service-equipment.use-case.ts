@@ -1,34 +1,29 @@
 import { inject, Injectable } from '@angular/core';
-import { forkJoin, map, type Observable } from 'rxjs';
-import { EquipmentDirectoryPort } from '@assets/application/ports/equipment-directory.port';
-import { SiteDirectoryPort } from '@assets/application/ports/site-directory.port';
+import { map, type Observable } from 'rxjs';
 import type { ServiceEquipmentDirectory } from '@service/application/contracts/service-equipment';
+import { ServiceEquipmentDirectoryPort } from '@service/application/ports/service-equipment-directory.port';
 
 const byName = (first: { name: string }, second: { name: string }): number =>
   first.name.localeCompare(second.name);
 
 /**
  * Loads the owner's equipment and sites that service requests refer to, through the narrow read-only
- * directories that Assets offers.
+ * directory port that Assets implements.
  */
 @Injectable({
   providedIn: 'root',
 })
 export class LoadServiceEquipmentUseCase {
-  private readonly equipmentDirectory = inject(EquipmentDirectoryPort);
-  private readonly siteDirectory = inject(SiteDirectoryPort);
+  private readonly directory = inject(ServiceEquipmentDirectoryPort);
 
   /**
    * @returns An Observable of the owner's equipment and sites, each sorted by name.
    */
   execute(): Observable<ServiceEquipmentDirectory> {
-    return forkJoin({
-      equipment: this.equipmentDirectory.listEquipment(),
-      sites: this.siteDirectory.listSites(),
-    }).pipe(
+    return this.directory.loadDirectory().pipe(
       map(({ equipment, sites }) => ({
-        equipment: equipment.map(({ id, name, siteId }) => ({ id, name, siteId })).sort(byName),
-        sites: sites.map(({ id, name }) => ({ id, name })).sort(byName),
+        equipment: [...equipment].sort(byName),
+        sites: [...sites].sort(byName),
       })),
     );
   }

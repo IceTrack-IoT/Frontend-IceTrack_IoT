@@ -20,7 +20,10 @@ export const ACTION_SUCCESS_KEYS: Readonly<Record<ServiceRequestAction, string>>
  * @param failure - Why it failed.
  * @returns The translation key.
  */
-export function actionErrorKey(action: ServiceRequestAction, failure: ServiceRequestsFailure): string {
+export function actionErrorKey(
+  action: ServiceRequestAction,
+  failure: ServiceRequestsFailure,
+): string {
   switch (failure) {
     case 'VALIDATION_ERROR':
       return 'serviceRequests.errors.invalid';
@@ -52,9 +55,14 @@ export function actionErrorKey(action: ServiceRequestAction, failure: ServiceReq
 /**
  * Resolves the translation key shown when creating a request fails.
  * @param failure - Why it failed, or null when it did not fail.
+ * @param alertLinked - Whether the request was linked to the alert it was drafted from. The backend then
+ * answers `404` for an unreachable alert as well as for unreachable equipment.
  * @returns The translation key, or null.
  */
-export function createErrorKey(failure: ServiceRequestsFailure | null): string | null {
+export function createErrorKey(
+  failure: ServiceRequestsFailure | null,
+  alertLinked = false,
+): string | null {
   switch (failure) {
     case null:
       return null;
@@ -63,7 +71,9 @@ export function createErrorKey(failure: ServiceRequestsFailure | null): string |
     case 'ACCESS_DENIED':
       return 'serviceRequests.errors.notAllowed';
     case 'NOT_FOUND':
-      return 'serviceRequests.errors.equipmentNotFound';
+      return alertLinked
+        ? 'serviceRequests.errors.equipmentOrAlertNotFound'
+        : 'serviceRequests.errors.equipmentNotFound';
     default:
       return 'serviceRequests.errors.unexpected';
   }

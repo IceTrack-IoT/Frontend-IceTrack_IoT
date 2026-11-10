@@ -11,11 +11,21 @@ import type {
 } from '@service/infrastructure/api/service-request.requests';
 import type {
   InterventionResource,
-  PagedServiceRequestResource,
+  PagedServiceRequestSummaryResource,
   ServiceRequestResource,
 } from '@service/infrastructure/api/service-request.response';
 
 const baseUrl = environment.iceTrackProviderApiBaseUrl;
+
+/** The service request list filters and paging, as query parameter values. */
+export interface ServiceRequestListParams {
+  statuses: readonly string[];
+  types: readonly string[];
+  priorities: readonly string[];
+  equipmentId: number | null;
+  page: number;
+  size: number;
+}
 
 /**
  * ServiceRequestApiEndpoint sends the owner requests of the `ServiceRequestsController`,
@@ -39,17 +49,30 @@ export class ServiceRequestApiEndpoint {
   }
 
   /**
-   * `GET /service-requests?status&page&size`
-   * @param statuses - The statuses to keep, sent comma-separated; none sends no filter.
-   * @param page - The zero-based page index.
-   * @param size - The page size, from 1 to 100.
+   * `GET /service-requests?view=summary&status&type&priority&equipment_id&page&size`: one page of list
+   * summaries. Multi-value filters are comma-separated; an empty filter is not sent.
+   * @param params - The filters and paging.
    */
-  list(statuses: readonly string[], page: number, size: number): Observable<PagedServiceRequestResource> {
-    let params = new HttpParams().set('page', page).set('size', size);
-    if (statuses.length > 0) {
-      params = params.set('status', statuses.join(','));
+  list(params: ServiceRequestListParams): Observable<PagedServiceRequestSummaryResource> {
+    let query = new HttpParams()
+      .set('view', 'summary')
+      .set('page', params.page)
+      .set('size', params.size);
+    if (params.statuses.length > 0) {
+      query = query.set('status', params.statuses.join(','));
     }
-    return this.http.get<PagedServiceRequestResource>(this.serviceRequestsUrl, { params });
+    if (params.types.length > 0) {
+      query = query.set('type', params.types.join(','));
+    }
+    if (params.priorities.length > 0) {
+      query = query.set('priority', params.priorities.join(','));
+    }
+    if (params.equipmentId !== null) {
+      query = query.set('equipment_id', params.equipmentId);
+    }
+    return this.http.get<PagedServiceRequestSummaryResource>(this.serviceRequestsUrl, {
+      params: query,
+    });
   }
 
   /** `GET /service-requests/{serviceRequestId}` */
@@ -60,7 +83,10 @@ export class ServiceRequestApiEndpoint {
   }
 
   /** `PUT /service-requests/{serviceRequestId}/assign` */
-  assign(serviceRequestId: number, request: AssignTechnicianRequest): Observable<ServiceRequestResource> {
+  assign(
+    serviceRequestId: number,
+    request: AssignTechnicianRequest,
+  ): Observable<ServiceRequestResource> {
     return this.http.put<ServiceRequestResource>(
       withId(this.assignUrl, '{serviceRequestId}', serviceRequestId),
       request,
@@ -92,7 +118,10 @@ export class ServiceRequestApiEndpoint {
 
   /** `PUT /reviews/{reviewId}` */
   updateReview(reviewId: number, request: UpdateReviewRequest): Observable<ReviewResource> {
-    return this.http.put<ReviewResource>(withId(this.reviewByIdUrl, '{reviewId}', reviewId), request);
+    return this.http.put<ReviewResource>(
+      withId(this.reviewByIdUrl, '{reviewId}', reviewId),
+      request,
+    );
   }
 
   /** `GET /assets/equipments/{equipmentId}/interventions` */

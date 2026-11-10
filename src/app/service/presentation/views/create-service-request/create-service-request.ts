@@ -14,7 +14,11 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ServicePriority } from '@service/domain/value-objects/service-priority';
 import { isServiceType, ServiceType } from '@service/domain/value-objects/service-type';
-import { SERVICE_REQUEST_DESCRIPTION_MAX_LENGTH } from '@service/application/contracts/new-service-request';
+import {
+  type AlertDraft,
+  linkedAlertIdFor,
+  SERVICE_REQUEST_DESCRIPTION_MAX_LENGTH,
+} from '@service/application/contracts/new-service-request';
 import { ServiceRequestsStore } from '@service/application/service-requests-store';
 import {
   SERVICE_PRIORITY_APPEARANCE,
@@ -80,9 +84,24 @@ export class CreateServiceRequest {
     initialValue: '',
   });
 
-  /** The alert the draft comes from, when the owner started it from an alert. */
-  protected readonly sourceAlertId = this.positiveNumberParam('alertId');
   private readonly requestedEquipmentId = this.positiveNumberParam('equipmentId');
+  /**
+   * The alert the draft comes from, with the equipment it was raised on, when the owner started it from an
+   * alert. Without the equipment the alert cannot be linked safely, so there is no draft.
+   */
+  protected readonly alertDraft = this.alertDraftOf(
+    this.positiveNumberParam('alertId'),
+    this.requestedEquipmentId,
+  );
+  /** Whether another equipment item than the one the alert was raised on is selected. */
+  protected readonly alertMismatch = computed(() => {
+    const equipmentId = this.equipmentId();
+    return (
+      this.alertDraft !== null &&
+      equipmentId !== null &&
+      equipmentId !== this.alertDraft.equipmentId
+    );
+  });
   private readonly confirmationHeading = viewChild<ElementRef<HTMLElement>>('confirmationHeading');
 
   protected readonly equipmentStatus = computed<EquipmentStatus>(() => {
@@ -102,7 +121,12 @@ export class CreateServiceRequest {
     return equipment === null ? null : (this.store.siteById().get(equipment.siteId)?.name ?? null);
   });
   protected readonly descriptionLength = computed(() => this.description().length);
-  protected readonly createErrorKey = computed(() => createErrorKey(this.store.createFailure()));
+  protected readonly createErrorKey = computed(() =>
+    createErrorKey(
+      this.store.createFailure(),
+      linkedAlertIdFor(this.alertDraft, this.equipmentId()) !== null,
+    ),
+  );
 
   constructor() {
     this.store.clearCreation();
@@ -135,7 +159,14 @@ export class CreateServiceRequest {
       this.form.markAllAsTouched();
       return;
     }
-    this.store.createServiceRequest({ equipmentId, type, priority, description });
+    this.store.createServiceRequest({
+      equipmentId,
+      type,
+      priority,
+      description,
+      // The alert belongs to the drafted equipment; another equipment item is a request of its own.
+      sourceAlertId: linkedAlertIdFor(this.alertDraft, equipmentId),
+    });
   }
 
   protected createAnother(): void {
@@ -165,6 +196,10 @@ export class CreateServiceRequest {
     if (isServiceType(type)) {
       this.form.controls.type.setValue(type);
     }
+  }
+
+  private alertDraftOf(alertId: number | null, equipmentId: number | null): AlertDraft | null {
+    return alertId === null || equipmentId === null ? null : { alertId, equipmentId };
   }
 
   private positiveNumberParam(name: string): number | null {

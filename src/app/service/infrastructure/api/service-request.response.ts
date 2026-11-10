@@ -65,13 +65,42 @@ export interface ServiceRequestResource {
   history: StatusTransitionResource[] | null;
   intervention: InterventionResource | null;
   maintenance_windows: MaintenanceWindowLinkResource[] | null;
+  equipment_name?: string | null;
+  site_name?: string | null;
+  technician_name?: string | null;
+  source_alert_id?: number | null;
 }
 
 /**
- * PagedServiceRequestResource is returned by `GET /service-requests`.
+ * ServiceRequestSummaryResource is an item of `GET /service-requests?view=summary`: the request without its
+ * history, intervention details or maintenance windows.
  */
-export interface PagedServiceRequestResource {
-  content: ServiceRequestResource[];
+export interface ServiceRequestSummaryResource {
+  id: number;
+  equipment_id: number;
+  site_id: number;
+  technician_id: number | null;
+  type: string;
+  priority: string;
+  status: string;
+  created_at: string;
+  assigned_at: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  canceled_at: string | null;
+  equipment_name?: string | null;
+  site_name?: string | null;
+  technician_name?: string | null;
+  has_intervention: boolean;
+  has_review: boolean;
+  source_alert_id?: number | null;
+}
+
+/**
+ * PagedServiceRequestSummaryResource is returned by `GET /service-requests?view=summary`.
+ */
+export interface PagedServiceRequestSummaryResource {
+  content: ServiceRequestSummaryResource[];
   page: number;
   size: number;
   total_elements: number;

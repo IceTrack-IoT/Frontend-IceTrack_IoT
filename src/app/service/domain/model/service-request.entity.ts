@@ -20,7 +20,9 @@ const OPEN_STATUSES: ReadonlySet<ServiceStatus> = new Set([
  *
  * It starts PENDING without a technician. `technician_id` is null while none is assigned; the moments of
  * each step are null until the request reaches it. The status history travels with the request, oldest
- * first, starting with the creation.
+ * first, starting with the creation. `equipment_name`, `site_name` and `technician_name` are the display
+ * names at the time of the read, null when no longer known (or, for the technician, while unassigned).
+ * `source_alert_id` is the alert a corrective request was opened for.
  */
 export class ServiceRequest implements BaseEntity {
   private readonly _id: number;
@@ -41,6 +43,10 @@ export class ServiceRequest implements BaseEntity {
   private readonly _history: readonly StatusTransition[];
   private readonly _intervention: Intervention | null;
   private readonly _maintenance_windows: readonly MaintenanceWindowLink[];
+  private readonly _equipment_name: string | null;
+  private readonly _site_name: string | null;
+  private readonly _technician_name: string | null;
+  private readonly _source_alert_id: number | null;
 
   /**
    * @param serviceRequest - An object containing the properties of the service request.
@@ -64,6 +70,10 @@ export class ServiceRequest implements BaseEntity {
     history: readonly StatusTransition[];
     intervention: Intervention | null;
     maintenance_windows: readonly MaintenanceWindowLink[];
+    equipment_name: string | null;
+    site_name: string | null;
+    technician_name: string | null;
+    source_alert_id: number | null;
   }) {
     this._id = serviceRequest.id;
     this._owner_id = serviceRequest.owner_id;
@@ -83,6 +93,10 @@ export class ServiceRequest implements BaseEntity {
     this._history = serviceRequest.history;
     this._intervention = serviceRequest.intervention;
     this._maintenance_windows = serviceRequest.maintenance_windows;
+    this._equipment_name = serviceRequest.equipment_name;
+    this._site_name = serviceRequest.site_name;
+    this._technician_name = serviceRequest.technician_name;
+    this._source_alert_id = serviceRequest.source_alert_id;
   }
 
   get id(): number {
@@ -145,6 +159,20 @@ export class ServiceRequest implements BaseEntity {
   /** The maintenance windows opened on the equipment while the work was in progress, oldest first. */
   get maintenance_windows(): readonly MaintenanceWindowLink[] {
     return this._maintenance_windows;
+  }
+  get equipment_name(): string | null {
+    return this._equipment_name;
+  }
+  get site_name(): string | null {
+    return this._site_name;
+  }
+  /** The full name of the assigned technician, or null while none is assigned. */
+  get technician_name(): string | null {
+    return this._technician_name;
+  }
+  /** The alert a corrective request was opened for, or null when none. */
+  get source_alert_id(): number | null {
+    return this._source_alert_id;
   }
 
   /**

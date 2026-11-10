@@ -20,6 +20,7 @@ import type {
 import type {
   ServiceRequestPage,
   ServiceRequestQuery,
+  ServiceRequestSummary,
 } from '@service/application/contracts/service-request-page';
 import {
   isStaleStateFailure,
@@ -104,10 +105,13 @@ export class ServiceRequestsStore {
   // List.
   private readonly queryState = signal<ServiceRequestQuery>({
     statuses: [],
+    types: [],
+    priorities: [],
+    equipmentId: null,
     page: 0,
     size: SERVICE_REQUEST_PAGE_SIZE,
   });
-  /** The status filter and page of the list, kept while the owner navigates away and back. */
+  /** The filters and page of the list, kept while the owner navigates away and back. */
   readonly requestQuery = this.queryState.asReadonly();
   private readonly pageState = readState<ServiceRequestPage | null>(null);
   /** The current page of the list, or null until one is loaded. */
@@ -195,14 +199,19 @@ export class ServiceRequestsStore {
 
   /**
    * Loads a page of the owner's service requests. A newer load supersedes one still in progress.
-   * @param change - The status filter or page to apply; the rest of the current query is kept. Changing
-   * the statuses returns to the first page.
+   * @param change - The filters or page to apply; the rest of the current query is kept. Changing any
+   * filter returns to the first page.
    */
-  loadServiceRequests(change: Partial<Pick<ServiceRequestQuery, 'statuses' | 'page'>> = {}): void {
+  loadServiceRequests(
+    change: Partial<Pick<ServiceRequestQuery, 'statuses' | 'types' | 'priorities' | 'page'>> = {},
+  ): void {
+    const filtersChanged = (['statuses', 'types', 'priorities'] as const).some(
+      (key) => change[key] !== undefined,
+    );
     this.queryState.update((query) => ({
       ...query,
       ...change,
-      page: change.statuses !== undefined && change.page === undefined ? 0 : (change.page ?? query.page),
+      page: change.page ?? (filtersChanged ? 0 : query.page),
     }));
     this.pageSubscription?.unsubscribe();
     this.pageSubscription = this.run(
@@ -337,8 +346,10 @@ export class ServiceRequestsStore {
     if (request === null) {
       return;
     }
-    this.runAction('assign', this.assignTechnicianUseCase.execute(request.id, technicianId), (updated) =>
-      this.applySelectedRequest(updated, false),
+    this.runAction(
+      'assign',
+      this.assignTechnicianUseCase.execute(request.id, technicianId),
+      (updated) => this.applySelectedRequest(updated, false),
     );
   }
 
@@ -351,8 +362,10 @@ export class ServiceRequestsStore {
     if (request === null) {
       return;
     }
-    this.runAction('cancel', this.cancelServiceRequestUseCase.execute(request.id, reason), (updated) =>
-      this.applySelectedRequest(updated, false),
+    this.runAction(
+      'cancel',
+      this.cancelServiceRequestUseCase.execute(request.id, reason),
+      (updated) => this.applySelectedRequest(updated, false),
     );
   }
 
@@ -381,8 +394,10 @@ export class ServiceRequestsStore {
     if (review === null) {
       return;
     }
-    this.runAction('update-review', this.updateServiceReviewUseCase.execute(review.id, scores), (updated) =>
-      this.reviewState.value.set(updated),
+    this.runAction(
+      'update-review',
+      this.updateServiceReviewUseCase.execute(review.id, scores),
+      (updated) => this.reviewState.value.set(updated),
     );
   }
 
@@ -406,7 +421,12 @@ export class ServiceRequestsStore {
     this.pageState.value.update((page) =>
       page === null
         ? page
-        : { ...page, items: page.items.map((item) => (item.id === request.id ? request : item)) },
+        : {
+            ...page,
+            items: page.items.map((item) =>
+              item.id === request.id ? withRequest(item, request) : item,
+            ),
+          },
     );
 
     if (request.technician_id === null) {
@@ -499,4 +519,20 @@ export class ServiceRequestsStore {
       error: (error: unknown) => state.failure.set(toServiceRequestsFailure(error)),
     });
   }
+}
+
+/** Brings a listed request up to date with the request as the backend last answered it. */
+function withRequest(
+  summary: ServiceRequestSummary,
+  request: ServiceRequest,
+): ServiceRequestSummary {
+  return {
+    ...summary,
+    technicianId: request.technician_id,
+    status: request.status,
+    equipmentName: request.equipment_name ?? summary.equipmentName,
+    siteName: request.site_name ?? summary.siteName,
+    technicianName: request.technician_name,
+    hasIntervention: request.intervention !== null,
+  };
 }

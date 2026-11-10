@@ -9,6 +9,7 @@ export interface CreateServiceRequestRequest {
   type: string;
   priority: string;
   description: string;
+  source_alert_id: number | null;
 }
 
 /** AssignTechnicianResource, sent by `PUT /service-requests/{serviceRequestId}/assign`. */

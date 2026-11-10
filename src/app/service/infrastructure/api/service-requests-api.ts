@@ -35,7 +35,7 @@ export class ServiceRequestsApi extends BaseApi implements ServiceRequestsPort {
   }
 
   listServiceRequests(query: ServiceRequestQuery): Observable<ServiceRequestPage> {
-    return this.endpoint.list(query.statuses, query.page, query.size).pipe(
+    return this.endpoint.list(query).pipe(
       mapServiceRequestsErrors(),
       map((resource) => this.assembler.toPageFromResource(resource)),
     );
@@ -49,12 +49,10 @@ export class ServiceRequestsApi extends BaseApi implements ServiceRequestsPort {
   }
 
   assignTechnician(serviceRequestId: number, technicianId: number): Observable<ServiceRequest> {
-    return this.endpoint
-      .assign(serviceRequestId, { technician_profile_id: technicianId })
-      .pipe(
-        mapServiceRequestsErrors(),
-        map((resource) => this.assembler.toEntityFromResource(resource)),
-      );
+    return this.endpoint.assign(serviceRequestId, { technician_profile_id: technicianId }).pipe(
+      mapServiceRequestsErrors(),
+      map((resource) => this.assembler.toEntityFromResource(resource)),
+    );
   }
 
   cancelServiceRequest(serviceRequestId: number, reason: string): Observable<ServiceRequest> {
@@ -78,7 +76,9 @@ export class ServiceRequestsApi extends BaseApi implements ServiceRequestsPort {
       map((resource): Review | null => this.assembler.toReviewFromResource(resource)),
       // A request without a review answers 404.
       catchError((error: unknown) =>
-        error instanceof HttpErrorResponse && error.status === 404 ? of(null) : throwError(() => error),
+        error instanceof HttpErrorResponse && error.status === 404
+          ? of(null)
+          : throwError(() => error),
       ),
       mapServiceRequestsErrors(),
     );
@@ -86,7 +86,10 @@ export class ServiceRequestsApi extends BaseApi implements ServiceRequestsPort {
 
   submitReview(serviceRequestId: number, scores: ReviewScores): Observable<Review> {
     return this.endpoint
-      .submitReview({ service_request_id: serviceRequestId, ...this.assembler.toReviewRequest(scores) })
+      .submitReview({
+        service_request_id: serviceRequestId,
+        ...this.assembler.toReviewRequest(scores),
+      })
       .pipe(
         mapServiceRequestsErrors(),
         map((resource) => this.assembler.toReviewFromResource(resource)),

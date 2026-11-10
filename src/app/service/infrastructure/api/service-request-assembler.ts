@@ -8,7 +8,10 @@ import { isServiceType } from '@service/domain/value-objects/service-type';
 import type { StatusTransition } from '@service/domain/value-objects/status-transition';
 import type { NewServiceRequest } from '@service/application/contracts/new-service-request';
 import type { ReviewScores } from '@service/application/contracts/review-scores';
-import type { ServiceRequestPage } from '@service/application/contracts/service-request-page';
+import type {
+  ServiceRequestPage,
+  ServiceRequestSummary,
+} from '@service/application/contracts/service-request-page';
 import type { ReviewResource } from '@service/infrastructure/api/review.response';
 import type {
   CreateServiceRequestRequest,
@@ -17,8 +20,9 @@ import type {
 import type {
   InterventionResource,
   MaintenanceWindowLinkResource,
-  PagedServiceRequestResource,
+  PagedServiceRequestSummaryResource,
   ServiceRequestResource,
+  ServiceRequestSummaryResource,
   StatusTransitionResource,
 } from '@service/infrastructure/api/service-request.response';
 
@@ -63,17 +67,49 @@ export class ServiceRequestAssembler {
       maintenance_windows: (resource.maintenance_windows ?? []).map((window) =>
         toMaintenanceWindow(window),
       ),
+      equipment_name: resource.equipment_name ?? null,
+      site_name: resource.site_name ?? null,
+      technician_name: resource.technician_name ?? null,
+      source_alert_id: resource.source_alert_id ?? null,
     });
   }
 
   /**
-   * Converts a PagedServiceRequestResource to a ServiceRequestPage.
+   * Converts a ServiceRequestSummaryResource to a ServiceRequestSummary.
+   * @param resource - The resource to convert.
+   * @returns The corresponding summary.
+   */
+  toSummaryFromResource(resource: ServiceRequestSummaryResource): ServiceRequestSummary {
+    const { type, priority } = resource;
+    if (!isServiceType(type) || !isServicePriority(priority)) {
+      throw new Error('The service request has an unknown type or priority.');
+    }
+    return {
+      id: resource.id,
+      equipmentId: resource.equipment_id,
+      siteId: resource.site_id,
+      technicianId: resource.technician_id ?? null,
+      type,
+      priority,
+      status: toStatus(resource.status),
+      createdAt: toInstant(resource.created_at),
+      equipmentName: resource.equipment_name ?? null,
+      siteName: resource.site_name ?? null,
+      technicianName: resource.technician_name ?? null,
+      hasIntervention: resource.has_intervention,
+      hasReview: resource.has_review,
+      sourceAlertId: resource.source_alert_id ?? null,
+    };
+  }
+
+  /**
+   * Converts a PagedServiceRequestSummaryResource to a ServiceRequestPage.
    * @param resource - The resource to convert.
    * @returns The corresponding page.
    */
-  toPageFromResource(resource: PagedServiceRequestResource): ServiceRequestPage {
+  toPageFromResource(resource: PagedServiceRequestSummaryResource): ServiceRequestPage {
     return {
-      items: (resource.content ?? []).map((item) => this.toEntityFromResource(item)),
+      items: (resource.content ?? []).map((item) => this.toSummaryFromResource(item)),
       page: resource.page,
       size: resource.size,
       totalElements: resource.total_elements,
@@ -136,6 +172,7 @@ export class ServiceRequestAssembler {
       type: request.type,
       priority: request.priority,
       description: request.description,
+      source_alert_id: request.sourceAlertId,
     };
   }
 

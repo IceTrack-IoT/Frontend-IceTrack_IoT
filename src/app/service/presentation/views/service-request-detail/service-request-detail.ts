@@ -89,16 +89,8 @@ export class ServiceRequestDetail {
     return failure !== null && !this.store.selectedRequestLoading() ? 'error' : 'loading';
   });
 
-  protected readonly equipmentName = computed(() => {
-    const request = this.request();
-    return request === null
-      ? null
-      : (this.store.equipmentById().get(request.equipment_id)?.name ?? null);
-  });
-  protected readonly siteName = computed(() => {
-    const request = this.request();
-    return request === null ? null : (this.store.siteById().get(request.site_id)?.name ?? null);
-  });
+  protected readonly equipmentName = computed(() => this.request()?.equipment_name ?? null);
+  protected readonly siteName = computed(() => this.request()?.site_name ?? null);
   /** The public profile of the assigned technician, when it is the current one. */
   protected readonly technician = computed(() => {
     const technician = this.store.assignedTechnician();
@@ -113,7 +105,10 @@ export class ServiceRequestDetail {
       return null;
     }
     return (
-      this.technician()?.fullName ?? this.store.technicianById().get(technicianId)?.fullName ?? null
+      this.technician()?.fullName ??
+      this.request()?.technician_name ??
+      this.store.technicianById().get(technicianId)?.fullName ??
+      null
     );
   });
   protected readonly acceptedAt = computed(
@@ -161,7 +156,7 @@ export class ServiceRequestDetail {
   );
 
   constructor() {
-    this.store.loadEquipmentDirectory();
+    // The status history and the intervention name their technicians from the directory.
     this.store.loadTechnicianDirectory();
 
     this.route.paramMap.pipe(takeUntilDestroyed()).subscribe((params) => {

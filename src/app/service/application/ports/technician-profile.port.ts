@@ -19,8 +19,8 @@ export abstract class TechnicianProfilePort {
   abstract listTechnicians(): Observable<TechnicianSummary[]>;
 
   /**
-   * Lists the technicians an owner can choose from, each with the statistics of its public profile.
-   * A technician whose public profile cannot be read is listed with `profileAvailable` false.
+   * Lists the technicians an owner can choose from, each with the statistics of its public profile,
+   * read from the public technician directory.
    * @returns An Observable of the technician candidates.
    */
   abstract listTechnicianCandidates(): Observable<TechnicianCandidate[]>;

@@ -154,6 +154,36 @@
             </button>
           }
         </div>
+        <form class="ui-toolbar" [formGroup]="filters">
+          <div class="ui-field">
+            <label class="ui-field__label" for="service-request-type">{{
+              'serviceRequests.fields.type' | translate
+            }}</label>
+            <select class="ui-field__control" id="service-request-type" formControlName="type">
+              <option value="ALL">{{ 'serviceRequests.list.allTypes' | translate }}</option>
+              @for (type of types; track type) {
+                <option [value]="type">{{ 'serviceRequests.type.' + type | translate }}</option>
+              }
+            </select>
+          </div>
+          <div class="ui-field">
+            <label class="ui-field__label" for="service-request-priority">{{
+              'serviceRequests.fields.priority' | translate
+            }}</label>
+            <select
+              class="ui-field__control"
+              id="service-request-priority"
+              formControlName="priority"
+            >
+              <option value="ALL">{{ 'serviceRequests.list.allPriorities' | translate }}</option>
+              @for (priority of priorities; track priority) {
+                <option [value]="priority">
+                  {{ 'serviceRequests.priority.' + priority | translate }}
+                </option>
+              }
+            </select>
+          </div>
+        </form>
       </div>
 
       @switch (status()) {
@@ -216,12 +246,6 @@
                 </thead>
                 <tbody>
                   @for (request of requests(); track request.id) {
-                    @let equipment = store.equipmentById().get(request.equipment_id);
-                    @let site = store.siteById().get(request.site_id);
-                    @let technician =
-                      request.technician_id === null
-                        ? undefined
-                        : store.technicianById().get(request.technician_id);
                     <tr>
                       <th scope="row">
                         <a class="ui-link" [routerLink]="['/service-requests', request.id]">
@@ -231,28 +255,28 @@
                           'serviceRequests.type.' + request.type | translate
                         }}</span>
                       </th>
-                      <td>{{ request.created_at | localizedDate: 'date' }}</td>
+                      <td>{{ request.createdAt | localizedDate: 'date' }}</td>
                       <td>
                         {{
-                          equipment?.name ??
+                          request.equipmentName ??
                             ('serviceRequests.equipmentNumber'
-                              | translate: { id: request.equipment_id })
+                              | translate: { id: request.equipmentId })
                         }}
                         <span class="ui-table__secondary">{{
-                          site?.name ??
-                            ('serviceRequests.siteNumber' | translate: { id: request.site_id })
+                          request.siteName ??
+                            ('serviceRequests.siteNumber' | translate: { id: request.siteId })
                         }}</span>
                       </td>
                       <td>
-                        @if (request.technician_id === null) {
+                        @if (request.technicianId === null) {
                           <span class="ui-table__secondary">{{
                             'serviceRequests.unassigned' | translate
                           }}</span>
                         } @else {
                           {{
-                            technician?.fullName ??
+                            request.technicianName ??
                               ('serviceRequests.technicianNumber'
-                                | translate: { id: request.technician_id })
+                                | translate: { id: request.technicianId })
                           }}
                         }
                       </td>

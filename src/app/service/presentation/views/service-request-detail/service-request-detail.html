@@ -119,6 +119,21 @@
                 <dt>{{ 'serviceRequests.fields.type' | translate }}</dt>
                 <dd>{{ 'serviceRequests.type.' + item.type | translate }}</dd>
               </div>
+              @if (item.source_alert_id !== null) {
+                <div>
+                  <dt>{{ 'serviceRequests.fields.sourceAlert' | translate }}</dt>
+                  <dd>
+                    {{
+                      'serviceRequests.detail.sourceAlert' | translate: { id: item.source_alert_id }
+                    }}
+                    <a
+                      class="ui-link"
+                      [routerLink]="['/monitoring/alerts', item.source_alert_id]"
+                      >{{ 'serviceRequests.detail.viewSourceAlert' | translate }}</a
+                    >
+                  </dd>
+                </div>
+              }
               <div>
                 <dt>{{ 'serviceRequests.fields.priority' | translate }}</dt>
                 <dd>{{ 'serviceRequests.priority.' + item.priority | translate }}</dd>

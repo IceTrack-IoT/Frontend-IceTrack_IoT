@@ -16,8 +16,9 @@ export interface TechnicianSummary {
  */
 export interface TechnicianCandidate extends TechnicianSummary {
   /**
-   * Whether the public profile could be read. A technician whose profile is unavailable cannot be
-   * assigned, and its statistics are null.
+   * Whether the public profile could be read; a technician whose profile is unavailable cannot be
+   * assigned, and its statistics are null. Candidates are read from the public technician directory, so
+   * every listed candidate has an available profile.
    */
   readonly profileAvailable: boolean;
   /** The service requests the technician completed, or null when the profile is unavailable. */

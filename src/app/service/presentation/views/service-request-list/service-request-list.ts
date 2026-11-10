@@ -1,8 +1,15 @@
 import { Component, computed, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import type { ServiceRequest } from '@service/domain/model/service-request.entity';
+import { ServicePriority } from '@service/domain/value-objects/service-priority';
 import { ServiceStatus } from '@service/domain/value-objects/service-status';
+import { ServiceType } from '@service/domain/value-objects/service-type';
+import {
+  awaitsAssignment,
+  type ServiceRequestSummary,
+} from '@service/application/contracts/service-request-page';
 import { ServiceRequestsStore } from '@service/application/service-requests-store';
 import { InterventionSummary } from '@service/presentation/components/intervention-summary/intervention-summary';
 import {
@@ -21,11 +28,13 @@ type StatusFilter = ServiceStatus | 'ALL';
 type ListStatus = 'loading' | 'error' | 'ready';
 
 /**
- * Service requests of the owner, newest first, filtered by status and paged by the backend. With the
- * `equipmentId` query parameter it shows the intervention history of that equipment item instead.
+ * Service requests of the owner, newest first, filtered by status, type and priority and paged by the
+ * backend, which names their equipment, site and technician. With the `equipmentId` query parameter it
+ * shows the intervention history of that equipment item instead.
  */
 @Component({
   imports: [
+    ReactiveFormsModule,
     RouterLink,
     TranslatePipe,
     Icon,
@@ -42,6 +51,8 @@ type ListStatus = 'loading' | 'error' | 'ready';
 export class ServiceRequestList {
   protected readonly store = inject(ServiceRequestsStore);
   protected readonly statusFilters: StatusFilter[] = ['ALL', ...Object.values(ServiceStatus)];
+  protected readonly types = Object.values(ServiceType);
+  protected readonly priorities = Object.values(ServicePriority);
   protected readonly statusAppearance = SERVICE_STATUS_APPEARANCE;
   protected readonly priorityAppearance = SERVICE_PRIORITY_APPEARANCE;
   /** The equipment whose intervention history is shown, or null to list the requests. */
@@ -50,6 +61,11 @@ export class ServiceRequestList {
   protected readonly statusFilter = computed<StatusFilter>(
     () => this.store.requestQuery().statuses[0] ?? 'ALL',
   );
+  /** The type and priority filters, starting from the ones kept by the store. */
+  protected readonly filters = inject(NonNullableFormBuilder).group({
+    type: [(this.store.requestQuery().types[0] ?? 'ALL') as ServiceType | 'ALL'],
+    priority: [(this.store.requestQuery().priorities[0] ?? 'ALL') as ServicePriority | 'ALL'],
+  });
   protected readonly page = computed(() => this.store.requestQuery().page + 1);
   protected readonly pageCount = computed(() =>
     Math.max(1, this.store.requestPage()?.totalPages ?? 1),
@@ -64,10 +80,11 @@ export class ServiceRequestList {
     }
     return this.store.requestPage() === null ? 'loading' : 'ready';
   });
-  /** Whether the owner has no requests at all, as opposed to none matching the filter. */
-  protected readonly noRequestsYet = computed(
-    () => this.statusFilter() === 'ALL' && this.store.requestQuery().page === 0,
-  );
+  /** Whether the owner has no requests at all, as opposed to none matching the filters. */
+  protected readonly noRequestsYet = computed(() => {
+    const { statuses, types, priorities, page } = this.store.requestQuery();
+    return statuses.length === 0 && types.length === 0 && priorities.length === 0 && page === 0;
+  });
 
   protected readonly interventionsStatus = computed<ListStatus>(() => {
     if (this.store.interventionsLoading()) {
@@ -85,11 +102,18 @@ export class ServiceRequestList {
   );
 
   constructor() {
-    this.store.loadEquipmentDirectory();
-    this.store.loadTechnicianDirectory();
     if (this.equipmentFilter === null) {
+      this.filters.valueChanges.pipe(takeUntilDestroyed()).subscribe(({ type, priority }) =>
+        this.store.loadServiceRequests({
+          types: type === undefined || type === 'ALL' ? [] : [type],
+          priorities: priority === undefined || priority === 'ALL' ? [] : [priority],
+        }),
+      );
       this.store.loadServiceRequests();
     } else {
+      // The intervention history names its equipment and technicians from the directories.
+      this.store.loadEquipmentDirectory();
+      this.store.loadTechnicianDirectory();
       this.store.loadEquipmentInterventions(this.equipmentFilter);
     }
   }
@@ -113,11 +137,12 @@ export class ServiceRequestList {
   }
 
   protected clearFilters(): void {
-    this.setStatusFilter('ALL');
+    this.filters.setValue({ type: 'ALL', priority: 'ALL' }, { emitEvent: false });
+    this.store.loadServiceRequests({ statuses: [], types: [], priorities: [] });
   }
 
-  protected canAssign(request: ServiceRequest): boolean {
-    return request.canBeAssigned() && request.technician_id === null;
+  protected canAssign(request: ServiceRequestSummary): boolean {
+    return awaitsAssignment(request);
   }
 
   private equipmentIdParam(): number | null {

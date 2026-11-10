@@ -67,6 +67,19 @@
           <dt>{{ 'serviceRequests.fields.createdAt' | translate }}</dt>
           <dd>{{ request.created_at | localizedDate }}</dd>
         </div>
+        @if (request.source_alert_id !== null) {
+          <div>
+            <dt>{{ 'serviceRequests.fields.sourceAlert' | translate }}</dt>
+            <dd>
+              {{
+                'serviceRequests.detail.sourceAlert' | translate: { id: request.source_alert_id }
+              }}
+              <a class="ui-link" [routerLink]="['/monitoring/alerts', request.source_alert_id]">{{
+                'serviceRequests.detail.viewSourceAlert' | translate
+              }}</a>
+            </dd>
+          </div>
+        }
       </dl>
       <div class="ui-form__actions create-request__confirmation-actions">
         <button class="ui-button ui-button--secondary" type="button" (click)="createAnother()">
@@ -89,16 +102,27 @@
       </div>
     </header>
 
-    @if (sourceAlertId !== null) {
-      <p class="ui-alert ui-alert--info">
-        <app-icon class="ui-alert__icon" name="bell-ringing" />
-        <span>
-          {{ 'serviceRequests.form.fromAlert' | translate: { id: sourceAlertId } }}
-          <a class="ui-link" [routerLink]="['/monitoring/alerts', sourceAlertId]">
-            {{ 'serviceRequests.form.viewAlert' | translate }}
-          </a>
-        </span>
-      </p>
+    @if (alertDraft; as draft) {
+      <div role="status">
+        @if (alertMismatch()) {
+          <p class="ui-alert ui-alert--warning">
+            <app-icon class="ui-alert__icon" name="alert-triangle" />
+            <span>
+              {{ 'serviceRequests.form.alertEquipmentMismatch' | translate: { id: draft.alertId } }}
+            </span>
+          </p>
+        } @else {
+          <p class="ui-alert ui-alert--info">
+            <app-icon class="ui-alert__icon" name="bell-ringing" />
+            <span>
+              {{ 'serviceRequests.form.fromAlert' | translate: { id: draft.alertId } }}
+              <a class="ui-link" [routerLink]="['/monitoring/alerts', draft.alertId]">
+                {{ 'serviceRequests.form.viewAlert' | translate }}
+              </a>
+            </span>
+          </p>
+        }
+      </div>
     }
 
     @switch (equipmentStatus()) {
