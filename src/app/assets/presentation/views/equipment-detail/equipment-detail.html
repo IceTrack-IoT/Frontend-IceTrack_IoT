@@ -61,9 +61,16 @@
                 [appearance]="statusAppearance[item.status]"
               />
               <span class="equipment-detail__connectivity">
-                <app-icon [name]="item.online ? 'wifi' : 'wifi-off'" />
-                {{ (item.online ? 'assets.online' : 'assets.offline') | translate }}
+                @let connectivity = connectivityOf(item.connectivity);
+                <app-icon [name]="connectivity.icon" />
+                {{ connectivity.labelKey | translate }}
               </span>
+              @if (item.connectivity.under_maintenance) {
+                <span class="equipment-detail__connectivity">
+                  <app-icon name="tools" />
+                  {{ 'assets.maintenanceWindowOpen' | translate }}
+                </span>
+              }
             </div>
             <div class="equipment-detail__actions">
               <button
@@ -178,7 +185,7 @@
                     routerLink="/assets/equipment"
                     [queryParams]="{ siteId: item.site_id }"
                   >
-                    {{ site()?.name ?? ('assets.siteNumber' | translate: { id: item.site_id }) }}
+                    {{ item.site_name }}
                   </a>
                 </dd>
               </div>

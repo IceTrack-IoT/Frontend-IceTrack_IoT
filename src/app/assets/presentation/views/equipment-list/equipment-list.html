@@ -170,10 +170,7 @@
                     </td>
                     <td>{{ 'assets.equipmentType.' + item.equipment_type | translate }}</td>
                     <td>
-                      {{
-                        store.siteById().get(item.site_id)?.name ??
-                          ('assets.siteNumber' | translate: { id: item.site_id })
-                      }}
+                      {{ item.site_name }}
                     </td>
                     <td>
                       <app-status-tag
@@ -183,9 +180,16 @@
                     </td>
                     <td>
                       <span class="equipment-list__connectivity">
-                        <app-icon [name]="item.online ? 'wifi' : 'wifi-off'" />
-                        {{ (item.online ? 'assets.online' : 'assets.offline') | translate }}
+                        @let connectivity = connectivityOf(item.connectivity);
+                        <app-icon [name]="connectivity.icon" />
+                        {{ connectivity.labelKey | translate }}
                       </span>
+                      @if (item.connectivity.under_maintenance) {
+                        <span class="ui-table__secondary equipment-list__connectivity">
+                          <app-icon name="tools" />
+                          {{ 'assets.maintenanceWindowOpen' | translate }}
+                        </span>
+                      }
                     </td>
                     <td>
                       @if (item.last_known_temperature !== null) {

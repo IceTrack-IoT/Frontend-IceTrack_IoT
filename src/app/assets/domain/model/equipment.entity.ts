@@ -1,4 +1,5 @@
 import { BaseEntity } from '@shared/domain/model/base-entity';
+import type { EquipmentConnectivity } from '@assets/domain/value-objects/equipment-connectivity';
 import { EquipmentType } from '@assets/domain/value-objects/equipment-type';
 import { StatusEquipment } from '@assets/domain/value-objects/status-equipment';
 import { TemperatureThreshold } from '@assets/domain/value-objects/temperature-threshold';
@@ -6,8 +7,9 @@ import { TemperatureThreshold } from '@assets/domain/value-objects/temperature-t
 /**
  * Represents a refrigeration equipment item installed at a site and monitored against its temperature threshold.
  *
- * `online`, `last_reading_at` and `last_known_temperature` are written by Monitoring from the equipment's
- * telemetry; the last two are null while the equipment has not reported yet. `config_version` is the version
+ * `last_reading_at` and `last_known_temperature` are written by Monitoring from the equipment's telemetry
+ * and are null while the equipment has not reported yet. `connectivity` is the server's evaluation of
+ * whether the equipment is reporting, and `site_name` the name of its site at the time of the read. `config_version` is the version
  * of the configuration its edge gateway enforces.
  */
 export class Equipment implements BaseEntity {
@@ -17,7 +19,8 @@ export class Equipment implements BaseEntity {
   private _equipment_type: EquipmentType;
   private _status: StatusEquipment;
   private _site_id: number;
-  private _online: boolean;
+  private _site_name: string;
+  private _connectivity: EquipmentConnectivity;
   private _reminder_interval_days: number;
   private _temperature_threshold: TemperatureThreshold;
   private _last_reading_at: Date | null;
@@ -36,7 +39,8 @@ export class Equipment implements BaseEntity {
     equipment_type: EquipmentType;
     status: StatusEquipment;
     site_id: number;
-    online: boolean;
+    site_name: string;
+    connectivity: EquipmentConnectivity;
     reminder_interval_days: number;
     temperature_threshold: TemperatureThreshold;
     last_reading_at: Date | null;
@@ -49,7 +53,8 @@ export class Equipment implements BaseEntity {
     this._equipment_type = equipment.equipment_type;
     this._status = equipment.status;
     this._site_id = equipment.site_id;
-    this._online = equipment.online;
+    this._site_name = equipment.site_name;
+    this._connectivity = equipment.connectivity;
     this._reminder_interval_days = equipment.reminder_interval_days;
     this._temperature_threshold = equipment.temperature_threshold;
     this._last_reading_at = equipment.last_reading_at;
@@ -93,11 +98,17 @@ export class Equipment implements BaseEntity {
   set site_id(site_id: number) {
     this._site_id = site_id;
   }
-  get online(): boolean {
-    return this._online;
+  get site_name(): string {
+    return this._site_name;
   }
-  set online(online: boolean) {
-    this._online = online;
+  set site_name(site_name: string) {
+    this._site_name = site_name;
+  }
+  get connectivity(): EquipmentConnectivity {
+    return this._connectivity;
+  }
+  set connectivity(connectivity: EquipmentConnectivity) {
+    this._connectivity = connectivity;
   }
   get reminder_interval_days(): number {
     return this._reminder_interval_days;

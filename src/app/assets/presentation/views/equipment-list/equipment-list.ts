@@ -13,7 +13,10 @@ import {
   equipmentActionErrorKey,
 } from '@assets/presentation/assets-feedback';
 import { EquipmentFormDialog } from '@assets/presentation/components/equipment-form-dialog/equipment-form-dialog';
-import { STATUS_EQUIPMENT_APPEARANCE } from '@assets/presentation/equipment-appearance';
+import {
+  connectivityAppearanceOf,
+  STATUS_EQUIPMENT_APPEARANCE,
+} from '@assets/presentation/equipment-appearance';
 import { Icon } from '@shared/presentation/components/icon/icon';
 import { Pagination } from '@shared/presentation/components/pagination/pagination';
 import { StatePanel } from '@shared/presentation/components/state-panel/state-panel';
@@ -54,6 +57,7 @@ export class EquipmentList {
   protected readonly types = Object.values(EquipmentType);
   protected readonly statuses = Object.values(StatusEquipment);
   protected readonly statusAppearance = STATUS_EQUIPMENT_APPEARANCE;
+  protected readonly connectivityOf = connectivityAppearanceOf;
 
   protected readonly filters = inject(NonNullableFormBuilder).group({
     search: [''],

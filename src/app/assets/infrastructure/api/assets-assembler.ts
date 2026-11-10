@@ -1,10 +1,15 @@
 import { Equipment } from '@assets/domain/model/equipment.entity';
 import { Site } from '@assets/domain/model/site.entity';
 import { isCoverageArea } from '@assets/domain/value-objects/coverage-area';
+import {
+  type EquipmentConnectivity,
+  isConnectivityState,
+} from '@assets/domain/value-objects/equipment-connectivity';
 import { isEquipmentType } from '@assets/domain/value-objects/equipment-type';
 import { isGeocodingStatus } from '@assets/domain/value-objects/geocoding-status';
 import { isStatusEquipment } from '@assets/domain/value-objects/status-equipment';
 import type { EquipmentPage } from '@assets/application/contracts/equipment-page';
+import type { EquipmentDirectoryEntry } from '@assets/application/contracts/equipment-directory-entry';
 import type {
   EquipmentChanges,
   NewEquipment,
@@ -18,6 +23,8 @@ import type {
   UpdateSiteRequest,
 } from '@assets/infrastructure/api/assets.requests';
 import type {
+  EquipmentConnectivityResource,
+  EquipmentDirectoryEntryResource,
   EquipmentResource,
   PagedEquipmentResource,
 } from '@assets/infrastructure/api/equipment.response';
@@ -82,7 +89,8 @@ export class AssetsAssembler {
       equipment_type,
       status,
       site_id: resource.site_id,
-      online: resource.online,
+      site_name: resource.site_name,
+      connectivity: toConnectivity(resource.connectivity),
       reminder_interval_days: resource.reminder_interval_days,
       temperature_threshold: {
         min_celsius: resource.min_celsius,
@@ -92,6 +100,27 @@ export class AssetsAssembler {
       last_known_temperature: resource.last_known_temperature ?? null,
       config_version: resource.config_version,
     });
+  }
+
+  /**
+   * Converts an EquipmentDirectoryEntryResource to an EquipmentDirectoryEntry.
+   * @param resource - The resource to convert.
+   * @returns The corresponding directory entry.
+   */
+  toDirectoryEntryFromResource(resource: EquipmentDirectoryEntryResource): EquipmentDirectoryEntry {
+    const { equipment_type, status } = resource;
+    if (!isEquipmentType(equipment_type) || !isStatusEquipment(status)) {
+      throw new Error('The directory entry has an unknown type or status.');
+    }
+    return {
+      id: resource.id,
+      uid: resource.uid,
+      name: resource.name,
+      type: equipment_type,
+      status,
+      siteId: resource.site_id,
+      siteName: resource.site_name,
+    };
   }
 
   /**
@@ -177,10 +206,25 @@ export class AssetsAssembler {
   }
 }
 
-function toOptionalInstant(value: string | null | undefined): Date | null {
-  if (value === null || value === undefined) {
-    return null;
+function toConnectivity(resource: EquipmentConnectivityResource): EquipmentConnectivity {
+  if (!isConnectivityState(resource.state)) {
+    throw new Error('The equipment has an unknown connectivity state.');
   }
+  return {
+    state: resource.state,
+    last_received_at: toOptionalInstant(resource.last_received_at),
+    silent_after_seconds: resource.silent_after_seconds,
+    silent_since: toOptionalInstant(resource.silent_since),
+    under_maintenance: resource.under_maintenance,
+    evaluated_at: toInstant(resource.evaluated_at),
+  };
+}
+
+function toOptionalInstant(value: string | null | undefined): Date | null {
+  return value === null || value === undefined ? null : toInstant(value);
+}
+
+function toInstant(value: string): Date {
   const instant = new Date(value);
   if (Number.isNaN(instant.getTime())) {
     throw new Error('The equipment resource has an unreadable instant.');

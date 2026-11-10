@@ -13,7 +13,10 @@ import {
 import { EquipmentFormDialog } from '@assets/presentation/components/equipment-form-dialog/equipment-form-dialog';
 import { EquipmentStatusDialog } from '@assets/presentation/components/equipment-status-dialog/equipment-status-dialog';
 import { EquipmentThresholdForm } from '@assets/presentation/components/equipment-threshold-form/equipment-threshold-form';
-import { STATUS_EQUIPMENT_APPEARANCE } from '@assets/presentation/equipment-appearance';
+import {
+  connectivityAppearanceOf,
+  STATUS_EQUIPMENT_APPEARANCE,
+} from '@assets/presentation/equipment-appearance';
 import { Icon } from '@shared/presentation/components/icon/icon';
 import { StatePanel } from '@shared/presentation/components/state-panel/state-panel';
 import { StatusTag } from '@shared/presentation/components/status-tag/status-tag';
@@ -56,6 +59,7 @@ const isEquipmentId = (value: number): boolean => Number.isInteger(value) && val
 export class EquipmentDetail {
   protected readonly store = inject(AssetsStore);
   protected readonly statusAppearance = STATUS_EQUIPMENT_APPEARANCE;
+  protected readonly connectivityOf = connectivityAppearanceOf;
   protected readonly dialog = signal<DetailDialog | null>(null);
 
   private readonly equipmentId = signal(0);
@@ -64,10 +68,6 @@ export class EquipmentDetail {
   protected readonly equipment = computed(() => {
     const equipment = this.store.selectedEquipment();
     return equipment?.id === this.equipmentId() ? equipment : null;
-  });
-  protected readonly site = computed(() => {
-    const equipment = this.equipment();
-    return equipment === null ? null : (this.store.siteById().get(equipment.site_id) ?? null);
   });
   protected readonly status = computed<DetailStatus>(() => {
     if (this.equipment() !== null) {

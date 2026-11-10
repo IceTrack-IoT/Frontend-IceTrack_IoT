@@ -1,11 +1,4 @@
-import {
-  computed,
-  inject,
-  Injectable,
-  signal,
-  type Signal,
-  type WritableSignal,
-} from '@angular/core';
+import { computed, inject, Injectable, signal, type WritableSignal } from '@angular/core';
 import { finalize, type Observable, type Subscription } from 'rxjs';
 import type { Equipment } from '@assets/domain/model/equipment.entity';
 import type { Site } from '@assets/domain/model/site.entity';
@@ -125,10 +118,6 @@ export class AssetsStore {
   readonly sitesLoaded = computed(() => this.sitesState.value() !== null);
   readonly sitesLoading = this.sitesState.loading.asReadonly();
   readonly sitesFailure = this.sitesState.failure.asReadonly();
-  /** The owner's sites by id. */
-  readonly siteById: Signal<ReadonlyMap<number, Site>> = computed(
-    () => new Map(this.sites().map((site) => [site.id, site])),
-  );
   /** The number of equipment items installed across the owner's sites. */
   readonly equipmentTotal = computed(() =>
     this.sites().reduce((total, site) => total + site.equipment_count, 0),
