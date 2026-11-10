@@ -12,3 +12,14 @@ export interface TechnicianPublicProfileResource {
   average_rating: number | null;
   rating_available: boolean;
 }
+
+/**
+ * PagedTechnicianPublicProfileResource is returned by `GET /profiles/technicians/public`.
+ */
+export interface PagedTechnicianPublicProfileResource {
+  content: TechnicianPublicProfileResource[];
+  page: number;
+  size: number;
+  total_elements: number;
+  total_pages: number;
+}

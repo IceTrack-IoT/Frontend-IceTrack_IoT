@@ -5,6 +5,7 @@ import { BaseApi } from '@shared/infrastructure/api/base-api';
 import type { OwnerProfile } from '@profiles/domain/model/owner-profile.entity';
 import type { TechnicianProfile } from '@profiles/domain/model/technician-profile.entity';
 import type { TechnicianPublicProfile } from '@profiles/domain/model/technician-public-profile.entity';
+import type { TechnicianPublicProfilePage } from '@profiles/application/contracts/technician-public-profile-page';
 import type { OwnerProfileUpdate } from '@profiles/application/contracts/owner-profile-update';
 import type { ProfilesPort } from '@profiles/application/ports/profiles.port';
 import { OwnerProfileApiEndpoint } from '@profiles/infrastructure/api/owner-profile-api-endpoint';
@@ -47,6 +48,24 @@ export class ProfilesApi extends BaseApi implements ProfilesPort {
       map((resources) =>
         resources.map((resource) => this.technicianProfileAssembler.toEntityFromResource(resource)),
       ),
+      mapProfilesErrors(),
+    );
+  }
+
+  listTechnicianPublicProfiles(
+    page: number,
+    size: number,
+  ): Observable<TechnicianPublicProfilePage> {
+    return this.technicianProfilesEndpoint.getPublicDirectory(page, size).pipe(
+      map((resource) => ({
+        items: resource.content.map((item) =>
+          this.technicianProfileAssembler.toPublicProfileFromResource(item),
+        ),
+        page: resource.page,
+        size: resource.size,
+        totalElements: resource.total_elements,
+        totalPages: resource.total_pages,
+      })),
       mapProfilesErrors(),
     );
   }

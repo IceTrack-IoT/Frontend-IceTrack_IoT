@@ -2,6 +2,7 @@ import type { Observable } from 'rxjs';
 import type { OwnerProfile } from '@profiles/domain/model/owner-profile.entity';
 import type { TechnicianProfile } from '@profiles/domain/model/technician-profile.entity';
 import type { TechnicianPublicProfile } from '@profiles/domain/model/technician-public-profile.entity';
+import type { TechnicianPublicProfilePage } from '@profiles/application/contracts/technician-public-profile-page';
 import type { OwnerProfileUpdate } from '@profiles/application/contracts/owner-profile-update';
 
 /**
@@ -47,4 +48,16 @@ export abstract class ProfilesPort {
    * @returns An Observable of the public profile.
    */
   abstract getTechnicianPublicProfile(technicianId: number): Observable<TechnicianPublicProfile>;
+
+  /**
+   * Lists one page of the public technician directory, ordered by name, with the statistics of each
+   * technician and no contact data.
+   * @param page - The zero-based page index.
+   * @param size - The number of technicians per page, from 1 to 100.
+   * @returns An Observable of the page.
+   */
+  abstract listTechnicianPublicProfiles(
+    page: number,
+    size: number,
+  ): Observable<TechnicianPublicProfilePage>;
 }
