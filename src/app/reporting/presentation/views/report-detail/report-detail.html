@@ -154,15 +154,11 @@
           <p class="report-detail__hint">{{ 'reporting.detail.noKpis' | translate }}</p>
         } @else {
           <ul class="report-detail__kpis">
-            @for (kpi of kpis(); track $index) {
+            @for (kpi of kpis(); track kpi.key) {
               <li class="report-detail__kpi">
                 <span class="report-detail__kpi-label" lang="en">{{ kpi.label }}</span>
                 <span class="report-detail__kpi-value">
-                  @if (isNumber(kpi.value)) {
-                    {{ kpi.value | localizedNumber: (kpi.value % 1 === 0 ? 0 : 1) }}
-                  } @else {
-                    {{ kpi.value }}
-                  }
+                  {{ kpi.value | localizedNumber: (kpi.value % 1 === 0 ? 0 : 1) }}
                   <span class="report-detail__kpi-unit">{{ kpi.unit }}</span>
                 </span>
               </li>

@@ -1,10 +1,11 @@
 import { computed, type DestroyRef, inject, Injectable, signal, type Signal } from '@angular/core';
-import { finalize, type Subscription, timer } from 'rxjs';
+import { debounceTime, filter, finalize, type Subscription, timer } from 'rxjs';
 import type { Report } from '@reporting/domain/model/report.entity';
 import {
   type ReportingFailure,
   toReportingFailure,
 } from '@reporting/application/contracts/reporting-error';
+import type { ReportPage, ReportQuery } from '@reporting/application/contracts/report-page';
 import type { ReportRequest } from '@reporting/application/contracts/report-request';
 import type {
   ReportEquipment,
@@ -15,13 +16,20 @@ import { GetReportDownloadUrlUseCase } from '@reporting/application/use-cases/ge
 import { LoadReportScopeUseCase } from '@reporting/application/use-cases/load-report-scope.use-case';
 import { LoadReportsUseCase } from '@reporting/application/use-cases/load-reports.use-case';
 import { RequestReportUseCase } from '@reporting/application/use-cases/request-report.use-case';
+import { WatchReportChangesUseCase } from '@reporting/application/use-cases/watch-report-changes.use-case';
 import { WatchReportUseCase } from '@reporting/application/use-cases/watch-report.use-case';
 
-/**
- * How long a download link is offered after it was read. The backend signs it for 15 minutes; a minute is
- * kept as margin.
- */
-const DOWNLOAD_LINK_LIFETIME_MS = 14 * 60_000;
+/** How long before its signature expires a download link stops being offered. */
+const DOWNLOAD_LINK_EXPIRY_MARGIN_MS = 60_000;
+
+/** How long live status changes are gathered before the report page shown is read again. */
+const LIVE_CHANGES_DEBOUNCE_MS = 500;
+
+/** The number of reports per page of the history. */
+export const REPORT_PAGE_SIZE = 6;
+
+/** The search and filters of the report history; the page is chosen separately. */
+export type ReportFilters = Omit<ReportQuery, 'page' | 'size'>;
 
 /** The outcome of the last report request, until it is cleared. */
 export interface ReportRequestState {
@@ -37,6 +45,8 @@ export interface ReportDownloadState {
   readonly status: 'pending' | 'ready' | 'failed';
   /** The signed link, while it is still valid; null unless ready. */
   readonly url: string | null;
+  /** The name the browser saves the file under; null unless ready. */
+  readonly fileName: string | null;
   readonly failure: ReportingFailure | null;
 }
 
@@ -45,10 +55,12 @@ export interface ReportDownloadState {
  * generation is followed, the sites and equipment a report can be scoped to, the outcome of a report
  * request, and the short-lived download link of a completed report.
  *
- * It holds signal-based state only and delegates every operation to Reporting use cases. A report in
- * progress is read again periodically until it finishes. A download link is read on demand, offered for
- * less than its 15-minute validity, and never stored beyond that. Everything is discarded once no
- * reporting view is open.
+ * It holds signal-based state only and delegates every operation to Reporting use cases. The history is
+ * searched, filtered and paged by the backend. A report in progress is read again when the live feed
+ * reports a status change of it (periodically while the feed is unavailable), and the page shown is read
+ * again when one of its reports changes. A download link is read on demand, offered until shortly before
+ * its signature expires, and never stored beyond that. Everything is discarded once no reporting view is
+ * open.
  */
 @Injectable({
   providedIn: 'root',
@@ -59,14 +71,28 @@ export class ReportingStore {
   private readonly requestReportUseCase = inject(RequestReportUseCase);
   private readonly getReportDownloadUrlUseCase = inject(GetReportDownloadUrlUseCase);
   private readonly loadReportScopeUseCase = inject(LoadReportScopeUseCase);
+  private readonly watchReportChangesUseCase = inject(WatchReportChangesUseCase);
 
   // Report history.
-  private readonly reportsSignal = signal<readonly Report[] | null>(null);
+  private readonly reportQuerySignal = signal<ReportQuery>({
+    search: '',
+    types: [],
+    statuses: [],
+    requestedFrom: null,
+    requestedTo: null,
+    page: 0,
+    size: REPORT_PAGE_SIZE,
+  });
+  private readonly reportPageSignal = signal<ReportPage | null>(null);
   private readonly reportsLoadingSignal = signal(false);
   private readonly reportsFailureSignal = signal<ReportingFailure | null>(null);
-  /** The owner's reports, most recent first, empty until they are loaded. */
-  readonly reports = computed(() => this.reportsSignal() ?? []);
-  readonly reportsLoaded = computed(() => this.reportsSignal() !== null);
+  /** The search, filters and page of the history. */
+  readonly reportQuery = this.reportQuerySignal.asReadonly();
+  /** The current page of the history, or null until one is loaded. */
+  readonly reportPage = this.reportPageSignal.asReadonly();
+  /** The reports of the current page, most recent first, empty until loaded. */
+  readonly reports = computed(() => this.reportPageSignal()?.items ?? []);
+  readonly reportsLoaded = computed(() => this.reportPageSignal() !== null);
   readonly reportsLoading = this.reportsLoadingSignal.asReadonly();
   readonly reportsFailure = this.reportsFailureSignal.asReadonly();
 
@@ -126,15 +152,35 @@ export class ReportingStore {
   private requestSubscription: Subscription | null = null;
   private downloadSubscription: Subscription | null = null;
   private downloadExpirySubscription: Subscription | null = null;
+  private liveChangesSubscription: Subscription | null = null;
   private attachedViews = 0;
 
   /**
-   * Keeps the reporting state while the caller lives. Every reporting view attaches; once the last one is
-   * destroyed, polling stops and the state, including any download link, is discarded.
+   * Keeps the reporting state while the caller lives. Every reporting view attaches; while any is
+   * attached, the page shown is read again when one of its reports changes status. Once the last one is
+   * destroyed, watching stops and the state, including any download link, is discarded.
    * @param destroyRef - The lifetime of the caller.
    */
   attach(destroyRef: DestroyRef): void {
     this.attachedViews++;
+    if (this.liveChangesSubscription === null) {
+      this.liveChangesSubscription = this.watchReportChangesUseCase
+        .execute()
+        .pipe(
+          filter(
+            (event) =>
+              event.kind === 'resync' ||
+              (event.kind === 'report-status' &&
+                this.reports().some((report) => report.id === event.reportId)),
+          ),
+          debounceTime(LIVE_CHANGES_DEBOUNCE_MS),
+        )
+        .subscribe(() => {
+          if (this.reportPageSignal() !== null) {
+            this.loadReports();
+          }
+        });
+    }
     destroyRef.onDestroy(() => {
       this.attachedViews--;
       if (this.attachedViews === 0) {
@@ -144,17 +190,28 @@ export class ReportingStore {
   }
 
   /**
-   * Loads the report history, keeping the one in memory until the new one arrives.
+   * Loads a page of the report history, keeping the one in memory until the new one arrives. A newer load
+   * supersedes one still in progress.
+   * @param change - The search, filters or page to apply; the rest of the current query is kept. Changing
+   * the search or any filter returns to the first page.
    */
-  loadReports(): void {
+  loadReports(change: Partial<ReportFilters & Pick<ReportQuery, 'page'>> = {}): void {
+    const filtersChanged = (
+      ['search', 'types', 'statuses', 'requestedFrom', 'requestedTo'] as const
+    ).some((key) => change[key] !== undefined);
+    this.reportQuerySignal.update((query) => ({
+      ...query,
+      ...change,
+      page: change.page ?? (filtersChanged ? 0 : query.page),
+    }));
     this.reportsSubscription?.unsubscribe();
     this.reportsLoadingSignal.set(true);
     this.reportsFailureSignal.set(null);
     this.reportsSubscription = this.loadReportsUseCase
-      .execute()
+      .execute(this.reportQuerySignal())
       .pipe(finalize(() => this.reportsLoadingSignal.set(false)))
       .subscribe({
-        next: (reports) => this.reportsSignal.set(reports),
+        next: (page) => this.reportPageSignal.set(page),
         error: (error: unknown) => this.reportsFailureSignal.set(toReportingFailure(error)),
       });
   }
@@ -219,8 +276,11 @@ export class ReportingStore {
     this.requestSignal.set({ status: 'pending', failure: null, report: null });
     this.requestSubscription = this.requestReportUseCase.execute(request).subscribe({
       next: (report) => {
-        this.applyReport(report);
         this.requestSignal.set({ status: 'succeeded', failure: null, report });
+        // The new report joins the history on the backend; the page shown is read again.
+        if (this.reportPageSignal() !== null) {
+          this.loadReports();
+        }
       },
       error: (error: unknown) =>
         this.requestSignal.set({
@@ -249,25 +309,28 @@ export class ReportingStore {
     }
     this.clearDownload();
     const reportId = report.id;
-    this.downloadSignal.set({ reportId, status: 'pending', url: null, failure: null });
+    const idle = { reportId, url: null, fileName: null };
+    this.downloadSignal.set({ ...idle, status: 'pending', failure: null });
     this.downloadSubscription = this.getReportDownloadUrlUseCase.execute(report).subscribe({
-      next: (url) => {
-        if (url === null) {
-          this.downloadSignal.set({ reportId, status: 'failed', url: null, failure: 'UNEXPECTED' });
+      next: (link) => {
+        if (link === null) {
+          this.downloadSignal.set({ ...idle, status: 'failed', failure: 'UNEXPECTED' });
           return;
         }
-        this.downloadSignal.set({ reportId, status: 'ready', url, failure: null });
-        this.downloadExpirySubscription = timer(DOWNLOAD_LINK_LIFETIME_MS).subscribe(() =>
+        this.downloadSignal.set({
+          reportId,
+          status: 'ready',
+          url: link.url,
+          fileName: link.fileName,
+          failure: null,
+        });
+        const offeredFor = link.expiresAt.getTime() - Date.now() - DOWNLOAD_LINK_EXPIRY_MARGIN_MS;
+        this.downloadExpirySubscription = timer(Math.max(0, offeredFor)).subscribe(() =>
           this.downloadSignal.set(null),
         );
       },
       error: (error: unknown) =>
-        this.downloadSignal.set({
-          reportId,
-          status: 'failed',
-          url: null,
-          failure: toReportingFailure(error),
-        }),
+        this.downloadSignal.set({ ...idle, status: 'failed', failure: toReportingFailure(error) }),
     });
   }
 
@@ -280,32 +343,32 @@ export class ReportingStore {
     this.downloadSignal.set(null);
   }
 
-  /** Puts the report as the backend answered it in the history, newest first. */
+  /** Puts the report as the backend answered it in the page shown, when it is there. */
   private applyReport(report: Report): void {
-    this.reportsSignal.update((reports) => {
-      if (reports === null) {
-        return null;
-      }
-      return reports.some((item) => item.id === report.id)
-        ? reports.map((item) => (item.id === report.id ? report : item))
-        : [report, ...reports];
-    });
+    this.reportPageSignal.update((page) =>
+      page === null
+        ? null
+        : { ...page, items: page.items.map((item) => (item.id === report.id ? report : item)) },
+    );
   }
 
   /** Discards every loaded value and any download link once no reporting view is open. */
   private release(): void {
     [
+      this.liveChangesSubscription,
       this.reportsSubscription,
       this.selectedSubscription,
       this.scopeSubscription,
       this.requestSubscription,
     ].forEach((subscription) => subscription?.unsubscribe());
+    this.liveChangesSubscription = null;
     this.reportsSubscription = null;
     this.selectedSubscription = null;
     this.scopeSubscription = null;
     this.requestSubscription = null;
     this.clearDownload();
-    this.reportsSignal.set(null);
+    this.reportPageSignal.set(null);
+    this.reportQuerySignal.update((query) => ({ ...query, page: 0 }));
     this.reportsLoadingSignal.set(false);
     this.reportsFailureSignal.set(null);
     this.selectedIdSignal.set(null);

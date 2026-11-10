@@ -3,6 +3,11 @@ import { inject, Injectable } from '@angular/core';
 import { map, type Observable } from 'rxjs';
 import { BaseApi } from '@shared/infrastructure/api/base-api';
 import type { Report } from '@reporting/domain/model/report.entity';
+import type {
+  ReportDownloadLink,
+  ReportPage,
+  ReportQuery,
+} from '@reporting/application/contracts/report-page';
 import type { ReportRequest } from '@reporting/application/contracts/report-request';
 import type { ReportsPort } from '@reporting/application/ports/reports.port';
 import { ReportAssembler } from '@reporting/infrastructure/api/report-assembler';
@@ -27,12 +32,10 @@ export class ReportsApi extends BaseApi implements ReportsPort {
     );
   }
 
-  listReports(): Observable<Report[]> {
-    return this.endpoint.listReports().pipe(
+  listReports(query: ReportQuery): Observable<ReportPage> {
+    return this.endpoint.listReports(query).pipe(
       mapReportingErrors(),
-      map((resources) =>
-        resources.map((resource) => this.assembler.toReportFromResource(resource)),
-      ),
+      map((resource) => this.assembler.toReportPageFromResource(resource)),
     );
   }
 
@@ -43,10 +46,16 @@ export class ReportsApi extends BaseApi implements ReportsPort {
     );
   }
 
-  getDownloadUrl(reportId: number): Observable<string | null> {
-    return this.endpoint.getReport(reportId).pipe(
+  getDownloadLink(reportId: number): Observable<ReportDownloadLink | null> {
+    return this.endpoint.getDownloadLink(reportId).pipe(
       mapReportingErrors(),
-      map((resource) => toHttpsUrl(resource.download_url)),
+      map((resource) => {
+        const url = toHttpsUrl(resource.download_url);
+        const expiresAt = new Date(resource.expires_at);
+        return url === null || Number.isNaN(expiresAt.getTime())
+          ? null
+          : { url, expiresAt, fileName: resource.file_name };
+      }),
     );
   }
 }

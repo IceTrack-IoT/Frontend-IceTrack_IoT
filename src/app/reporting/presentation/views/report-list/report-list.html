@@ -21,7 +21,7 @@
         </h2>
         @if (store.reportsLoaded()) {
           <p class="ui-panel__subtitle" role="status">
-            {{ 'reporting.list.showing' | translate: { shown: filtered().length, total: total() } }}
+            {{ 'reporting.list.showing' | translate: { shown: visible().length, total: total() } }}
           </p>
         }
       </div>
@@ -135,7 +135,7 @@
         </p>
       }
 
-      @if (total() === 0) {
+      @if (total() === 0 && !filtered()) {
         <app-state-panel
           kind="empty"
           [heading]="'reporting.list.emptyTitle' | translate"
@@ -145,7 +145,7 @@
             'reporting.list.generate' | translate
           }}</a>
         </app-state-panel>
-      } @else if (filtered().length === 0) {
+      } @else if (visible().length === 0) {
         <app-state-panel
           kind="empty"
           [heading]="'reporting.list.noMatchesTitle' | translate"
@@ -221,7 +221,7 @@
           class="report-list__pagination"
           [page]="page()"
           [pageCount]="pageCount()"
-          (pageChange)="page.set($event)"
+          (pageChange)="goToPage($event)"
         />
       }
     }

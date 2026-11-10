@@ -81,8 +81,4 @@ export class ReportDetail {
       this.store.prepareDownload(report);
     }
   }
-
-  protected isNumber(value: number | string): value is number {
-    return typeof value === 'number';
-  }
 }

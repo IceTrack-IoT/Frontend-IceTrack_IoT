@@ -1,10 +1,21 @@
 /**
- * ReportResource is returned by `POST /reports`, `GET /reports/{reportId}` and, as a JSON array,
+ * KpiResource is one indicator of a COMPLETED report, as the `kpis` array carries it.
+ */
+export interface KpiResource {
+  key: string;
+  label: string;
+  value: number;
+  unit: string;
+}
+
+/**
+ * ReportResource is returned by `POST /reports`, `GET /reports/{reportId}` and, as summaries, by the paged
  * `GET /reports`. It is serialized `NON_NULL`: absent properties are omitted, so every nullable one is
  * optional.
  *
- * `result_payload` is a JSON array of KPIs encoded inside a string (`[{"label","value","unit"}]`), present
- * once COMPLETED. `download_url` is a signed link valid for 15 minutes, present for a COMPLETED report.
+ * `kpis` is present for a COMPLETED report read by id and omitted in summaries. The web application never
+ * reads `result_payload` (the same KPIs encoded in a string) nor `download_url`: links are read from
+ * `GET /reports/{reportId}/download-link`.
  */
 export interface ReportResource {
   id: number;
@@ -22,5 +33,28 @@ export interface ReportResource {
   to: string;
   requested_at: string;
   completed_at?: string | null;
-  download_url?: string | null;
+  kpis?: KpiResource[] | null;
+}
+
+/**
+ * PagedReportResource is returned by `GET /reports` when both `page` and `size` are sent; its items are
+ * always summaries.
+ */
+export interface PagedReportResource {
+  content: ReportResource[];
+  page: number;
+  size: number;
+  total_elements: number;
+  total_pages: number;
+}
+
+/**
+ * ReportDownloadLinkResource is returned by `GET /reports/{reportId}/download-link`.
+ */
+export interface ReportDownloadLinkResource {
+  download_url: string;
+  expires_at: string;
+  file_name: string;
+  content_type: string;
+  size_bytes: number;
 }
