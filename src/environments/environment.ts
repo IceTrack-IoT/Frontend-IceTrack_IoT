@@ -83,11 +83,11 @@ export const environment = {
   iceTrackProviderDashboardSummaryEndpointPath: '/dashboard/summary',
 
   /** Google Identity Services */
-  googleClientId: '235296518162-amt44u4ha0908lh9oa5h23lifb5jbi07.apps.googleusercontent.com',
+  googleClientId: '',
 
   /**
    * Google Maps JavaScript API key, restricted to the web origins of the platform. The site maps are
    * hidden while it is empty.
    */
-  googleMapsApiKey: 'AIzaSyA4HhgkVL6MFXDrxsnaeO62aAWe2o4ufjU',
+  googleMapsApiKey: '',
 };
