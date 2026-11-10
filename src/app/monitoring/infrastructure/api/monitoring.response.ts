@@ -56,6 +56,58 @@ export interface SensorReadingResource {
 }
 
 /**
+ * TelemetryBucketResource is returned, as a JSON array oldest first, by
+ * `GET /telemetry/equipment/{equipmentId}` with `bucket`. Empty buckets are omitted.
+ */
+export interface TelemetryBucketResource {
+  bucket_start: string;
+  bucket_end: string;
+  min_temperature: number;
+  max_temperature: number;
+  avg_temperature: number;
+  avg_humidity?: number | null;
+  sample_count: number;
+  batch_count: number;
+  under_maintenance: boolean;
+  door_open_seconds?: number | null;
+  last_received_at: string;
+}
+
+/**
+ * PagedAlertResource is returned by `GET /alerts`, which is always paged.
+ */
+export interface PagedAlertResource {
+  content: AlertResource[];
+  page: number;
+  size: number;
+  total_elements: number;
+  total_pages: number;
+}
+
+/**
+ * DashboardSummaryResource is returned by `GET /dashboard/summary`. Every status and severity key is
+ * present, 0 when nothing holds it. Only the properties the web application reads are declared.
+ */
+export interface DashboardSummaryResource {
+  generated_at: string;
+  site_count: number;
+  equipment: {
+    total: number;
+    reporting: number;
+    silent: number;
+    never_reported: number;
+  };
+  alerts: {
+    open: number;
+    acknowledged: number;
+    active_by_severity: Record<string, number>;
+  };
+  service_requests: {
+    active: number;
+  };
+}
+
+/**
  * StreamTicketResource is returned by `POST /telemetry/stream-ticket`: a single-use ticket to open the
  * telemetry stream.
  */

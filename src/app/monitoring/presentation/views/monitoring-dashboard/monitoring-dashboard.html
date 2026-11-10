@@ -68,73 +68,72 @@
           </a>
         </app-state-panel>
       } @else {
-        <section aria-labelledby="dashboard-summary-title">
-          <h2 class="visually-hidden" id="dashboard-summary-title">
-            {{ 'monitoring.dashboard.summaryTitle' | translate }}
-          </h2>
-          <ul class="dashboard__tiles">
-            <li>
-              <a class="ui-panel dashboard__tile" routerLink="/assets/sites">
-                <span class="dashboard__tile-label"
-                  ><app-icon name="building-store" />{{
-                    'monitoring.dashboard.sites' | translate
-                  }}</span
-                >
-                <span class="dashboard__tile-value">{{ store.siteCount() }}</span>
-              </a>
-            </li>
-            <li>
-              <a class="ui-panel dashboard__tile" routerLink="/assets/equipment">
-                <span class="dashboard__tile-label"
-                  ><app-icon name="fridge" />{{
-                    'monitoring.dashboard.monitoredEquipment' | translate
-                  }}</span
-                >
-                <span class="dashboard__tile-value">{{ reportingCount() }}</span>
-                <span class="dashboard__tile-detail">
-                  {{
-                    'monitoring.dashboard.ofEquipment' | translate: { total: temperatures().length }
-                  }}
-                </span>
-              </a>
-            </li>
-            <li>
-              <a class="ui-panel dashboard__tile" routerLink="/monitoring/alerts">
-                <span class="dashboard__tile-label"
-                  ><app-icon name="bell-ringing" />{{
-                    'monitoring.dashboard.openAlerts' | translate
-                  }}</span
-                >
-                <span class="dashboard__tile-value">{{ store.activeAlerts().length }}</span>
-                <span
-                  class="dashboard__tile-detail"
-                  [class.dashboard__tile-detail--critical]="criticalCount() > 0"
-                >
-                  {{
-                    'monitoring.dashboard.criticalAlerts' | translate: { count: criticalCount() }
-                  }}
-                </span>
-              </a>
-            </li>
-            <li>
-              <a class="ui-panel dashboard__tile" routerLink="/service-requests">
-                <span class="dashboard__tile-label"
-                  ><app-icon name="tools" />{{
-                    'monitoring.dashboard.activeServiceRequests' | translate
-                  }}</span
-                >
-                @if (store.activeServiceRequests() !== null) {
-                  <span class="dashboard__tile-value">{{ store.activeServiceRequests() }}</span>
-                } @else {
-                  <span class="dashboard__tile-value" aria-hidden="true">—</span>
+        @if (store.summary(); as summary) {
+          <section aria-labelledby="dashboard-summary-title">
+            <h2 class="visually-hidden" id="dashboard-summary-title">
+              {{ 'monitoring.dashboard.summaryTitle' | translate }}
+            </h2>
+            <ul class="dashboard__tiles">
+              <li>
+                <a class="ui-panel dashboard__tile" routerLink="/assets/sites">
+                  <span class="dashboard__tile-label"
+                    ><app-icon name="building-store" />{{
+                      'monitoring.dashboard.sites' | translate
+                    }}</span
+                  >
+                  <span class="dashboard__tile-value">{{ summary.siteCount }}</span>
+                </a>
+              </li>
+              <li>
+                <a class="ui-panel dashboard__tile" routerLink="/assets/equipment">
+                  <span class="dashboard__tile-label"
+                    ><app-icon name="fridge" />{{
+                      'monitoring.dashboard.monitoredEquipment' | translate
+                    }}</span
+                  >
+                  <span class="dashboard__tile-value">{{ summary.equipment.reporting }}</span>
                   <span class="dashboard__tile-detail">
-                    {{ 'monitoring.dashboard.countUnavailable' | translate }}
+                    {{
+                      'monitoring.dashboard.ofEquipment'
+                        | translate: { total: summary.equipment.total }
+                    }}
                   </span>
-                }
-              </a>
-            </li>
-          </ul>
-        </section>
+                </a>
+              </li>
+              <li>
+                <a class="ui-panel dashboard__tile" routerLink="/monitoring/alerts">
+                  <span class="dashboard__tile-label"
+                    ><app-icon name="bell-ringing" />{{
+                      'monitoring.dashboard.openAlerts' | translate
+                    }}</span
+                  >
+                  <span class="dashboard__tile-value">{{
+                    summary.alerts.open + summary.alerts.acknowledged
+                  }}</span>
+                  <span
+                    class="dashboard__tile-detail"
+                    [class.dashboard__tile-detail--critical]="summary.alerts.activeCritical > 0"
+                  >
+                    {{
+                      'monitoring.dashboard.criticalAlerts'
+                        | translate: { count: summary.alerts.activeCritical }
+                    }}
+                  </span>
+                </a>
+              </li>
+              <li>
+                <a class="ui-panel dashboard__tile" routerLink="/service-requests">
+                  <span class="dashboard__tile-label"
+                    ><app-icon name="tools" />{{
+                      'monitoring.dashboard.activeServiceRequests' | translate
+                    }}</span
+                  >
+                  <span class="dashboard__tile-value">{{ summary.activeServiceRequests }}</span>
+                </a>
+              </li>
+            </ul>
+          </section>
+        }
 
         <div class="dashboard__columns">
           <section class="ui-panel" aria-labelledby="dashboard-current-title">
@@ -166,7 +165,7 @@
                   @if (item.equipment.lastKnownTemperature !== null) {
                     <p
                       class="telemetry dashboard__temperature-value"
-                      [class.dashboard__temperature-value--stale]="item.state === 'offline'"
+                      [class.dashboard__temperature-value--stale]="item.state === 'silent'"
                     >
                       {{ item.equipment.lastKnownTemperature | temperature }}
                     </p>
@@ -183,7 +182,7 @@
                       @case ('outside') {
                         <app-icon name="alert-triangle" />
                       }
-                      @case ('offline') {
+                      @case ('silent') {
                         <app-icon name="wifi-off" />
                       }
                       @case ('within') {
@@ -195,6 +194,12 @@
                     }
                     {{ 'monitoring.state.' + item.state | translate }}
                   </p>
+                  @if (item.equipment.connectivity.underMaintenance) {
+                    <p class="dashboard__temperature-state">
+                      <app-icon name="tools" />
+                      {{ 'monitoring.maintenanceWindowOpen' | translate }}
+                    </p>
+                  }
                   <p class="dashboard__temperature-meta">
                     {{
                       'monitoring.dashboard.thresholdShort'

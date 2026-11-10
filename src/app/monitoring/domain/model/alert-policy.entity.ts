@@ -1,23 +1,5 @@
 import { BaseEntity } from '@shared/domain/model/base-entity';
 
-/** Seconds of one synchronization window of an edge device: it sends one reading batch per window. */
-export const SYNC_WINDOW_SECONDS = 60;
-
-/**
- * Missed synchronization windows after which the platform-wide default policy considers a device offline.
- * Used only when the policy of an equipment item could not be read.
- */
-export const DEFAULT_MISSED_SYNC_WINDOWS_FOR_OFFLINE = 3;
-
-/**
- * Seconds without a reading after which a unit is considered offline.
- * @param missedSyncWindows - The missed synchronization windows of the applicable policy.
- * @returns The silence, in seconds, that marks the unit offline.
- */
-export function offlineAfterSeconds(missedSyncWindows: number): number {
-  return SYNC_WINDOW_SECONDS * missedSyncWindows;
-}
-
 /**
  * Represents the policy that decides when the readings of an equipment item raise an alert. The
  * platform-wide default policy has no equipment.

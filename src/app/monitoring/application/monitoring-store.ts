@@ -8,6 +8,7 @@ import {
   type Observable,
   share,
   type Subscription,
+  switchMap,
   tap,
   timer,
 } from 'rxjs';
@@ -15,6 +16,8 @@ import type { Alert } from '@monitoring/domain/model/alert.entity';
 import type { AlertPolicy } from '@monitoring/domain/model/alert-policy.entity';
 import type { SensorReading } from '@monitoring/domain/model/sensor-reading.entity';
 import type { AlertDismissal } from '@monitoring/application/contracts/alert-dismissal';
+import type { AlertPage, AlertQuery } from '@monitoring/application/contracts/alert-page';
+import type { DashboardSummary } from '@monitoring/application/contracts/dashboard-summary';
 import type { MonitoredEquipment } from '@monitoring/application/contracts/monitored-equipment';
 import {
   type MonitoringFailure,
@@ -25,11 +28,21 @@ import type {
   EquipmentTelemetryContext,
   MonitoringOverview,
 } from '@monitoring/application/contracts/monitoring-overview';
-import type { MonitoringUpdate } from '@monitoring/application/contracts/monitoring-update';
+import type {
+  ConnectivityChange,
+  MonitoringUpdate,
+} from '@monitoring/application/contracts/monitoring-update';
+import {
+  mergePoints,
+  type TelemetryHistory,
+  withLiveReading,
+} from '@monitoring/application/contracts/telemetry-history';
 import { AcknowledgeAlertUseCase } from '@monitoring/application/use-cases/acknowledge-alert.use-case';
 import { DismissAlertUseCase } from '@monitoring/application/use-cases/dismiss-alert.use-case';
 import { LoadAlertDetailUseCase } from '@monitoring/application/use-cases/load-alert-detail.use-case';
+import { LoadAlertPageUseCase } from '@monitoring/application/use-cases/load-alert-page.use-case';
 import { LoadAlertUseCase } from '@monitoring/application/use-cases/load-alert.use-case';
+import { LoadDashboardSummaryUseCase } from '@monitoring/application/use-cases/load-dashboard-summary.use-case';
 import { LoadEquipmentTelemetryUseCase } from '@monitoring/application/use-cases/load-equipment-telemetry.use-case';
 import { LoadMonitoringOverviewUseCase } from '@monitoring/application/use-cases/load-monitoring-overview.use-case';
 import { LoadReadingHistoryUseCase } from '@monitoring/application/use-cases/load-reading-history.use-case';
@@ -63,6 +76,18 @@ export type LiveStatus = 'idle' | 'connecting' | 'live' | 'reconnecting' | 'unav
  */
 const RELEASE_DELAY_MS = 1_000;
 
+/**
+ * How long live alert changes are gathered before the totals and the alert page shown are read again, so a
+ * burst of changes costs one read.
+ */
+const ALERT_REFRESH_DELAY_MS = 1_000;
+
+/** The number of alerts per page of the alert list. */
+export const ALERT_PAGE_SIZE = 10;
+
+/** The alert list filters the owner sets; the page is chosen separately. */
+export type AlertFilters = Pick<AlertQuery, 'statuses' | 'severities' | 'types' | 'equipmentId'>;
+
 /** Failures meaning the alert changed or disappeared and must be read again. */
 const STALE_ALERT_FAILURES: ReadonlySet<MonitoringFailure> = new Set([
   'INVALID_STATUS_TRANSITION',
@@ -85,10 +110,32 @@ function withReading(equipment: MonitoredEquipment, reading: SensorReading): Mon
   ) {
     return equipment;
   }
+  // Connectivity is left as the server stated it; its changes arrive as connectivity events.
   return {
     ...equipment,
     lastReadingAt: reading.recorded_at,
     lastKnownTemperature: reading.avg_temperature,
+  };
+}
+
+/** Applies a live connectivity change to an equipment item. */
+function withConnectivity(
+  equipment: MonitoredEquipment,
+  change: ConnectivityChange,
+): MonitoredEquipment {
+  if (equipment.id !== change.equipmentId) {
+    return equipment;
+  }
+  return {
+    ...equipment,
+    connectivity: {
+      ...equipment.connectivity,
+      state: change.state,
+      lastReceivedAt: change.lastReceivedAt,
+      underMaintenance: change.underMaintenance,
+      // The change is the latest server evaluation.
+      evaluatedAt: change.changedAt,
+    },
   };
 }
 
@@ -99,8 +146,8 @@ function withReading(equipment: MonitoredEquipment, reading: SensorReading): Mon
  *
  * It holds signal-based state only and delegates every operation to Monitoring and Alerting use cases.
  * Alert actions are not applied optimistically: the alert is replaced by the one the backend answers, and
- * a rejected action reads the alert again. Live updates reconcile the loaded state; on every (re)connection
- * the loaded state is read again because the feed carries no replay. The state is discarded once no
+ * a rejected action reads the alert again. Live updates reconcile the loaded state; a (re)connection whose
+ * missed events could not all be replayed reads the loaded state again. The state is discarded once no
  * monitoring view uses it, so nothing is kept between sessions.
  */
 @Injectable({
@@ -109,6 +156,8 @@ function withReading(equipment: MonitoredEquipment, reading: SensorReading): Mon
 export class MonitoringStore {
   private readonly loadMonitoringOverviewUseCase = inject(LoadMonitoringOverviewUseCase);
   private readonly loadAlertUseCase = inject(LoadAlertUseCase);
+  private readonly loadAlertPageUseCase = inject(LoadAlertPageUseCase);
+  private readonly loadDashboardSummaryUseCase = inject(LoadDashboardSummaryUseCase);
   private readonly loadAlertDetailUseCase = inject(LoadAlertDetailUseCase);
   private readonly acknowledgeAlertUseCase = inject(AcknowledgeAlertUseCase);
   private readonly resolveAlertUseCase = inject(ResolveAlertUseCase);
@@ -120,8 +169,7 @@ export class MonitoringStore {
   // Overview.
   private readonly overviewRequested = signal(false);
   private readonly equipmentSignal = signal<readonly MonitoredEquipment[] | null>(null);
-  private readonly siteCountSignal = signal(0);
-  private readonly activeServiceRequestsSignal = signal<number | null>(null);
+  private readonly summarySignal = signal<DashboardSummary | null>(null);
   private readonly overviewLoadingSignal = signal(false);
   private readonly overviewFailureSignal = signal<MonitoringFailure | null>(null);
   private readonly overviewUpdatedAtSignal = signal<Date | null>(null);
@@ -132,9 +180,8 @@ export class MonitoringStore {
   readonly equipmentById: Signal<ReadonlyMap<number, MonitoredEquipment>> = computed(
     () => new Map(this.equipment().map((item) => [item.id, item])),
   );
-  readonly siteCount = this.siteCountSignal.asReadonly();
-  /** The number of the owner's active service requests, or null when it could not be read. */
-  readonly activeServiceRequests = this.activeServiceRequestsSignal.asReadonly();
+  /** The totals of the owner's dashboard, computed by the backend, or null until loaded. */
+  readonly summary = this.summarySignal.asReadonly();
   readonly overviewLoading = this.overviewLoadingSignal.asReadonly();
   readonly overviewFailure = this.overviewFailureSignal.asReadonly();
   /** When the overview was last read from the backend. */
@@ -142,11 +189,28 @@ export class MonitoringStore {
 
   // Policies and active alerts, shared by every view.
   private readonly policiesSignal = signal<ReadonlyMap<number, AlertPolicy>>(new Map());
-  /** The applicable alert policy of each equipment item read so far, by equipment id. */
-  readonly policies = this.policiesSignal.asReadonly();
   private readonly activeAlertsSignal = signal<ReadonlyMap<number, Alert>>(new Map());
-  /** The OPEN and ACKNOWLEDGED alerts known so far, newest first. */
+  /** The most recently opened OPEN and ACKNOWLEDGED alerts known so far, newest first. */
   readonly activeAlerts = computed(() => [...this.activeAlertsSignal().values()].sort(newestFirst));
+
+  // Alert list, current and past alerts, paged by the backend.
+  private readonly alertQuerySignal = signal<AlertQuery>({
+    statuses: [],
+    severities: [],
+    types: [],
+    equipmentId: null,
+    page: 0,
+    size: ALERT_PAGE_SIZE,
+  });
+  private readonly alertPageSignal = signal<AlertPage | null>(null);
+  private readonly alertPageLoadingSignal = signal(false);
+  private readonly alertPageFailureSignal = signal<MonitoringFailure | null>(null);
+  /** The filters and page of the alert list. */
+  readonly alertQuery = this.alertQuerySignal.asReadonly();
+  /** The current page of the alert list, or null until one is loaded. */
+  readonly alertPage = this.alertPageSignal.asReadonly();
+  readonly alertPageLoading = this.alertPageLoadingSignal.asReadonly();
+  readonly alertPageFailure = this.alertPageFailureSignal.asReadonly();
 
   // Selected alert.
   private readonly selectedAlertIdSignal = signal<number | null>(null);
@@ -183,16 +247,18 @@ export class MonitoringStore {
   private readonly historyQuery = signal<{ equipmentId: number; durationMinutes: number } | null>(
     null,
   );
-  private readonly historySignal = signal<readonly SensorReading[] | null>(null);
+  private readonly historySignal = signal<TelemetryHistory | null>(null);
   private readonly historyFromSignal = signal<Date | null>(null);
   private readonly historyLoadingSignal = signal(false);
   private readonly historyFailureSignal = signal<MonitoringFailure | null>(null);
-  /** The readings of the selected period, oldest first, or null while none are loaded. */
-  readonly history = this.historySignal.asReadonly();
+  /** The points of the selected period, oldest first, or null while none are loaded. */
+  readonly history = computed(() => this.historySignal()?.points ?? null);
+  /** The width of the buckets the history is aggregated in, in seconds, or null for raw batches. */
+  readonly historyBucketSeconds = computed(() => this.historySignal()?.bucketSeconds ?? null);
   readonly historyLoading = this.historyLoadingSignal.asReadonly();
   readonly historyFailure = this.historyFailureSignal.asReadonly();
-  /** The latest reading batch of the selected equipment among those loaded or received live. */
-  readonly latestReading = computed(() => this.historySignal()?.at(-1) ?? null);
+  /** The latest raw reading batch of the selected equipment among those loaded or received live. */
+  readonly latestReading = computed(() => this.historySignal()?.latestReading ?? null);
 
   // Alert actions.
   private readonly alertActionSignal = signal<AlertActionState | null>(null);
@@ -208,6 +274,8 @@ export class MonitoringStore {
   private telemetrySubscription: Subscription | null = null;
   private historySubscription: Subscription | null = null;
   private actionSubscription: Subscription | null = null;
+  private alertPageSubscription: Subscription | null = null;
+  private alertRefreshSubscription: Subscription | null = null;
   private readonly refreshSubscriptions = new Set<Subscription>();
 
   /**
@@ -250,6 +318,35 @@ export class MonitoringStore {
       .subscribe({
         next: (overview) => this.applyOverview(overview),
         error: (error: unknown) => this.overviewFailureSignal.set(toMonitoringFailure(error)),
+      });
+  }
+
+  /**
+   * Loads a page of the owner's alerts, current and past. A newer load supersedes one still in progress.
+   * @param change - The filters or page to apply; the rest of the current query is kept. Changing any
+   * filter returns to the first page.
+   */
+  loadAlertPage(change: Partial<AlertFilters & Pick<AlertQuery, 'page'>> = {}): void {
+    const filtersChanged = (['statuses', 'severities', 'types', 'equipmentId'] as const).some(
+      (key) => change[key] !== undefined,
+    );
+    this.alertQuerySignal.update((query) => ({
+      ...query,
+      ...change,
+      page: change.page ?? (filtersChanged ? 0 : query.page),
+    }));
+    this.alertPageSubscription?.unsubscribe();
+    this.alertPageLoadingSignal.set(true);
+    this.alertPageFailureSignal.set(null);
+    this.alertPageSubscription = this.loadAlertPageUseCase
+      .execute(this.alertQuerySignal())
+      .pipe(finalize(() => this.alertPageLoadingSignal.set(false)))
+      .subscribe({
+        next: (page) => {
+          this.alertPageSignal.set(page);
+          page.items.filter((alert) => alert.isActive()).forEach((alert) => this.applyAlert(alert));
+        },
+        error: (error: unknown) => this.alertPageFailureSignal.set(toMonitoringFailure(error)),
       });
   }
 
@@ -333,10 +430,10 @@ export class MonitoringStore {
       .execute(equipmentId, from, to)
       .pipe(finalize(() => this.historyLoadingSignal.set(false)))
       .subscribe({
-        next: (readings) => {
+        next: (history) => {
           this.historyFromSignal.set(from);
           // Live readings received while loading are kept.
-          this.historySignal.update((current) => mergeReadings(readings, current ?? [], from));
+          this.historySignal.update((current) => withLoaded(history, current, from));
         },
         error: (error: unknown) => this.historyFailureSignal.set(toMonitoringFailure(error)),
       });
@@ -401,9 +498,7 @@ export class MonitoringStore {
 
   private applyOverview(overview: MonitoringOverview): void {
     this.equipmentSignal.set(overview.equipment);
-    this.siteCountSignal.set(overview.siteCount);
-    this.activeServiceRequestsSignal.set(overview.activeServiceRequests);
-    this.policiesSignal.update((policies) => new Map([...policies, ...overview.policies]));
+    this.summarySignal.set(overview.summary);
     this.activeAlertsSignal.set(new Map(overview.activeAlerts.map((alert) => [alert.id, alert])));
     this.overviewUpdatedAtSignal.set(new Date());
   }
@@ -422,6 +517,40 @@ export class MonitoringStore {
     this.selectedAlertSignal.update((detail) =>
       detail?.alert.id === alert.id ? { ...detail, alert } : detail,
     );
+    this.alertPageSignal.update((page) =>
+      page === null
+        ? page
+        : { ...page, items: page.items.map((item) => (item.id === alert.id ? alert : item)) },
+    );
+  }
+
+  /**
+   * Reads again, once a burst of live alert changes is over, what they make stale: the dashboard totals
+   * and the alert page shown, whose filters the changed alerts may now match or leave.
+   */
+  private scheduleAlertRefresh(): void {
+    if (this.summarySignal() === null && this.alertPageSignal() === null) {
+      return;
+    }
+    this.alertRefreshSubscription?.unsubscribe();
+    this.alertRefreshSubscription = timer(ALERT_REFRESH_DELAY_MS)
+      .pipe(
+        tap(() => {
+          if (this.alertPageSignal() !== null) {
+            this.loadAlertPage();
+          }
+        }),
+        switchMap(() => this.loadDashboardSummaryUseCase.execute()),
+      )
+      .subscribe({
+        next: (summary) => {
+          if (this.summarySignal() !== null) {
+            this.summarySignal.set(summary);
+          }
+        },
+        // The totals shown stay as they were; the next overview load reads them again.
+        error: () => undefined,
+      });
   }
 
   /** Reads an alert again and reconciles it; an alert no longer reachable leaves the active alerts. */
@@ -450,7 +579,9 @@ export class MonitoringStore {
     switch (update.kind) {
       case 'connected':
         this.liveStatusSignal.set('live');
-        this.resynchronize();
+        if (!update.resumed) {
+          this.resynchronize();
+        }
         break;
       case 'disconnected':
         this.liveStatusSignal.set('reconnecting');
@@ -460,6 +591,10 @@ export class MonitoringStore {
         break;
       case 'alert-status':
         this.refreshAlert(update.change.alertId);
+        this.scheduleAlertRefresh();
+        break;
+      case 'connectivity':
+        this.applyConnectivity(update.change);
         break;
     }
   }
@@ -474,15 +609,29 @@ export class MonitoringStore {
     const from = this.historyFromSignal();
     if (this.historyQuery()?.equipmentId === reading.equipment_id && from !== null) {
       this.historySignal.update((history) =>
-        history === null ? null : mergeReadings(history, [reading], from),
+        history === null ? null : withLiveReading(history, reading, from),
       );
     }
+  }
+
+  private applyConnectivity(change: ConnectivityChange): void {
+    this.equipmentSignal.update(
+      (equipment) => equipment?.map((item) => withConnectivity(item, change)) ?? null,
+    );
+    this.telemetryContextSignal.update((context) =>
+      context === null
+        ? null
+        : { ...context, equipment: withConnectivity(context.equipment, change) },
+    );
   }
 
   /** Reads again everything a view asked for, since updates sent while disconnected are lost. */
   private resynchronize(): void {
     if (this.overviewRequested()) {
       this.loadOverview();
+    }
+    if (this.alertPageSignal() !== null) {
+      this.loadAlertPage();
     }
     const equipmentId = this.telemetryEquipmentIdSignal();
     if (equipmentId !== null) {
@@ -514,14 +663,19 @@ export class MonitoringStore {
       this.selectedAlertSubscription,
       this.telemetrySubscription,
       this.actionSubscription,
+      this.alertPageSubscription,
+      this.alertRefreshSubscription,
       ...this.refreshSubscriptions,
     ].forEach((subscription) => subscription?.unsubscribe());
     this.refreshSubscriptions.clear();
     this.clearHistory();
     this.overviewRequested.set(false);
     this.equipmentSignal.set(null);
-    this.siteCountSignal.set(0);
-    this.activeServiceRequestsSignal.set(null);
+    this.summarySignal.set(null);
+    this.alertPageSignal.set(null);
+    this.alertPageLoadingSignal.set(false);
+    this.alertPageFailureSignal.set(null);
+    this.alertQuerySignal.update((query) => ({ ...query, page: 0 }));
     this.overviewLoadingSignal.set(false);
     this.overviewFailureSignal.set(null);
     this.overviewUpdatedAtSignal.set(null);
@@ -541,21 +695,28 @@ export class MonitoringStore {
 }
 
 /**
- * Merges readings by batch identifier, keeping only those recorded from the start of the period, oldest
- * first.
+ * Combines a loaded history with the one in memory. Raw batches received live while loading are kept;
+ * an aggregated history is taken as loaded, since its buckets already hold the batches stored so far.
  */
-function mergeReadings(
-  base: readonly SensorReading[],
-  extra: readonly SensorReading[],
+function withLoaded(
+  loaded: TelemetryHistory,
+  current: TelemetryHistory | null,
   from: Date,
-): SensorReading[] {
-  const byUid = new Map<string, SensorReading>();
-  [...base, ...extra].forEach((reading) => {
-    if (reading.recorded_at.getTime() >= from.getTime() && !byUid.has(reading.reading_uid)) {
-      byUid.set(reading.reading_uid, reading);
-    }
-  });
-  return [...byUid.values()].sort(
-    (first, second) => first.recorded_at.getTime() - second.recorded_at.getTime(),
+): TelemetryHistory {
+  if (current === null || loaded.bucketSeconds !== null || current.bucketSeconds !== null) {
+    return loaded;
+  }
+  const latest = [loaded.latestReading, current.latestReading].reduce<SensorReading | null>(
+    (newest, reading) =>
+      reading !== null &&
+      (newest === null || reading.recorded_at.getTime() > newest.recorded_at.getTime())
+        ? reading
+        : newest,
+    null,
   );
+  return {
+    points: mergePoints(loaded.points, current.points, from),
+    bucketSeconds: null,
+    latestReading: latest,
+  };
 }

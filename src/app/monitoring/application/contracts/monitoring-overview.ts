@@ -1,21 +1,17 @@
 import type { Alert } from '@monitoring/domain/model/alert.entity';
 import type { AlertPolicy } from '@monitoring/domain/model/alert-policy.entity';
+import type { DashboardSummary } from '@monitoring/application/contracts/dashboard-summary';
 import type { MonitoredEquipment } from '@monitoring/application/contracts/monitored-equipment';
 
 /**
- * The owner's monitoring overview: the equipment with its last known telemetry, the policy that applies
- * to each item, the active (OPEN or ACKNOWLEDGED) alerts, and the counters of other contexts the overview
- * shows.
+ * The owner's monitoring overview: the totals computed by the backend, the equipment with its last known
+ * telemetry and connectivity, and the most recently opened active (OPEN or ACKNOWLEDGED) alerts.
  */
 export interface MonitoringOverview {
+  readonly summary: DashboardSummary;
   readonly equipment: readonly MonitoredEquipment[];
-  readonly siteCount: number;
-  /** The applicable alert policy of each equipment item, by equipment id; missing when unreadable. */
-  readonly policies: ReadonlyMap<number, AlertPolicy>;
-  /** The active alerts of every equipment item, newest first. */
+  /** The most recently opened active alerts, newest first; the summary holds their total. */
   readonly activeAlerts: readonly Alert[];
-  /** The number of the owner's active service requests, or null when it could not be read. */
-  readonly activeServiceRequests: number | null;
 }
 
 /**

@@ -1,9 +1,8 @@
 import { Component, computed, DestroyRef, effect, inject, signal } from '@angular/core';
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { map } from 'rxjs';
 import { Alert } from '@monitoring/domain/model/alert.entity';
 import { AlertSeverity } from '@monitoring/domain/value-objects/alert-severity';
 import { AlertStatus } from '@monitoring/domain/value-objects/alert-status';
@@ -18,23 +17,31 @@ import {
   alertActionErrorKey,
 } from '@monitoring/presentation/monitoring-feedback';
 import { Icon } from '@shared/presentation/components/icon/icon';
-import {
-  pageCountOf,
-  pageOf,
-  Pagination,
-} from '@shared/presentation/components/pagination/pagination';
+import { Pagination } from '@shared/presentation/components/pagination/pagination';
 import { StatePanel } from '@shared/presentation/components/state-panel/state-panel';
 
-const PAGE_SIZE = 5;
+/** The status choices of the list: the active alerts (OPEN and ACKNOWLEDGED), one status, or all. */
+type StatusFilter = 'ACTIVE' | AlertStatus | 'ALL';
 
-type StatusFilter = AlertStatus.OPEN | AlertStatus.ACKNOWLEDGED | 'ALL';
+const ACTIVE_STATUSES: readonly AlertStatus[] = [AlertStatus.OPEN, AlertStatus.ACKNOWLEDGED];
+
+function statusesOf(filter: StatusFilter): readonly AlertStatus[] {
+  switch (filter) {
+    case 'ACTIVE':
+      return ACTIVE_STATUSES;
+    case 'ALL':
+      return [];
+    default:
+      return [filter];
+  }
+}
 
 /**
- * Active (OPEN and ACKNOWLEDGED) thermal and connectivity alerts of the owner, filtered by status,
- * severity and type. The backend lists only active alerts, so resolved and dismissed alerts leave this
- * list; each one stays reachable from its detail. The `equipmentId` query parameter shows the alerts of one
- * equipment item. Alerts can be acknowledged, resolved or dismissed with a reason, or turned into a
- * corrective service request draft.
+ * Thermal and connectivity alerts of the owner, current and past, filtered by status, severity and type
+ * and paged by the backend. The list opens on the active (OPEN and ACKNOWLEDGED) alerts; resolved and
+ * dismissed ones form the history. The `equipmentId` query parameter shows the alerts of one equipment
+ * item. Alerts can be acknowledged, resolved or dismissed with a reason, or turned into a corrective
+ * service request draft.
  */
 @Component({
   imports: [
@@ -55,9 +62,12 @@ type StatusFilter = AlertStatus.OPEN | AlertStatus.ACKNOWLEDGED | 'ALL';
 export class AlertList {
   protected readonly store = inject(MonitoringStore);
   protected readonly statusFilters: StatusFilter[] = [
-    'ALL',
+    'ACTIVE',
     AlertStatus.OPEN,
     AlertStatus.ACKNOWLEDGED,
+    AlertStatus.RESOLVED,
+    AlertStatus.DISMISSED,
+    'ALL',
   ];
   protected readonly severities = Object.values(AlertSeverity);
   protected readonly types = Object.values(AlertType);
@@ -67,13 +77,8 @@ export class AlertList {
     severity: ['ALL' as AlertSeverity | 'ALL'],
     type: ['ALL' as AlertType | 'ALL'],
   });
-  private readonly filterValue = toSignal(
-    this.filters.valueChanges.pipe(map(() => this.filters.getRawValue())),
-    { initialValue: this.filters.getRawValue() },
-  );
 
-  protected readonly statusFilter = signal<StatusFilter>('ALL');
-  protected readonly page = signal(1);
+  protected readonly statusFilter = signal<StatusFilter>('ACTIVE');
   /** The alert whose resolution or dismissal is being confirmed. */
   protected readonly confirmation = signal<{
     readonly alert: Alert;
@@ -81,47 +86,22 @@ export class AlertList {
   } | null>(null);
 
   protected readonly status = computed<'loading' | 'error' | 'ready'>(() => {
-    if (this.store.overviewLoaded()) {
+    if (this.store.alertPage() !== null) {
       return 'ready';
     }
-    return this.store.overviewFailure() !== null ? 'error' : 'loading';
+    return this.store.alertPageFailure() !== null ? 'error' : 'loading';
   });
-  private readonly scoped = computed(() =>
-    this.store
-      .activeAlerts()
-      .filter(
-        (alert) => this.equipmentFilter === null || alert.equipment_id === this.equipmentFilter,
-      ),
+  protected readonly alerts = computed(() => this.store.alertPage()?.items ?? []);
+  /** The page shown, counted from 1. */
+  protected readonly currentPage = computed(() => this.store.alertQuery().page + 1);
+  protected readonly pageCount = computed(() =>
+    Math.max(1, this.store.alertPage()?.totalPages ?? 1),
   );
-  protected readonly statusCounts = computed(() => {
-    const counts = new Map<StatusFilter, number>([['ALL', this.scoped().length]]);
-    for (const alert of this.scoped()) {
-      if (alert.status === AlertStatus.OPEN || alert.status === AlertStatus.ACKNOWLEDGED) {
-        counts.set(alert.status, (counts.get(alert.status) ?? 0) + 1);
-      }
-    }
-    return counts;
-  });
-  protected readonly filtered = computed(() => {
-    const status = this.statusFilter();
-    const { severity, type } = this.filterValue();
-    return this.scoped().filter(
-      (alert) =>
-        (status === 'ALL' || alert.status === status) &&
-        (severity === 'ALL' || alert.severity === severity) &&
-        (type === 'ALL' || alert.type === type),
-    );
-  });
+  /** Whether a severity or type filter, or a status other than the active ones, narrows the list. */
   protected readonly anyFilter = computed(() => {
-    const { severity, type } = this.filterValue();
-    return this.statusFilter() !== 'ALL' || severity !== 'ALL' || type !== 'ALL';
+    const { severities, types } = this.store.alertQuery();
+    return this.statusFilter() !== 'ACTIVE' || severities.length > 0 || types.length > 0;
   });
-  protected readonly pageCount = computed(() => pageCountOf(this.filtered().length, PAGE_SIZE));
-  /** The page shown, which moves back when closed alerts leave the last page. */
-  protected readonly currentPage = computed(() => Math.min(this.page(), this.pageCount()));
-  protected readonly visible = computed(() =>
-    pageOf(this.filtered(), this.currentPage(), PAGE_SIZE),
-  );
 
   /** The confirmation announced after the last successful action. */
   protected readonly announcement = computed(() => {
@@ -146,7 +126,7 @@ export class AlertList {
   constructor() {
     this.store.clearAlertAction();
     this.store.connectLiveUpdates(inject(DestroyRef));
-    this.filters.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.page.set(1));
+    this.filters.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.loadPage());
     this.load();
     // A successful resolution or dismissal closes its dialog.
     effect(() => {
@@ -156,8 +136,14 @@ export class AlertList {
     });
   }
 
+  /** Reads the equipment names and the first page of the list again. */
   protected load(): void {
     this.store.loadOverview();
+    this.loadPage();
+  }
+
+  protected goToPage(page: number): void {
+    this.store.loadAlertPage({ page: page - 1 });
   }
 
   protected equipmentName(alert: Alert): string | number {
@@ -166,12 +152,24 @@ export class AlertList {
 
   protected setStatusFilter(status: StatusFilter): void {
     this.statusFilter.set(status);
-    this.page.set(1);
+    this.loadPage();
   }
 
   protected clearFilters(): void {
+    this.statusFilter.set('ACTIVE');
+    // Resetting the form loads the first page of the active alerts.
     this.filters.reset();
-    this.setStatusFilter('ALL');
+  }
+
+  /** Loads the first page matching the filters chosen. */
+  private loadPage(): void {
+    const { severity, type } = this.filters.getRawValue();
+    this.store.loadAlertPage({
+      statuses: statusesOf(this.statusFilter()),
+      severities: severity === 'ALL' ? [] : [severity],
+      types: type === 'ALL' ? [] : [type],
+      equipmentId: this.equipmentFilter,
+    });
   }
 
   protected acknowledge(alert: Alert): void {

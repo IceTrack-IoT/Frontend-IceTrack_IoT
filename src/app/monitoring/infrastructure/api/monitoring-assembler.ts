@@ -4,13 +4,28 @@ import { SensorReading } from '@monitoring/domain/model/sensor-reading.entity';
 import { isAlertSeverity } from '@monitoring/domain/value-objects/alert-severity';
 import { isAlertStatus } from '@monitoring/domain/value-objects/alert-status';
 import { isAlertType } from '@monitoring/domain/value-objects/alert-type';
+import type { TelemetryBucket } from '@monitoring/domain/value-objects/telemetry-bucket';
+import type { AlertPage } from '@monitoring/application/contracts/alert-page';
+import type { DashboardSummary } from '@monitoring/application/contracts/dashboard-summary';
 import type { AlertDismissal } from '@monitoring/application/contracts/alert-dismissal';
 import type { DismissAlertRequest } from '@monitoring/infrastructure/api/monitoring.requests';
 import type {
   AlertPolicyResource,
   AlertResource,
+  DashboardSummaryResource,
+  PagedAlertResource,
   SensorReadingResource,
+  TelemetryBucketResource,
 } from '@monitoring/infrastructure/api/monitoring.response';
+
+/** The bucket widths the backend aggregates telemetry in, in seconds, by their `X-Telemetry-Bucket` name. */
+const BUCKET_SECONDS: Readonly<Record<string, number>> = {
+  '1m': 60,
+  '5m': 300,
+  '15m': 900,
+  '1h': 3_600,
+  '6h': 21_600,
+};
 
 /**
  * MonitoringAssembler converts the Monitoring and Alerting resources into domain entities, and application
@@ -88,6 +103,79 @@ export class MonitoringAssembler {
       recorded_at: toInstant(resource.recorded_at),
       under_maintenance: resource.under_maintenance,
     });
+  }
+
+  /**
+   * Converts a PagedAlertResource to an AlertPage.
+   * @param resource - The resource to convert.
+   * @returns The corresponding page.
+   */
+  toAlertPageFromResource(resource: PagedAlertResource): AlertPage {
+    return {
+      items: resource.content.map((item) => this.toAlertFromResource(item)),
+      page: resource.page,
+      size: resource.size,
+      totalElements: resource.total_elements,
+      totalPages: resource.total_pages,
+    };
+  }
+
+  /**
+   * Converts a TelemetryBucketResource to a TelemetryBucket.
+   * @param resource - The resource to convert.
+   * @returns The corresponding bucket.
+   */
+  toTelemetryBucketFromResource(resource: TelemetryBucketResource): TelemetryBucket {
+    return {
+      bucket_start: toInstant(resource.bucket_start),
+      bucket_end: toInstant(resource.bucket_end),
+      min_temperature: resource.min_temperature,
+      max_temperature: resource.max_temperature,
+      avg_temperature: resource.avg_temperature,
+      avg_humidity: resource.avg_humidity ?? null,
+      sample_count: resource.sample_count,
+      batch_count: resource.batch_count,
+      under_maintenance: resource.under_maintenance,
+      door_open_seconds: resource.door_open_seconds ?? null,
+      last_received_at: toInstant(resource.last_received_at),
+    };
+  }
+
+  /**
+   * Reads the bucket width the backend used from its `X-Telemetry-Bucket` name.
+   * @param name - The header value, such as `1h`.
+   * @returns The width in seconds.
+   */
+  toBucketSeconds(name: string | null): number {
+    const seconds = name === null ? undefined : BUCKET_SECONDS[name];
+    if (seconds === undefined) {
+      throw new Error('The telemetry answer has an unknown bucket width.');
+    }
+    return seconds;
+  }
+
+  /**
+   * Converts a DashboardSummaryResource to a DashboardSummary.
+   * @param resource - The resource to convert.
+   * @returns The corresponding summary.
+   */
+  toDashboardSummaryFromResource(resource: DashboardSummaryResource): DashboardSummary {
+    return {
+      generatedAt: toInstant(resource.generated_at),
+      siteCount: resource.site_count,
+      equipment: {
+        total: resource.equipment.total,
+        reporting: resource.equipment.reporting,
+        silent: resource.equipment.silent,
+        neverReported: resource.equipment.never_reported,
+      },
+      alerts: {
+        open: resource.alerts.open,
+        acknowledged: resource.alerts.acknowledged,
+        activeCritical: resource.alerts.active_by_severity['CRITICAL'] ?? 0,
+      },
+      activeServiceRequests: resource.service_requests.active,
+    };
   }
 
   /**

@@ -39,8 +39,8 @@
       ? ('monitoring.chart.valueText'
         | translate
           : {
-              time: (active.reading.recorded_at | localizedDate: 'dateTime'),
-              temperature: (active.reading.avg_temperature | temperature),
+              time: (active.sample.at | localizedDate: 'dateTime'),
+              temperature: (active.sample.avgTemperature | temperature),
             })
       : ('monitoring.chart.sliderHint' | translate)
   "
@@ -151,7 +151,7 @@
     @for (line of chart.lines; track $index) {
       <path class="temperature-chart__line" [attr.d]="line" />
     }
-    @for (point of chart.points; track point.reading.reading_uid) {
+    @for (point of chart.points; track point.sample.key) {
       @if (point.outside) {
         <circle
           class="temperature-chart__outside"
@@ -189,20 +189,24 @@
       [style.left.px]="active.x"
     >
       <span class="temperature-chart__tooltip-value telemetry">{{
-        active.reading.avg_temperature | temperature
+        active.sample.avgTemperature | temperature
       }}</span>
-      <span>{{ active.reading.recorded_at | localizedDate: 'dateTime' }}</span>
+      <span>{{ active.sample.at | localizedDate: 'dateTime' }}</span>
       <span>
         {{
           'monitoring.chart.rangeValue'
             | translate
               : {
-                  min: (active.reading.min_temperature | temperature),
-                  max: (active.reading.max_temperature | temperature),
+                  min: (active.sample.minTemperature | temperature),
+                  max: (active.sample.maxTemperature | temperature),
                 }
         }}
       </span>
-      <span>{{ 'monitoring.chart.humidity' | translate: { value: active.reading.humidity } }}</span>
+      @if (active.sample.humidity !== null) {
+        <span>{{
+          'monitoring.chart.humidity' | translate: { value: active.sample.humidity }
+        }}</span>
+      }
       @if (active.outside) {
         <span class="temperature-chart__tooltip-outside">{{
           'monitoring.chart.outside' | translate
@@ -213,7 +217,7 @@
           'monitoring.chart.excursion' | translate
         }}</span>
       }
-      @if (active.reading.under_maintenance) {
+      @if (active.sample.underMaintenance) {
         <span>{{ 'monitoring.chart.underMaintenance' | translate }}</span>
       }
     </div>

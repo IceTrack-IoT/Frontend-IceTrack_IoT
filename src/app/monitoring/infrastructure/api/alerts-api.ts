@@ -3,6 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { map, type Observable } from 'rxjs';
 import { BaseApi } from '@shared/infrastructure/api/base-api';
 import type { Alert } from '@monitoring/domain/model/alert.entity';
+import type { AlertPage, AlertQuery } from '@monitoring/application/contracts/alert-page';
 import type { AlertDismissal } from '@monitoring/application/contracts/alert-dismissal';
 import type { AlertsPort } from '@monitoring/application/ports/alerts.port';
 import { MonitoringApiEndpoint } from '@monitoring/infrastructure/api/monitoring-api-endpoint';
@@ -23,6 +24,13 @@ export class AlertsApi extends BaseApi implements AlertsPort {
     return this.endpoint.getAlert(alertId).pipe(
       mapMonitoringErrors(),
       map((resource) => this.assembler.toAlertFromResource(resource)),
+    );
+  }
+
+  listAlerts(query: AlertQuery): Observable<AlertPage> {
+    return this.endpoint.listAlerts(query).pipe(
+      mapMonitoringErrors(),
+      map((resource) => this.assembler.toAlertPageFromResource(resource)),
     );
   }
 

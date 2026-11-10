@@ -1,16 +1,11 @@
 import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { interval, map } from 'rxjs';
-import {
-  DEFAULT_MISSED_SYNC_WINDOWS_FOR_OFFLINE,
-  offlineAfterSeconds,
-} from '@monitoring/domain/model/alert-policy.entity';
-import type { SensorReading } from '@monitoring/domain/model/sensor-reading.entity';
 import { AlertType } from '@monitoring/domain/value-objects/alert-type';
 import { MonitoringStore } from '@monitoring/application/monitoring-store';
 import type { MonitoredEquipment } from '@monitoring/application/contracts/monitored-equipment';
+import type { TelemetryPoint } from '@monitoring/application/contracts/telemetry-history';
 import {
   type ExcursionPeriod,
   TemperatureChart,
@@ -27,9 +22,6 @@ import { LocalizedDatePipe } from '@shared/presentation/pipes/localized-date.pip
 import { LocalizedNumberPipe } from '@shared/presentation/pipes/localized-number.pipe';
 import { RelativeTimePipe } from '@shared/presentation/pipes/relative-time.pipe';
 import { TemperaturePipe } from '@shared/presentation/pipes/temperature.pipe';
-
-/** How often the freshness of the last reading is re-evaluated. */
-const CLOCK_TICK_MS = 15_000;
 
 /**
  * Current and historical telemetry of an equipment item: the last known reading and its freshness, the
@@ -62,9 +54,6 @@ export class EquipmentTelemetry {
   protected readonly window = computed(() => TELEMETRY_RANGE_WINDOWS[this.range()]);
   /** Whether the readings table is open; it is only rendered then, as a long period has many rows. */
   protected readonly tableOpen = signal(false);
-  private readonly now = toSignal(interval(CLOCK_TICK_MS).pipe(map(() => Date.now())), {
-    initialValue: Date.now(),
-  });
 
   protected readonly equipment = computed(() => {
     const equipment = this.store.telemetryEquipment();
@@ -85,11 +74,14 @@ export class EquipmentTelemetry {
     }
   });
   protected readonly history = computed(() => this.store.history() ?? []);
-  /** Seconds without a reading after which the unit is considered offline, from its policy. */
-  protected readonly offlineSeconds = computed(() =>
-    offlineAfterSeconds(
-      this.store.telemetryPolicy()?.missed_sync_windows_for_offline ??
-        DEFAULT_MISSED_SYNC_WINDOWS_FOR_OFFLINE,
+  /**
+   * The time between two points beyond which the chart shows a gap: the silence window of the unit, or
+   * the bucket width when the history is aggregated.
+   */
+  protected readonly gapSeconds = computed(() =>
+    Math.max(
+      this.equipment()?.connectivity.silentAfterSeconds ?? 0,
+      this.store.historyBucketSeconds() ?? 0,
     ),
   );
   /** The latest reading batch, when it is the last one the equipment reported. */
@@ -102,10 +94,11 @@ export class EquipmentTelemetry {
       ? reading
       : null;
   });
+  /** Whether the server reports the unit silent outside a maintenance window, where silence is expected. */
   protected readonly stale = computed(() => {
-    const lastReadingAt = this.equipment()?.lastReadingAt ?? null;
+    const connectivity = this.equipment()?.connectivity ?? null;
     return (
-      lastReadingAt !== null && this.now() - lastReadingAt.getTime() > this.offlineSeconds() * 1000
+      connectivity !== null && connectivity.state === 'SILENT' && !connectivity.underMaintenance
     );
   });
   protected readonly outside = computed(() => {
@@ -127,20 +120,20 @@ export class EquipmentTelemetry {
     return starts.length === 0 ? null : new Date(Math.min(...starts));
   });
   protected readonly stats = computed(() => {
-    const readings = this.history();
+    const points = this.history();
     const equipment = this.equipment();
-    if (readings.length === 0 || !equipment) {
+    if (points.length === 0 || !equipment) {
       return null;
     }
-    const averages = readings.map((reading) => reading.avg_temperature);
+    const averages = points.map((point) => point.avgTemperature);
     return {
-      min: Math.min(...readings.map((reading) => reading.min_temperature)),
-      max: Math.max(...readings.map((reading) => reading.max_temperature)),
+      min: Math.min(...points.map((point) => point.minTemperature)),
+      max: Math.max(...points.map((point) => point.maxTemperature)),
       mean: averages.reduce((total, value) => total + value, 0) / averages.length,
-      outside: readings.filter((reading) => this.isOutside(reading, equipment)).length,
-      count: readings.length,
-      from: readings[0].recorded_at,
-      to: readings[readings.length - 1].recorded_at,
+      outside: points.filter((point) => this.isOutside(point, equipment)).length,
+      count: points.length,
+      from: points[0].at,
+      to: points[points.length - 1].at,
     };
   });
 
@@ -154,8 +147,8 @@ export class EquipmentTelemetry {
       });
   }
 
-  protected isOutside(reading: SensorReading, equipment: MonitoredEquipment): boolean {
-    return this.isOutsideValue(reading.avg_temperature, equipment);
+  protected isOutside(point: TelemetryPoint, equipment: MonitoredEquipment): boolean {
+    return this.isOutsideValue(point.avgTemperature, equipment);
   }
 
   protected load(): void {

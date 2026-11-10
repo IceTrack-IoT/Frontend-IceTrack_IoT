@@ -95,13 +95,18 @@
                 </p>
                 <p class="telemetry-view__state">
                   @if (stale()) {
-                    <app-icon name="wifi-off" /> {{ 'monitoring.state.offline' | translate }}
+                    <app-icon name="wifi-off" /> {{ 'monitoring.state.silent' | translate }}
                   } @else if (outside()) {
                     <app-icon name="alert-triangle" /> {{ 'monitoring.state.outside' | translate }}
                   } @else {
                     <app-icon name="circle-check" /> {{ 'monitoring.state.within' | translate }}
                   }
                 </p>
+                @if (item.connectivity.underMaintenance) {
+                  <p class="telemetry-view__state">
+                    <app-icon name="tools" /> {{ 'monitoring.maintenanceWindowOpen' | translate }}
+                  </p>
+                }
               </div>
               <dl class="ui-details telemetry-view__current-facts">
                 <div>
@@ -234,10 +239,10 @@
 
             <figure class="telemetry-view__figure">
               <app-temperature-chart
-                [readings]="history()"
+                [points]="history()"
                 [minCelsius]="item.minCelsius"
                 [maxCelsius]="item.maxCelsius"
-                [gapSeconds]="offlineSeconds()"
+                [gapSeconds]="gapSeconds()"
                 [timeDisplay]="window().timeDisplay"
                 [excursions]="excursions()"
               />
@@ -284,27 +289,36 @@
                       </tr>
                     </thead>
                     <tbody>
-                      @for (reading of history(); track reading.reading_uid) {
+                      @for (point of history(); track point.key) {
                         <tr>
-                          <td>{{ reading.recorded_at | localizedDate }}</td>
+                          <td>{{ point.at | localizedDate }}</td>
                           <td class="telemetry">
-                            {{ reading.avg_temperature | temperature }}
-                            @if (isOutside(reading, item)) {
+                            {{ point.avgTemperature | temperature }}
+                            @if (isOutside(point, item)) {
                               <span class="telemetry-view__outside">{{
                                 'monitoring.state.outside' | translate
                               }}</span>
                             }
-                            @if (reading.under_maintenance) {
+                            @if (point.underMaintenance) {
                               <span class="telemetry-view__maintenance">{{
                                 'monitoring.telemetry.underMaintenance' | translate
                               }}</span>
                             }
                           </td>
                           <td class="telemetry">
-                            {{ reading.min_temperature | temperature }} –
-                            {{ reading.max_temperature | temperature }}
+                            {{ point.minTemperature | temperature }} –
+                            {{ point.maxTemperature | temperature }}
                           </td>
-                          <td class="telemetry">{{ reading.humidity | localizedNumber }} %</td>
+                          <td class="telemetry">
+                            @if (point.humidity !== null) {
+                              {{ point.humidity | localizedNumber }} %
+                            } @else {
+                              <span aria-hidden="true">—</span>
+                              <span class="visually-hidden">{{
+                                'monitoring.telemetry.noHumidity' | translate
+                              }}</span>
+                            }
+                          </td>
                         </tr>
                       }
                     </tbody>

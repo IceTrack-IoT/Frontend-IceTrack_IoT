@@ -4,8 +4,8 @@ import type { MonitoringUpdate } from '@monitoring/application/contracts/monitor
 import { MonitoringStreamPort } from '@monitoring/application/ports/monitoring-stream.port';
 
 /**
- * Opens the owner's live monitoring feed of readings and alert status changes. The feed carries no
- * replay: every `connected` update means the loaded state must be read again.
+ * Opens the owner's live monitoring feed. A `connected` update that is not resumed means the loaded state
+ * must be read again.
  */
 @Injectable({
   providedIn: 'root',

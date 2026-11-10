@@ -1,13 +1,6 @@
 import { Component, computed, DestroyRef, inject } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { interval, map } from 'rxjs';
-import {
-  DEFAULT_MISSED_SYNC_WINDOWS_FOR_OFFLINE,
-  offlineAfterSeconds,
-} from '@monitoring/domain/model/alert-policy.entity';
-import { AlertSeverity } from '@monitoring/domain/value-objects/alert-severity';
 import { MonitoringStore } from '@monitoring/application/monitoring-store';
 import type { MonitoredEquipment } from '@monitoring/application/contracts/monitored-equipment';
 import { LIVE_STATUS_KEYS } from '@monitoring/presentation/monitoring-feedback';
@@ -25,15 +18,15 @@ import { TemperaturePipe } from '@shared/presentation/pipes/temperature.pipe';
 /**
  * The condition of the last known temperature of an equipment item, most urgent first:
  * - `outside`: the last reading is recent and outside the configured threshold.
- * - `offline`: no reading arrived within the offline window of the equipment's alert policy.
+ * - `silent`: the server reports the unit silent and no maintenance window covers it.
  * - `within`: the last reading is recent and within the threshold.
  * - `none`: the equipment has never reported.
  */
-type TemperatureState = 'outside' | 'offline' | 'within' | 'none';
+type TemperatureState = 'outside' | 'silent' | 'within' | 'none';
 
 const STATE_ORDER: Readonly<Record<TemperatureState, number>> = {
   outside: 0,
-  offline: 1,
+  silent: 1,
   within: 2,
   none: 3,
 };
@@ -44,8 +37,6 @@ interface CurrentTemperature {
 }
 
 const MAX_RECENT_ALERTS = 4;
-/** How often the freshness of the last readings is re-evaluated. */
-const CLOCK_TICK_MS = 15_000;
 
 /**
  * Monitoring overview of the owner: summary counters, the last known temperature of each monitored
@@ -73,10 +64,6 @@ export class MonitoringDashboard {
   protected readonly typeIcons = ALERT_TYPE_ICONS;
   protected readonly liveStatusKeys = LIVE_STATUS_KEYS;
 
-  private readonly now = toSignal(interval(CLOCK_TICK_MS).pipe(map(() => Date.now())), {
-    initialValue: Date.now(),
-  });
-
   protected readonly status = computed<'loading' | 'error' | 'ready'>(() => {
     if (this.store.overviewLoaded()) {
       return 'ready';
@@ -86,14 +73,6 @@ export class MonitoringDashboard {
   /** Deactivated equipment is not monitored. */
   private readonly monitored = computed(() =>
     this.store.equipment().filter((item) => item.status !== 'DEACTIVATED'),
-  );
-  /** The monitored equipment that has reported telemetry at least once. */
-  protected readonly reportingCount = computed(
-    () => this.monitored().filter((item) => item.lastReadingAt !== null).length,
-  );
-  protected readonly criticalCount = computed(
-    () =>
-      this.store.activeAlerts().filter((alert) => alert.severity === AlertSeverity.CRITICAL).length,
   );
   protected readonly recentAlerts = computed(() =>
     this.store.activeAlerts().slice(0, MAX_RECENT_ALERTS),
@@ -119,11 +98,9 @@ export class MonitoringDashboard {
     if (lastReadingAt === null || lastKnownTemperature === null) {
       return 'none';
     }
-    const windows =
-      this.store.policies().get(equipment.id)?.missed_sync_windows_for_offline ??
-      DEFAULT_MISSED_SYNC_WINDOWS_FOR_OFFLINE;
-    if (this.now() - lastReadingAt.getTime() > offlineAfterSeconds(windows) * 1000) {
-      return 'offline';
+    const { connectivity } = equipment;
+    if (connectivity.state === 'SILENT' && !connectivity.underMaintenance) {
+      return 'silent';
     }
     return lastKnownTemperature < equipment.minCelsius ||
       lastKnownTemperature > equipment.maxCelsius

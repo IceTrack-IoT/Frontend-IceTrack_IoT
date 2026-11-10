@@ -1,5 +1,6 @@
 import type { Observable } from 'rxjs';
 import type { Alert } from '@monitoring/domain/model/alert.entity';
+import type { AlertPage, AlertQuery } from '@monitoring/application/contracts/alert-page';
 import type { AlertDismissal } from '@monitoring/application/contracts/alert-dismissal';
 
 /**
@@ -17,6 +18,15 @@ export abstract class AlertsPort {
    * @returns An Observable of the alert.
    */
   abstract getAlert(alertId: number): Observable<Alert>;
+
+  /**
+   * Lists one page of the owner's alerts, whatever their status, most recently opened first.
+   * Fails with `VALIDATION_ERROR` for an invalid filter or page, or `NOT_FOUND` when the equipment of the
+   * filter is not reachable by the owner.
+   * @param query - The filters and paging.
+   * @returns An Observable of the page.
+   */
+  abstract listAlerts(query: AlertQuery): Observable<AlertPage>;
 
   /**
    * Lists the OPEN and ACKNOWLEDGED alerts of an equipment item; empty for a unit the owner may not read.

@@ -61,14 +61,13 @@
             (click)="setStatusFilter(option)"
           >
             {{
-              (option === 'ALL'
-                ? 'monitoring.alerts.allStatuses'
-                : 'monitoring.alertStatus.' + option
+              (option === 'ACTIVE'
+                ? 'monitoring.alerts.activeStatuses'
+                : option === 'ALL'
+                  ? 'monitoring.alerts.allStatuses'
+                  : 'monitoring.alertStatus.' + option
               ) | translate
             }}
-            @if (status() === 'ready') {
-              <span class="ui-segmented__count">{{ statusCounts().get(option) ?? 0 }}</span>
-            }
           </button>
         }
       </div>
@@ -119,7 +118,7 @@
       </app-state-panel>
     }
     @default {
-      @if (filtered().length === 0) {
+      @if (alerts().length === 0) {
         @if (anyFilter()) {
           <app-state-panel
             kind="empty"
@@ -139,7 +138,7 @@
         }
       } @else {
         <ul class="alert-list">
-          @for (alert of visible(); track alert.id) {
+          @for (alert of alerts(); track alert.id) {
             <li>
               <app-alert-card
                 [alert]="alert"
@@ -155,7 +154,7 @@
         <app-pagination
           [page]="currentPage()"
           [pageCount]="pageCount()"
-          (pageChange)="page.set($event)"
+          (pageChange)="goToPage($event)"
         />
       }
     }
