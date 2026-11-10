@@ -1,5 +1,5 @@
 /**
- * DeviceResource is returned by `GET /devices` (as a JSON array), `POST /devices/{deviceId}/unpair` and
+ * DeviceResource is returned by `GET /devices` (as a JSON array without paging), `POST /devices/{deviceId}/unpair` and
  * `PUT /devices/{deviceId}/status`, and is embedded in DeviceCredentialResource. Nullable properties are
  * written as `null`; they are typed optional as well so a missing one is read as null.
  */
@@ -10,6 +10,8 @@ export interface DeviceResource {
   firmware_version?: string | null;
   status: string;
   paired_equipment_id?: number | null;
+  paired_equipment_name?: string | null;
+  paired_site_id?: number | null;
   last_seen_at?: string | null;
 }
 

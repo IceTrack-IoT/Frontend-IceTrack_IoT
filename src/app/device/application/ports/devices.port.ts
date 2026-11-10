@@ -16,12 +16,11 @@ import type {
  */
 export abstract class DevicesPort {
   /**
-   * Lists the devices linked (PAIRED or REVOKED) to an equipment item; empty for a unit the owner may not
-   * read.
-   * @param equipmentId - The identifier of the equipment.
-   * @returns An Observable of the devices.
+   * Lists every device linked (PAIRED or REVOKED) to the owner's equipment, in one read. Unpaired boards
+   * belong to no owner, so they are never listed.
+   * @returns An Observable of the devices, ordered by board UID.
    */
-  abstract listDevicesByEquipment(equipmentId: number): Observable<Device[]>;
+  abstract listDevices(): Observable<Device[]>;
 
   /**
    * Pairs a board with one of the owner's equipment items and issues its API key.

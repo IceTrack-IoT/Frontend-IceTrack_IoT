@@ -1,5 +1,5 @@
 import { computed, type DestroyRef, inject, Injectable, signal, type Signal } from '@angular/core';
-import { finalize, map, type Observable, type Subscription } from 'rxjs';
+import { debounceTime, finalize, map, type Observable, type Subscription } from 'rxjs';
 import type { Device } from '@device/domain/model/device.entity';
 import { DeviceStatus } from '@device/domain/value-objects/device-status';
 import { type DeviceFailure, toDeviceFailure } from '@device/application/contracts/device-error';
@@ -14,6 +14,10 @@ import { PairDeviceUseCase } from '@device/application/use-cases/pair-device.use
 import { RevokeDeviceApiKeyUseCase } from '@device/application/use-cases/revoke-device-api-key.use-case';
 import { RotateDeviceApiKeyUseCase } from '@device/application/use-cases/rotate-device-api-key.use-case';
 import { UnpairDeviceUseCase } from '@device/application/use-cases/unpair-device.use-case';
+import { WatchDeviceChangesUseCase } from '@device/application/use-cases/watch-device-changes.use-case';
+
+/** How long the live changes are gathered before the inventory is read again, in milliseconds. */
+const LIVE_CHANGES_DEBOUNCE_MS = 500;
 
 /** The lifecycle actions the owner runs on devices. */
 export type DeviceAction = 'pair' | 'unpair' | 'rotate' | 'revoke';
@@ -72,6 +76,7 @@ const byUid = (first: Device, second: Device): number =>
 })
 export class DevicesStore {
   private readonly loadDeviceInventoryUseCase = inject(LoadDeviceInventoryUseCase);
+  private readonly watchDeviceChangesUseCase = inject(WatchDeviceChangesUseCase);
   private readonly pairDeviceUseCase = inject(PairDeviceUseCase);
   private readonly unpairDeviceUseCase = inject(UnpairDeviceUseCase);
   private readonly rotateDeviceApiKeyUseCase = inject(RotateDeviceApiKeyUseCase);
@@ -120,15 +125,27 @@ export class DevicesStore {
 
   private inventorySubscription: Subscription | null = null;
   private actionSubscription: Subscription | null = null;
+  private liveChangesSubscription: Subscription | null = null;
   private attachedViews = 0;
 
   /**
-   * Keeps the device state while the caller lives. Every device view attaches; once the last one is
-   * destroyed, the state, including any issued API key, is discarded.
+   * Keeps the device state while the caller lives. Every device view attaches; while any is attached, the
+   * loaded inventory is read again whenever a board changes lifecycle status from any session. Once the
+   * last one is destroyed, the state, including any issued API key, is discarded.
    * @param destroyRef - The lifetime of the caller.
    */
   attach(destroyRef: DestroyRef): void {
     this.attachedViews++;
+    if (this.liveChangesSubscription === null) {
+      this.liveChangesSubscription = this.watchDeviceChangesUseCase
+        .execute()
+        .pipe(debounceTime(LIVE_CHANGES_DEBOUNCE_MS))
+        .subscribe(() => {
+          if (this.devicesSignal() !== null) {
+            this.loadInventory();
+          }
+        });
+    }
     destroyRef.onDestroy(() => {
       this.attachedViews--;
       if (this.attachedViews === 0) {
@@ -263,6 +280,8 @@ export class DevicesStore {
 
   /** Discards every loaded value and any issued API key once no device view is open. */
   private release(): void {
+    this.liveChangesSubscription?.unsubscribe();
+    this.liveChangesSubscription = null;
     this.inventorySubscription?.unsubscribe();
     this.actionSubscription?.unsubscribe();
     this.inventorySubscription = null;

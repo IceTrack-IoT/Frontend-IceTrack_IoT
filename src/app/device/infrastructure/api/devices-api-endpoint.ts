@@ -1,4 +1,4 @@
-import { type HttpClient, HttpParams } from '@angular/common/http';
+import type { HttpClient } from '@angular/common/http';
 import type { Observable } from 'rxjs';
 import { environment } from '@env/environment';
 import type {
@@ -25,10 +25,11 @@ export class DevicesApiEndpoint {
 
   constructor(private readonly http: HttpClient) {}
 
-  /** `GET /devices?equipment_id`: the devices linked to the unit. */
-  listDevicesByEquipment(equipmentId: number): Observable<DeviceResource[]> {
-    const params = new HttpParams().set('equipment_id', equipmentId);
-    return this.http.get<DeviceResource[]>(this.devicesUrl, { params });
+  /**
+   * `GET /devices`: every device linked to the owner's units, as a plain array (no paging is sent).
+   */
+  listDevices(): Observable<DeviceResource[]> {
+    return this.http.get<DeviceResource[]>(this.devicesUrl);
   }
 
   /** `POST /devices` */

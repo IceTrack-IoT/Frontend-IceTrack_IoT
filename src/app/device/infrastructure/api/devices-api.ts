@@ -24,8 +24,8 @@ export class DevicesApi extends BaseApi implements DevicesPort {
   private readonly endpoint = new DevicesApiEndpoint(inject(HttpClient));
   private readonly assembler = new DeviceAssembler();
 
-  listDevicesByEquipment(equipmentId: number): Observable<Device[]> {
-    return this.endpoint.listDevicesByEquipment(equipmentId).pipe(
+  listDevices(): Observable<Device[]> {
+    return this.endpoint.listDevices().pipe(
       mapDeviceErrors(),
       map((resources) =>
         resources.map((resource) => this.assembler.toDeviceFromResource(resource)),

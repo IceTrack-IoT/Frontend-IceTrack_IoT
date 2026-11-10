@@ -1,13 +1,12 @@
 import { inject, Injectable } from '@angular/core';
-import { forkJoin, map, type Observable, of, switchMap } from 'rxjs';
-import type { Device } from '@device/domain/model/device.entity';
+import { forkJoin, type Observable } from 'rxjs';
 import type { DeviceInventory } from '@device/application/contracts/device-inventory';
 import { DevicesPort } from '@device/application/ports/devices.port';
 import { EquipmentDirectoryPort } from '@device/application/ports/equipment-directory.port';
 
 /**
- * Loads the owner's equipment (from Assets Management) and the devices linked to each item. The backend
- * lists devices only per equipment item, so the inventory is composed from one request per item.
+ * Loads the owner's equipment (from Assets Management) and every device linked to it, in two parallel
+ * reads.
  */
 @Injectable({
   providedIn: 'root',
@@ -20,15 +19,9 @@ export class LoadDeviceInventoryUseCase {
    * @returns An Observable of the inventory.
    */
   execute(): Observable<DeviceInventory> {
-    return this.equipmentDirectory
-      .listEquipment()
-      .pipe(
-        switchMap((equipment) =>
-          (equipment.length === 0
-            ? of<Device[][]>([])
-            : forkJoin(equipment.map(({ id }) => this.devices.listDevicesByEquipment(id)))
-          ).pipe(map((devices) => ({ equipment, devices: devices.flat() }))),
-        ),
-      );
+    return forkJoin({
+      equipment: this.equipmentDirectory.listEquipment(),
+      devices: this.devices.listDevices(),
+    });
   }
 }
