@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  iceTrackProviderApiBaseUrl: 'http://localhost:8080/api/v1',
+  iceTrackProviderApiBaseUrl: 'https://platform-icetrackiot-production.up.railway.app/api/v1',
 
   /** Authentication endpoints */
   iceTrackProviderMeEndpointPath: '/authentication/me',
@@ -18,6 +18,7 @@ export const environment = {
   iceTrackProviderGetOwnerProfileByUserIdEndpointPath: '/profiles/owners/user/{userId}',
   iceTrackProviderUpdateOwnerProfileEndpointPath: '/profiles/owners/{ownerId}',
   iceTrackProviderTechnicianProfilesEndpointPath: '/profiles/technicians',
+  iceTrackProviderTechnicianPublicDirectoryEndpointPath: '/profiles/technicians/public',
   iceTrackProviderTechnicianPublicProfileEndpointPath:
     '/profiles/technicians/{technicianId}/public',
   iceTrackProviderCreateDashboardConfigEndpointPath: '/profiles/dashboard-configs',
@@ -31,6 +32,7 @@ export const environment = {
   /** Assets endpoints */
   iceTrackProviderSitesEndpointPath: '/assets/sites',
   iceTrackProviderEquipmentEndpointPath: '/assets/equipments',
+  iceTrackProviderEquipmentDirectoryEndpointPath: '/assets/equipments/directory',
   iceTrackProviderValidateSiteAddressEndpointPath: '/assets/sites/validate-address',
   iceTrackProviderSiteByIdEndpointPath: '/assets/sites/{siteId}',
   iceTrackProviderSiteAddressEndpointPath: '/assets/sites/{siteId}/address',
@@ -58,14 +60,17 @@ export const environment = {
   /** Notification endpoints */
   iceTrackProviderNotificationsEndpointPath: '/notifications',
   iceTrackProviderUnreadNotificationCountEndpointPath: '/notifications/unread-count',
+  iceTrackProviderMarkAllNotificationsAsReadEndpointPath: '/notifications/read-all',
   iceTrackProviderMarkNotificationAsReadEndpointPath: '/notifications/{notificationId}/read',
   iceTrackProviderDismissNotificationEndpointPath: '/notifications/{notificationId}/dismiss',
 
   /** Reporting endpoints */
   iceTrackProviderReportsEndpointPath: '/reports',
   iceTrackProviderReportByIdEndpointPath: '/reports/{reportId}',
+  iceTrackProviderReportDownloadLinkEndpointPath: '/reports/{reportId}/download-link',
 
   /** Monitoring and alerting endpoints */
+  iceTrackProviderAlertsEndpointPath: '/alerts',
   iceTrackProviderAlertByIdEndpointPath: '/alerts/{alertId}',
   iceTrackProviderActiveAlertsByEquipmentEndpointPath: '/alerts/equipment/{equipmentId}/open',
   iceTrackProviderAcknowledgeAlertEndpointPath: '/alerts/{alertId}/acknowledge',
@@ -75,13 +80,14 @@ export const environment = {
   iceTrackProviderReadingHistoryEndpointPath: '/telemetry/equipment/{equipmentId}',
   iceTrackProviderTelemetryStreamTicketEndpointPath: '/telemetry/stream-ticket',
   iceTrackProviderTelemetryStreamEndpointPath: '/telemetry/stream',
+  iceTrackProviderDashboardSummaryEndpointPath: '/dashboard/summary',
 
   /** Google Identity Services */
-  googleClientId: '',
+  googleClientId: '235296518162-amt44u4ha0908lh9oa5h23lifb5jbi07.apps.googleusercontent.com',
 
   /**
    * Google Maps JavaScript API key, restricted to the web origins of the platform. The site maps are
    * hidden while it is empty.
    */
-  googleMapsApiKey: '',
+  googleMapsApiKey: 'AIzaSyA4HhgkVL6MFXDrxsnaeO62aAWe2o4ufjU',
 };
