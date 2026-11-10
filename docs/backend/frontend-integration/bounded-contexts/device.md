@@ -49,4 +49,4 @@ Authenticated by `X-API-Key` only. `EdgeConfigurationQueryService` assembles: eq
 
 ## Dependencies
 
-Outbound: iam, profiles, assets, monitoring, service.request (all through ExternalService + Facade). Inbound: `DeviceContextFacade` (unused). Security: owns the edge chain used by monitoring's `POST /telemetry`, `POST /telemetry/events`.
+Outbound: iam, profiles, assets, monitoring, service.request (all through ExternalService + Facade). Inbound: `DeviceContextFacade` (`recordActivity` and `countLinkedDevices`, both called by monitoring). Security: owns the edge chain used by monitoring's `POST /telemetry`, `POST /telemetry/events`.

@@ -4,6 +4,41 @@ Generated from the REST resource records under `src/main/java/pe/edu/upc/ice/tra
 
 Legend: **Required** = enforced by Bean Validation (`@NotNull` / `@NotBlank`). Optional properties may be omitted or `null`. A resource marked `@JsonInclude(NON_NULL)` **omits** null properties; every other resource writes them as `null`.
 
+## `TelemetryBucketResource` (response)
+
+- Source: `src/main/java/pe/edu/upc/ice/track/platform/monitoring/interfaces/rest/resources/TelemetryBucketResource.java`
+- Example: [`responses/TelemetryBucketResource.json`](responses/TelemetryBucketResource.json)
+- Used by: `GET /api/v1/telemetry/equipment/{equipmentId}` with `bucket`, as a JSON array, oldest first; empty buckets are omitted
+
+| JSON property | Type | Required | Validation | Notes |
+|---|---|---|---|---|
+| `bucket_start` | string (date-time, UTC with Z) | no |  | Inclusive; a multiple of the bucket width since the epoch |
+| `bucket_end` | string (date-time, UTC with Z) | no |  | Exclusive |
+| `min_temperature` | number | no |  | Minimum of the batches' `min_temperature` |
+| `max_temperature` | number | no |  | Maximum of the batches' `max_temperature` |
+| `avg_temperature` | number | no |  | Average of the batches' `avg_temperature`, weighted by `sample_count` |
+| `avg_humidity` | number | no |  | Weighted average; null when no batch had humidity; nullable |
+| `sample_count` | integer | no |  | Sum of the batches' samples |
+| `batch_count` | integer | no |  | Batches aggregated |
+| `under_maintenance` | boolean | no |  | True when any aggregated batch was under maintenance |
+| `door_open_seconds` | integer | no |  | Sum, when the batches carry it; nullable |
+| `last_received_at` | string (date-time, UTC with Z) | no |  | Latest server arrival time in the bucket |
+
+## Owner stream events
+
+Data of the events of `GET /api/v1/telemetry/stream` other than `telemetry-update` (documented below with `ReadingRecordedStreamResource` and `AlertStatusChangedStreamResource`). Every event but `stream-opened` carries an SSE `id`; pass the last one received as `last_event_id` when reconnecting.
+
+| SSE event | Resource | JSON properties |
+|---|---|---|
+| `stream-opened` | map | `timeout_seconds`, `heartbeat_seconds`, `replayed` (events replayed after `last_event_id`), `replay_complete` (`false`: reload over REST) |
+| `notification-created` | `NotificationCreatedStreamResource` | `notification_id`, `type` (`NotificationType`), `severity` (`NotificationSeverity`), `equipment_id` (nullable), `source_alert_id` (nullable), `created_at`, `unread_count` (after this notification). No message text |
+| `unread-count-changed` | `UnreadCountChangedStreamResource` | `unread_count`, `changed_at`. Sent when a notification arrives and when one or several are read or dismissed |
+| `report-status-changed` | `ReportStatusChangedStreamResource` | `report_id`, `previous_status`, `status` (`GENERATING`, `COMPLETED` or `FAILED`), `changed_at` |
+| `device-status-changed` | `DeviceStatusChangedStreamResource` | `device_id`, `paired_equipment_id` (null once unpaired), `previous_status`, `status` (`UNPAIRED`, `PAIRED`, `REVOKED`; both `PAIRED` for a rotation), `changed_at`. `last_seen_at` changes are not pushed |
+| `connectivity-changed` | `ConnectivityChangedStreamResource` | `equipment_id`, `device_id` (nullable), `previous_state`, `state` (`REPORTING`, `SILENT`, `NEVER_REPORTED`, `NOT_MONITORED`), `last_received_at` (nullable), `under_maintenance`, `changed_at`. Sent when offline detection finds the unit silent, its next batch brings it back, it is deactivated or reactivated, or a maintenance window opens or closes (then the state may stay the same) |
+
+These events report the state stored by offline detection and reading arrivals; `EquipmentResource.connectivity` additionally applies the offline window at read time.
+
 ## `AlertPolicyResource` (response)
 
 - Source: `src/main/java/pe/edu/upc/ice/track/platform/monitoring/interfaces/rest/resources/AlertPolicyResource.java`
@@ -46,6 +81,54 @@ Legend: **Required** = enforced by Bean Validation (`@NotNull` / `@NotBlank`). O
 | `dismiss_reason` | string | no |  | Justification given when the alert was dismissed; nullable |
 | `dismiss_evidence` | string | no |  | Evidence given when the alert was dismissed; nullable |
 | `total_duration_seconds` | integer | no |  | Seconds between opening and resolution or dismissal; null while the alert is active; nullable |
+
+## `PagedAlertResource` (response)
+
+- Source: `src/main/java/pe/edu/upc/ice/track/platform/monitoring/interfaces/rest/resources/PagedAlertResource.java`
+- Used by: `GET /api/v1/alerts`
+
+| JSON property | Type | Required | Validation | Notes |
+|---|---|---|---|---|
+| `content` | array<object (`AlertResource`)> | no |  | Alerts of this page, most recently opened first |
+| `page` | integer | no |  | Zero-based index of this page |
+| `size` | integer | no |  | Maximum number of alerts a page may hold |
+| `total_elements` | integer | no |  | Total number of alerts matching the filters |
+| `total_pages` | integer | no |  | Number of pages the matching alerts span; at least 1 |
+
+## `ApplicablePolicyResource` (response)
+
+- Source: `src/main/java/pe/edu/upc/ice/track/platform/monitoring/interfaces/rest/resources/ApplicablePolicyResource.java`
+- Used by: `GET /api/v1/alert-policies`
+
+| JSON property | Type | Required | Validation | Notes |
+|---|---|---|---|---|
+| `equipment_id` | integer | no |  | Identifier of the unit the policy applies to |
+| `source` | string | no |  | documented values: `EQUIPMENT`, `DEFAULT`; `EQUIPMENT` for the unit's own policy, `DEFAULT` for the platform-wide default |
+| `policy` | object (`AlertPolicyResource`) | no |  | The applicable policy; its `equipment_id` is null when `source` is `DEFAULT` |
+
+## `DashboardSummaryResource` (response)
+
+- Source: `src/main/java/pe/edu/upc/ice/track/platform/monitoring/interfaces/rest/resources/DashboardSummaryResource.java`
+- Used by: `GET /api/v1/dashboard/summary`
+
+| JSON property | Type | Required | Validation | Notes |
+|---|---|---|---|---|
+| `generated_at` | string (date-time, UTC with Z) | no |  | When the figures were computed |
+| `site_count` | integer | no |  | Sites the figures cover: the owner's sites, or 1 when `site_id` was sent |
+| `equipment.total` | integer | no |  | Units in scope |
+| `equipment.by_status` | object | no |  | Units per lifecycle status (`ACTIVE`, `MAINTENANCE`, `REPAIR`, `DEACTIVATED`); every status is present, 0 when no unit holds it |
+| `equipment.reporting` | integer | no |  | Units whose `last_reading_at` lies within their offline window (60 s × `missed_sync_windows_for_offline` of the applicable policy), judged by the server clock |
+| `equipment.silent` | integer | no |  | Units whose `last_reading_at` lies outside that window |
+| `equipment.never_reported` | integer | no |  | Units with no reading yet |
+| `alerts.open` | integer | no |  | Alerts in `OPEN` |
+| `alerts.acknowledged` | integer | no |  | Alerts in `ACKNOWLEDGED` |
+| `alerts.active_by_severity` | object | no |  | `OPEN` and `ACKNOWLEDGED` alerts per severity (`INFO`, `WARNING`, `CRITICAL`); every severity is present |
+| `service_requests.active` | integer | no |  | Requests in `PENDING`, `ACCEPTED` or `IN_PROGRESS` |
+| `service_requests.by_status` | object | no |  | Requests per status (`PENDING`, `ACCEPTED`, `IN_PROGRESS`, `COMPLETED`, `CANCELED`); every status is present |
+| `devices.paired` | integer | no |  | Devices `PAIRED` with a unit in scope |
+| `devices.revoked` | integer | no |  | Devices `REVOKED` and still linked to a unit in scope |
+
+`equipment.reporting`, `equipment.silent` and `equipment.never_reported` add up to `equipment.total`.
 
 ## `AlertStatusChangedStreamResource` (response)
 

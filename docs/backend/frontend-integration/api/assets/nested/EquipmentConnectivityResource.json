@@ -1,0 +1,8 @@
+{
+  "state": "SILENT",
+  "last_received_at": "2026-11-09T14:51:12Z",
+  "silent_after_seconds": 180,
+  "silent_since": "2026-11-09T14:54:12Z",
+  "under_maintenance": false,
+  "evaluated_at": "2026-11-09T15:02:40Z"
+}

@@ -1,6 +1,7 @@
 {
   "id": 10,
   "site_id": 1,
+  "site_name": "Sede Central",
   "uid": "ESP32-0001",
   "name": "Refrigerador 1",
   "equipment_type": "REFRIGERATOR",

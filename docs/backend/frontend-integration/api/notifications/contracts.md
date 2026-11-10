@@ -4,6 +4,27 @@ Generated from the REST resource records under `src/main/java/pe/edu/upc/ice/tra
 
 Legend: **Required** = enforced by Bean Validation (`@NotNull` / `@NotBlank`). Optional properties may be omitted or `null`. A resource marked `@JsonInclude(NON_NULL)` **omits** null properties; every other resource writes them as `null`.
 
+## `BulkNotificationReadRequest` (request)
+
+- Source: `src/main/java/pe/edu/upc/ice/track/platform/notifications/interfaces/rest/resources/BulkNotificationReadRequest.java`
+- Example: [`requests/BulkNotificationReadRequest.json`](requests/BulkNotificationReadRequest.json) | JSON Schema: [`schemas/notifications/BulkNotificationReadRequest.schema.json`](../../schemas/notifications/BulkNotificationReadRequest.schema.json)
+- Used by: `PUT /api/v1/notifications/read`
+
+| JSON property | Type | Required | Validation | Notes |
+|---|---|---|---|---|
+| `notification_ids` | array<integer> | yes | 1 to 100 items; each not null and greater than zero | Notifications to mark as read; duplicates count once; identifiers not addressed to the caller, already read or dismissed are skipped |
+
+## `BulkReadResultResource` (response)
+
+- Source: `src/main/java/pe/edu/upc/ice/track/platform/notifications/interfaces/rest/resources/BulkReadResultResource.java`
+- Example: [`responses/BulkReadResultResource.json`](responses/BulkReadResultResource.json) | JSON Schema: [`schemas/notifications/BulkReadResultResource.schema.json`](../../schemas/notifications/BulkReadResultResource.schema.json)
+- Used by: `PUT /api/v1/notifications/read-all`, `PUT /api/v1/notifications/read`
+
+| JSON property | Type | Required | Validation | Notes |
+|---|---|---|---|---|
+| `updated_count` | integer | no |  | Notifications that changed from unread to read; `0` on a repeated call |
+| `unread_count` | integer | no |  | The caller's notifications neither read nor dismissed after the change |
+
 ## `NotificationResource` (response)
 
 - Source: `src/main/java/pe/edu/upc/ice/track/platform/notifications/interfaces/rest/resources/NotificationResource.java`
@@ -18,10 +39,12 @@ Legend: **Required** = enforced by Bean Validation (`@NotNull` / `@NotBlank`). O
 | `equipment_id` | integer | no |  | Identifier of the equipment the notification concerns; nullable |
 | `device_id` | integer | no |  | Identifier of the device the notification concerns; nullable |
 | `source_alert_id` | integer | no |  | Identifier of the alert that triggered the notification; nullable |
+| `service_request_id` | integer | no |  | Identifier of the service request the notification is about; set for `SERVICE_REQUEST_UPDATE` notifications and for `MAINTENANCE_WINDOW` notifications of a window linked to a request, null otherwise; nullable |
 | `message` | string | no |  | Human-readable notification text |
 | `type` | string | no |  | documented values: `MAINTENANCE_REMINDER`, `TEMPERATURE_EXCURSION`, `DEVICE_OFFLINE`, `LOW_BATTERY`, `SENSOR_FAILURE`, `SERVICE_REQUEST_UPDATE`, `MAINTENANCE_WINDOW`, `UNLINKED_MAINTENANCE_WINDOW`; Kind of event that produced the notification |
 | `severity` | string | no |  | documented values: `INFO`, `WARNING`, `CRITICAL`; Urgency of the notification |
 | `is_read` | boolean | no |  | Whether the user has already read the notification |
+| `created_at` | string (date-time, UTC with Z) | no |  | When the notification was raised; never null. The inbox is ordered by it, most recent first |
 | `read_at` | string (date-time, UTC with Z) | no |  | When the notification was read; null while unread; nullable |
 | `dismissed_at` | string (date-time, UTC with Z) | no |  | When the user dismissed the notification; null while not dismissed; nullable |
 

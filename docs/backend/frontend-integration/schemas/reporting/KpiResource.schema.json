@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "KpiResource",
+  "type": "object",
+  "properties": {
+    "key": {
+      "type": "string",
+      "description": "Stable machine key; a per-unit KPI ends in .unit_<equipment_id>"
+    },
+    "label": {
+      "type": "string",
+      "description": "English label"
+    },
+    "value": {
+      "type": "number",
+      "format": "double",
+      "description": "Numeric value"
+    },
+    "unit": {
+      "type": "string",
+      "description": "Unit of the value: %, h, °C, °C·min or stars; an empty string for a plain count"
+    }
+  },
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/reporting/interfaces/rest/resources/KpiResource.java"
+}

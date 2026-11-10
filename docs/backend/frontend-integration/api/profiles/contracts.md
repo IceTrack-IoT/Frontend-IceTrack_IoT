@@ -104,6 +104,19 @@ Legend: **Required** = enforced by Bean Validation (`@NotNull` / `@NotBlank`). O
 | `average_rating` | number | no |  | Average of the technician's review scores, between 1 and 5; null until the first review; nullable |
 | `rating_available` | boolean | no |  | Whether average_rating is available, i.e. the technician has been reviewed |
 
+## `PagedTechnicianPublicProfileResource` (response)
+
+- Source: `src/main/java/pe/edu/upc/ice/track/platform/profiles/interfaces/rest/resources/PagedTechnicianPublicProfileResource.java`
+- Used by: `GET /api/v1/profiles/technicians/public`
+
+| JSON property | Type | Required | Validation | Notes |
+|---|---|---|---|---|
+| `content` | array<object (`TechnicianPublicProfileResource`)> | no |  | Technicians of this page |
+| `page` | integer | no |  | Zero-based index of this page |
+| `size` | integer | no |  | Maximum number of technicians a page may hold |
+| `total_elements` | integer | no |  | Total number of technicians matching the filters |
+| `total_pages` | integer | no |  | Number of pages the matching technicians span; at least 1 |
+
 ## `TemperatureRangeResource` (nested object)
 
 - Source: `src/main/java/pe/edu/upc/ice/track/platform/profiles/interfaces/rest/resources/TemperatureRangeResource.java`

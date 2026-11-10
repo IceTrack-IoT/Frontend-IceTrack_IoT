@@ -10,9 +10,11 @@ Base URL: see [../../README.md](../../README.md#5-base-url). All paths are relat
 | 2 | `DELETE` | `/api/v1/notifications/device-tokens` | Authenticated (any valid bearer token) | Unregister device token |
 | 3 | `GET` | `/api/v1/notifications` | Authenticated (any valid bearer token) | List my notifications |
 | 4 | `GET` | `/api/v1/notifications/unread-count` | Authenticated (any valid bearer token) | Count my unread notifications |
-| 5 | `GET` | `/api/v1/notifications/{notificationId}` | Authenticated (any valid bearer token) | Get notification by ID |
-| 6 | `PUT` | `/api/v1/notifications/{notificationId}/read` | Authenticated (any valid bearer token) | Mark notification as read |
-| 7 | `PUT` | `/api/v1/notifications/{notificationId}/dismiss` | Authenticated (any valid bearer token) | Dismiss notification |
+| 5 | `PUT` | `/api/v1/notifications/read-all` | Authenticated (any valid bearer token) | Mark all my notifications as read |
+| 6 | `PUT` | `/api/v1/notifications/read` | Authenticated (any valid bearer token) | Mark several of my notifications as read |
+| 7 | `GET` | `/api/v1/notifications/{notificationId}` | Authenticated (any valid bearer token) | Get notification by ID |
+| 8 | `PUT` | `/api/v1/notifications/{notificationId}/read` | Authenticated (any valid bearer token) | Mark notification as read |
+| 9 | `PUT` | `/api/v1/notifications/{notificationId}/dismiss` | Authenticated (any valid bearer token) | Dismiss notification |
 
 ## `PUT /api/v1/notifications/device-tokens`
 
@@ -48,7 +50,7 @@ Base URL: see [../../README.md](../../README.md#5-base-url). All paths are relat
 
 ## `GET /api/v1/notifications`
 
-**List my notifications** - Returns one page of the authenticated caller's active (not dismissed) notifications, most recent first, optionally only the unread ones. The recipient is derived from the access token. size defaults to 20 and is capped at 100.
+**List my notifications** - Returns one page of the authenticated caller's active (not dismissed) notifications, most recent first, optionally only the unread ones, and optionally narrowed by severity, type and unit. The filters combine with each other and only narrow the caller's own notifications, so a unit of another owner yields an empty page. The recipient is derived from the access token. size defaults to 20 and is capped at 100.
 
 | Field | Value |
 |---|---|
@@ -57,10 +59,42 @@ Base URL: see [../../README.md](../../README.md#5-base-url). All paths are relat
 | Authentication / authorization | Authenticated (any valid bearer token) |
 | Headers | `Accept: application/json`, `Authorization: Bearer <access token>` |
 | Path parameters | none |
-| Query parameters | `page` (int; optional; default `0`)<br>`size` (int; optional; default `20`, 1 to 100, larger values capped at 100)<br>`unread_only` (boolean; optional; default `false`) |
+| Query parameters | `page` (int; optional; default `0`)<br>`size` (int; optional; default `20`, 1 to 100, larger values capped at 100)<br>`unread_only` (boolean; optional; default `false`)<br>`severity` (comma-separated `INFO`, `WARNING`, `CRITICAL`; optional)<br>`type` (comma-separated `NotificationType`; optional; the eight values listed in [contracts.md](contracts.md#notificationresource-response))<br>`equipment_id` (Long; optional) |
 | Request body | none (no JSON request body) |
-| Declared statuses / responses | `200` - `PagedNotificationResource` ([`responses/PagedNotificationResource.json`](responses/PagedNotificationResource.json)) - Page of notifications; empty when the caller has none<br>`400` - `ErrorResource` - VALIDATION_ERROR - a negative page or a size below 1<br>`401` - error body - Unauthorized - JWT token required or invalid |
+| Declared statuses / responses | `200` - `PagedNotificationResource` ([`responses/PagedNotificationResource.json`](responses/PagedNotificationResource.json)) - Page of notifications; empty when the caller has none<br>`400` - `ErrorResource` - VALIDATION_ERROR - a negative page, a size below 1, or an unknown severity or type (`details`: `Parameter 'severity' must be one of [INFO, WARNING, CRITICAL]`)<br>`401` - error body - Unauthorized - JWT token required or invalid |
 | Application flow | controller -> `externalProfilesService`, `notificationQueryService` |
+
+## `PUT /api/v1/notifications/read-all`
+
+**Mark all my notifications as read** - Marks every active, unread notification of the authenticated caller as read, or only those matching the optional severity, type and unit filters, which work as on the listing. Idempotent: a second call updates 0. Answers how many changed and the unread count afterward, so the badge needs no second request.
+
+| Field | Value |
+|---|---|
+| Bounded context | Notifications |
+| Controller | `src/main/java/pe/edu/upc/ice/track/platform/notifications/interfaces/rest/NotificationsController.java` - method `markAllMyNotificationsAsRead` |
+| Authentication / authorization | Authenticated (any valid bearer token); recipient derived from the token |
+| Headers | `Accept: application/json`, `Authorization: Bearer <access token>` |
+| Path parameters | none |
+| Query parameters | `severity` (comma-separated; optional)<br>`type` (comma-separated; optional)<br>`equipment_id` (Long; optional) |
+| Request body | none (no JSON request body) |
+| Declared statuses / responses | `200` - `BulkReadResultResource` ([`responses/BulkReadResultResource.json`](responses/BulkReadResultResource.json)) - Matching notifications marked as read<br>`400` - `ErrorResource` - VALIDATION_ERROR - an unknown severity or type<br>`401` - error body - Unauthorized - JWT token required or invalid |
+| Application flow | controller -> `externalProfilesService`, `notificationCommandService` (one conditional bulk `UPDATE`, then the unread count) |
+
+## `PUT /api/v1/notifications/read`
+
+**Mark several of my notifications as read** - Marks the listed notifications of the authenticated caller as read. Identifiers not addressed to the caller, already read or dismissed are skipped silently. Answers how many changed and the unread count afterward.
+
+| Field | Value |
+|---|---|
+| Bounded context | Notifications |
+| Controller | `src/main/java/pe/edu/upc/ice/track/platform/notifications/interfaces/rest/NotificationsController.java` - method `markSeveralOfMyNotificationsAsRead` |
+| Authentication / authorization | Authenticated (any valid bearer token); recipient derived from the token |
+| Headers | `Accept: application/json`, `Content-Type: application/json`, `Authorization: Bearer <access token>` |
+| Path parameters | none |
+| Query parameters | none |
+| Request body | `BulkNotificationReadRequest` - [`requests/BulkNotificationReadRequest.json`](requests/BulkNotificationReadRequest.json), schema [`BulkNotificationReadRequest.schema.json`](../../schemas/notifications/BulkNotificationReadRequest.schema.json) |
+| Declared statuses / responses | `200` - `BulkReadResultResource` ([`responses/BulkReadResultResource.json`](responses/BulkReadResultResource.json)) - Listed notifications marked as read<br>`400` - `ErrorResource` - VALIDATION_ERROR - `notification_ids` missing, empty, or holding more than 100 identifiers<br>`401` - error body - Unauthorized - JWT token required or invalid |
+| Application flow | controller -> `externalProfilesService`, `notificationCommandService` (one conditional bulk `UPDATE`, then the unread count) |
 
 ## `GET /api/v1/notifications/unread-count`
 

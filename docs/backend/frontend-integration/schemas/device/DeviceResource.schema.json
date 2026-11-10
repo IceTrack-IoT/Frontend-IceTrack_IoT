@@ -34,6 +34,15 @@
       "format": "int64",
       "description": "Identifier of the equipment the device is paired with"
     },
+    "paired_equipment_name": {
+      "type": "string",
+      "description": "Name of the equipment the device is paired with; null when unpaired"
+    },
+    "paired_site_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Identifier of the site that equipment is installed at; null when unpaired"
+    },
     "last_seen_at": {
       "type": "string",
       "description": "When the platform received the device's latest reading batch; null before the first one"

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PagedReportResource",
+  "type": "object",
+  "properties": {
+    "content": {
+      "type": "array",
+      "items": {
+        "$ref": "ReportResource.schema.json"
+      },
+      "description": "Reports of this page as summaries (no result_payload, kpis or download_url), most recently requested first"
+    },
+    "page": {
+      "type": "integer",
+      "format": "int32",
+      "description": "Zero-based index of this page"
+    },
+    "size": {
+      "type": "integer",
+      "format": "int32",
+      "description": "Page size after capping"
+    },
+    "total_elements": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Number of reports matching the filters"
+    },
+    "total_pages": {
+      "type": "integer",
+      "format": "int32",
+      "description": "Number of pages the matching reports span, at least 1"
+    }
+  },
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/reporting/interfaces/rest/resources/PagedReportResource.java"
+}

@@ -13,6 +13,11 @@
       "format": "int64",
       "description": "Identifier of the site the unit is installed at"
     },
+    "site_name": {
+      "type": "string",
+      "readOnly": true,
+      "description": "Name of the site the unit is installed at, at the time of the read"
+    },
     "uid": {
       "type": "string",
       "description": "The unit's own identifier, unique across the platform"

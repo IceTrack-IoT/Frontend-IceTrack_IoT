@@ -36,7 +36,9 @@ Legend: **Required** = enforced by Bean Validation (`@NotNull` / `@NotBlank`). O
 - Source: `src/main/java/pe/edu/upc/ice/track/platform/reporting/interfaces/rest/resources/ReportResource.java`
 - Example: [`responses/ReportResource.json`](responses/ReportResource.json) | JSON Schema: [`schemas/reporting/ReportResource.schema.json`](../../schemas/reporting/ReportResource.schema.json)
 - Used by: `POST /api/v1/reports`, `GET /api/v1/reports/{reportId}`, `GET /api/v1/reports`
+- Embedded in: `PagedReportResource`
 - Serialization: `@JsonInclude(NON_NULL)` - null properties are **omitted**.
+- Summary: the items of `PagedReportResource`, and of the plain listing with `include=summary`, omit `result_payload`, `kpis` and `download_url`.
 
 | JSON property | Type | Required | Validation | Notes |
 |---|---|---|---|---|
@@ -56,3 +58,45 @@ Legend: **Required** = enforced by Bean Validation (`@NotNull` / `@NotBlank`). O
 | `requested_at` | string (date-time, UTC with Z) | no |  | When the report was requested |
 | `completed_at` | string (date-time, UTC with Z) | no |  | When the report reached COMPLETED or FAILED; null while in progress; nullable |
 | `download_url` | string | no |  | Signed download URL valid for 15 minutes; only for a COMPLETED report read by id; nullable |
+| `kpis` | array<object (`KpiResource`)> | no |  | The KPIs of a COMPLETED report, the same values as `result_payload` as a JSON array; omitted when not COMPLETED and in summaries; nullable |
+
+## `KpiResource` (nested object)
+
+- Source: `src/main/java/pe/edu/upc/ice/track/platform/reporting/interfaces/rest/resources/KpiResource.java`
+- Example: [`nested/KpiResource.json`](nested/KpiResource.json) | JSON Schema: [`schemas/reporting/KpiResource.schema.json`](../../schemas/reporting/KpiResource.schema.json)
+- Embedded in: `ReportResource`
+
+| JSON property | Type | Required | Validation | Notes |
+|---|---|---|---|---|
+| `key` | string | no |  | Stable machine key, to translate the label on the client. Aggregate keys: `excursion_count`, `excursion_hours`, `average_uptime_pct`, `units_in_scope`, `compliant_units`, `compliance_rate_pct`, `completed_service_requests`, `average_rating`. Per-unit keys end in `.unit_<equipment_id>`: `excursion_count`, `excursion_hours`, `mean_kinetic_temperature`, `temperature_std_dev`, `degree_minutes_out_of_range`, `time_in_range_pct`, `uptime_pct`. A report generated before keys existed carries a key derived from its label (`Total excursions` becomes `total_excursions`) |
+| `label` | string | no |  | English label |
+| `value` | number | no |  | Always numeric |
+| `unit` | string | no |  | `""` for a plain count; otherwise `%`, `h`, `°C`, `°C·min` or `stars` |
+
+## `ReportDownloadLinkResource` (response)
+
+- Source: `src/main/java/pe/edu/upc/ice/track/platform/reporting/interfaces/rest/resources/ReportDownloadLinkResource.java`
+- Example: [`responses/ReportDownloadLinkResource.json`](responses/ReportDownloadLinkResource.json) | JSON Schema: [`schemas/reporting/ReportDownloadLinkResource.schema.json`](../../schemas/reporting/ReportDownloadLinkResource.schema.json)
+- Used by: `GET /api/v1/reports/{reportId}/download-link`
+
+| JSON property | Type | Required | Validation | Notes |
+|---|---|---|---|---|
+| `download_url` | string | no |  | Signed `https` URL; the browser saves the file as `file_name` |
+| `expires_at` | string (date-time, UTC with Z) | no |  | When the signature expires |
+| `file_name` | string | no |  | Suggested file name: the report name in lower case, accents dropped, other characters replaced by `-`, plus the extension of the stored file, e.g. `excursions-october-2026.pdf`; `report-<id>.<ext>` when the name leaves nothing |
+| `content_type` | string | no |  | `application/pdf`, `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` or `text/csv` |
+| `size_bytes` | integer | no |  | File size in bytes |
+
+## `PagedReportResource` (response)
+
+- Source: `src/main/java/pe/edu/upc/ice/track/platform/reporting/interfaces/rest/resources/PagedReportResource.java`
+- Example: [`responses/PagedReportResource.json`](responses/PagedReportResource.json) | JSON Schema: [`schemas/reporting/PagedReportResource.schema.json`](../../schemas/reporting/PagedReportResource.schema.json)
+- Used by: `GET /api/v1/reports` when both `page` and `size` are sent
+
+| JSON property | Type | Required | Validation | Notes |
+|---|---|---|---|---|
+| `content` | array<object (`ReportResource`)> | no |  | Reports of this page as summaries, most recently requested first |
+| `page` | integer | no |  | Zero-based index of this page |
+| `size` | integer | no |  | Page size after capping |
+| `total_elements` | integer | no |  | Reports matching the filters, across every page |
+| `total_pages` | integer | no |  | Number of pages; at least 1 |

@@ -28,6 +28,11 @@
       "format": "int64",
       "description": "Identifier of the alert that triggered the notification"
     },
+    "service_request_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Identifier of the service request the notification is about; null when it concerns none"
+    },
     "message": {
       "type": "string",
       "description": "Human-readable notification text"
@@ -58,6 +63,10 @@
     "is_read": {
       "type": "boolean",
       "description": "Whether the user has already read the notification"
+    },
+    "created_at": {
+      "type": "string",
+      "description": "Format: date-time (ISO 8601 UTC with Z, e.g. 2026-09-29T08:30:00Z) When the notification was raised; never null"
     },
     "read_at": {
       "type": "string",

@@ -32,6 +32,12 @@
       "minLength": 1,
       "maxLength": 1000,
       "description": "What the owner needs"
+    },
+    "source_alert_id": {
+      "type": ["integer", "null"],
+      "format": "int64",
+      "exclusiveMinimum": 0,
+      "description": "The alert this corrective request is opened for; one of the caller's alerts, raised on the same unit, in any status"
     }
   },
   "required": [

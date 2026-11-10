@@ -19,6 +19,9 @@ Base URL: see [../../README.md](../../README.md#5-base-url). All paths are relat
 | 11 | `GET` | `/api/v1/assets/sites/{siteId}/equipments` | OWNER_ROLE or TECHNICIAN_ROLE | List the equipment of a site |
 | 12 | `PUT` | `/api/v1/assets/sites/{siteId}` | OWNER_ROLE | Update a site |
 | 13 | `PUT` | `/api/v1/assets/sites/{siteId}/address` | OWNER_ROLE | Change the address of a site |
+| 14 | `GET` | `/api/v1/assets/equipments/directory` | OWNER_ROLE | Get my equipment directory |
+
+Every `EquipmentResource` returned by these endpoints carries the read-only `site_name` of the unit's site.
 
 ## `POST /api/v1/assets/equipments`
 
@@ -50,6 +53,23 @@ Base URL: see [../../README.md](../../README.md#5-base-url). All paths are relat
 | Query parameters | `search` (String; optional)<br>`status` (StatusEquipmentResource; optional; values ACTIVE, MAINTENANCE, REPAIR, DEACTIVATED)<br>`equipment_type` (EquipmentTypeResource; optional; values DISPLAY_CASE, COLD_ROOM, REFRIGERATOR, OTHER)<br>`site_id` (Long; optional)<br>`page` (Integer; optional)<br>`size` (Integer; optional) |
 | Request body | none (no JSON request body) |
 | Declared statuses / responses | `200` - JSON array of `EquipmentResource` ([`responses/EquipmentResource.json`](responses/EquipmentResource.json)); **or** `PagedEquipmentResource` when both `page` and `size` are sent - Equipment found<br>`400` - error body - Invalid filter or paging value, such as an unknown status or a page size above 100<br>`401` - error body - Unauthorized - no owner identity on the request<br>`403` - error body - Forbidden - the authenticated account is not an owner |
+| Application flow | controller -> `equipmentQueryService` |
+
+## `GET /api/v1/assets/equipments/directory`
+
+**Get my equipment directory** - Returns the identity of every unit of the authenticated owner - id, uid, name, type, status and site, with the site name - sorted by name, unpaged. It carries no telemetry, threshold or configuration version, so it only changes when a unit or a site is created, renamed or changes status. The `ETag` header identifies the answer; sending it back in `If-None-Match` answers `304` with an empty body while nothing changed.
+
+| Field | Value |
+|---|---|
+| Bounded context | Assets |
+| Controller | `src/main/java/pe/edu/upc/ice/track/platform/assets/interfaces/rest/EquipmentController.java` - method `getMyEquipmentDirectory` |
+| Authentication / authorization | OWNER_ROLE |
+| Headers | `Accept: application/json`, `Authorization: Bearer <access token>`, `If-None-Match` (optional) |
+| Path parameters | none |
+| Query parameters | `site_id` (Long; optional)<br>`status` (comma-separated `StatusEquipmentResource`; optional; values ACTIVE, MAINTENANCE, REPAIR, DEACTIVATED) |
+| Request body | none (no JSON request body) |
+| Response headers | `ETag` (quoted digest of the answer), `Cache-Control: no-cache, private`, `Vary: Authorization` |
+| Declared statuses / responses | `200` - JSON array of `EquipmentDirectoryEntryResource` - Directory found; the ETag header identifies it<br>`304` - no JSON body (Directory unchanged since the ETag in If-None-Match)<br>`400` - error body - Invalid filter value, such as an unknown status<br>`401` - error body - Unauthorized - JWT token required or invalid<br>`403` - error body - Forbidden - the authenticated account is not an owner<br>`404` - error body - SITE_NOT_FOUND - no such site is reachable by the caller |
 | Application flow | controller -> `equipmentQueryService` |
 
 ## `GET /api/v1/assets/equipments/{equipmentId}`

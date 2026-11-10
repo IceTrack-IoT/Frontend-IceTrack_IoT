@@ -40,7 +40,22 @@ Legend: **Required** = enforced by Bean Validation (`@NotNull` / `@NotBlank`). O
 | `firmware_version` | string | no |  | Firmware version currently running on the board |
 | `status` | string enum | no |  | values: `UNPAIRED`, `PAIRED`, `REVOKED`; Current lifecycle status of the device |
 | `paired_equipment_id` | integer | no |  | Identifier of the equipment the device is paired with; nullable |
+| `paired_equipment_name` | string | no |  | Name of the equipment the device is paired with; null when unpaired; read-only; nullable |
+| `paired_site_id` | integer | no |  | Identifier of the site that equipment is installed at; null when unpaired; read-only; nullable |
 | `last_seen_at` | string | no |  | When the platform received the device's latest reading batch; null before the first one; nullable |
+
+## `PagedDeviceResource` (response)
+
+- Source: `src/main/java/pe/edu/upc/ice/track/platform/device/interfaces/rest/resources/PagedDeviceResource.java`
+- Used by: `GET /api/v1/devices` when both `page` and `size` are sent
+
+| JSON property | Type | Required | Validation | Notes |
+|---|---|---|---|---|
+| `content` | array<object (`DeviceResource`)> | no |  | Devices of this page, ordered by device_uid |
+| `page` | integer | no |  | Zero-based index of this page |
+| `size` | integer | no |  | Maximum number of devices a page may hold |
+| `total_elements` | integer | no |  | Total number of devices matching the filters |
+| `total_pages` | integer | no |  | Number of pages the matching devices span; at least 1 |
 
 ## `EdgeConfigurationResource` (response)
 

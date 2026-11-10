@@ -87,7 +87,7 @@ Base URL: see [../../README.md](../../README.md#5-base-url). All paths are relat
 
 ## `POST /api/v1/service-requests`
 
-**Create a service request** - Creates a maintenance or repair request for a unit of the authenticated owner. The request starts PENDING, without a technician.
+**Create a service request** - Creates a maintenance or repair request for a unit of the authenticated owner. The request starts PENDING, without a technician. A corrective request may name the alert it answers in `source_alert_id`: the alert must be one of the caller's and raised on the same `equipment_id`; its status does not matter, since the repair may come after the alert closed.
 
 | Field | Value |
 |---|---|
@@ -98,12 +98,12 @@ Base URL: see [../../README.md](../../README.md#5-base-url). All paths are relat
 | Path parameters | none |
 | Query parameters | none |
 | Request body | `CreateServiceRequestResource` - [`requests/CreateServiceRequestResource.json`](requests/CreateServiceRequestResource.json), schema [`CreateServiceRequestResource.schema.json`](../../schemas/service-request/CreateServiceRequestResource.schema.json) |
-| Declared statuses / responses | `201` - `ServiceRequestResource` ([`responses/ServiceRequestResource.json`](responses/ServiceRequestResource.json)) - Service request created<br>`400` - error body - Invalid input data<br>`401` - error body - Unauthorized - JWT token required or invalid<br>`403` - error body - Forbidden - the authenticated account is not an owner<br>`404` - error body - No such equipment is reachable by the caller |
-| Application flow | controller -> `serviceRequestCommandService` |
+| Declared statuses / responses | `201` - `ServiceRequestResource` ([`responses/ServiceRequestResource.json`](responses/ServiceRequestResource.json)) - Service request created<br>`400` - error body - VALIDATION_ERROR - invalid input data, or `source_alert_id` names an alert of another unit of the caller (`details`: `Field source_alert_id: belongs to another unit`)<br>`401` - error body - Unauthorized - JWT token required or invalid<br>`403` - error body - Forbidden - the authenticated account is not an owner<br>`404` - error body - EQUIPMENT_NOT_FOUND - no such equipment is reachable by the caller; ALERT_NOT_FOUND - the alert does not exist or belongs to another owner |
+| Application flow | controller -> `serviceRequestCommandService` (-> `ExternalMonitoringService` when `source_alert_id` is sent), then `serviceRequestQueryService` for the display names |
 
 ## `GET /api/v1/service-requests`
 
-**List my service requests** - An owner lists the requests it created; a technician lists the requests assigned to it, which assigned_to=me makes explicit. Optionally filtered by one or more statuses, always paged and ordered by creation date, newest first.
+**List my service requests** - An owner lists the requests it created; a technician lists the requests assigned to it, which assigned_to=me makes explicit. Optionally filtered by status, unit, site, type, priority, creation period and source alert; every filter combines with the others and only narrows the caller's own requests, so a unit, site or alert of another owner yields an empty page. Always paged and ordered by creation date, newest first. `view=summary` answers `PagedServiceRequestSummaryResource` items, without history, intervention details or maintenance windows; use it for lists and counts, and keep the full resource for the detail.
 
 | Field | Value |
 |---|---|
@@ -112,10 +112,10 @@ Base URL: see [../../README.md](../../README.md#5-base-url). All paths are relat
 | Authentication / authorization | OWNER_ROLE or TECHNICIAN_ROLE |
 | Headers | `Accept: application/json`, `Authorization: Bearer <access token>` |
 | Path parameters | none |
-| Query parameters | `status` (comma-separated list of ServiceStatusResource; optional; values PENDING, ACCEPTED, IN_PROGRESS, COMPLETED, CANCELED)<br>`assigned_to` (String; optional; only the value `me` is accepted)<br>`page` (Integer; optional; default `0`, zero-based)<br>`size` (Integer; optional; default `20`, 1 to 100) |
+| Query parameters | `status` (comma-separated list of ServiceStatusResource; optional; values PENDING, ACCEPTED, IN_PROGRESS, COMPLETED, CANCELED)<br>`assigned_to` (String; optional; only the value `me` is accepted)<br>`equipment_id` (Long; optional)<br>`site_id` (Long; optional)<br>`type` (comma-separated `PREVENTIVE_MAINTENANCE`, `REPAIR`; optional)<br>`priority` (comma-separated `LOW`, `MEDIUM`, `HIGH`, `URGENT`; optional)<br>`created_from`, `created_to` (instants, ISO 8601 with `Z` or an offset; optional; inclusive; `created_from` must not be after `created_to`)<br>`source_alert_id` (Long; optional; the requests opened for one alert)<br>`view` (String; optional; `full`, the default, or `summary`)<br>`page` (Integer; optional; default `0`, zero-based)<br>`size` (Integer; optional; default `20`, 1 to 100) |
 | Request body | none (no JSON request body) |
-| Declared statuses / responses | `200` - `PagedServiceRequestResource` ([`responses/PagedServiceRequestResource.json`](responses/PagedServiceRequestResource.json)) - Service requests found<br>`400` - error body - Invalid filter or paging value, such as an unknown status, a page size above 100, or assigned_to=me sent by an owner<br>`401` - error body - Unauthorized - JWT token required or invalid<br>`403` - error body - Forbidden - the authenticated account is neither an owner nor a technician |
-| Application flow | controller -> `serviceRequestQueryService` |
+| Declared statuses / responses | `200` - `PagedServiceRequestResource` ([`responses/PagedServiceRequestResource.json`](responses/PagedServiceRequestResource.json)), or `PagedServiceRequestSummaryResource` ([`responses/PagedServiceRequestSummaryResource.json`](responses/PagedServiceRequestSummaryResource.json)) for `view=summary` - Service requests found<br>`400` - error body - VALIDATION_ERROR - invalid filter or paging value, such as an unknown status, type, priority or view, created_from after created_to, a page size above 100, or assigned_to=me sent by an owner<br>`401` - error body - Unauthorized - JWT token required or invalid<br>`403` - error body - Forbidden - the authenticated account is neither an owner nor a technician |
+| Application flow | controller -> `serviceRequestQueryService` (the page, then its display names and, for `view=summary`, its reviews: one read per owner on the page, one for the technicians, one for the reviews) |
 
 ## `GET /api/v1/service-requests/{serviceRequestId}`
 

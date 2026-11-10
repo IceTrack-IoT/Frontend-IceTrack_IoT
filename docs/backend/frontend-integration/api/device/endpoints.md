@@ -8,7 +8,7 @@ Base URL: see [../../README.md](../../README.md#5-base-url). All paths are relat
 |---|---|---|---|---|
 | 1 | `POST` | `/api/v1/devices` | OWNER_ROLE | Pair a device with an owned equipment unit |
 | 2 | `GET` | `/api/v1/devices/{deviceId}` | OWNER_ROLE | Get a device by ID |
-| 3 | `GET` | `/api/v1/devices` | OWNER_ROLE | List the devices of an equipment unit |
+| 3 | `GET` | `/api/v1/devices` | OWNER_ROLE | List my devices |
 | 4 | `POST` | `/api/v1/devices/{deviceId}/unpair` | OWNER_ROLE | Unpair a device |
 | 5 | `POST` | `/api/v1/devices/{deviceId}/rotate-api-key` | OWNER_ROLE | Rotate the API key of a device |
 | 6 | `PUT` | `/api/v1/devices/{deviceId}/status` | OWNER_ROLE | Change the lifecycle status of a device |
@@ -48,19 +48,21 @@ Base URL: see [../../README.md](../../README.md#5-base-url). All paths are relat
 
 ## `GET /api/v1/devices`
 
-**List the devices of an equipment unit** - Lists the devices linked to one of the caller's units; an empty list for any other unit.
+**List my devices** - Lists the devices linked (paired or revoked) to the units of the authenticated owner, ordered by `device_uid`. Without a filter it answers the whole inventory in one read. It can be narrowed to one unit, to the units of one site, to a set of statuses and by a search on the device uid or board model; every filter combines with the others. An unpaired device belongs to no owner, so `status=UNPAIRED` matches nothing. Each device carries the name and the site of its unit. Supplying both `page` and `size` returns a page wrapper with the total count instead of a plain array; a `size` above 100 is capped to 100.
 
 | Field | Value |
 |---|---|
 | Bounded context | Device Management |
-| Controller | `src/main/java/pe/edu/upc/ice/track/platform/device/interfaces/rest/DeviceController.java` - method `getDevicesByEquipment` |
+| Controller | `src/main/java/pe/edu/upc/ice/track/platform/device/interfaces/rest/DeviceController.java` - method `getDevices` |
 | Authentication / authorization | OWNER_ROLE |
 | Headers | `Accept: application/json`, `Authorization: Bearer <access token>` |
 | Path parameters | none |
-| Query parameters | `equipment_id` (Long; required) |
+| Query parameters | `equipment_id` (Long; optional)<br>`site_id` (Long; optional)<br>`status` (comma-separated `DeviceStatusResource`; optional)<br>`search` (String, at most 64 characters; optional)<br>`page` (Integer, 0 or more; optional)<br>`size` (Integer, 1 or more, capped at 100; optional) |
 | Request body | none (no JSON request body) |
-| Declared statuses / responses | `200` - JSON array of `DeviceResource` ([`responses/DeviceResource.json`](responses/DeviceResource.json)) - Devices found<br>`401` - error body - Missing or invalid JWT<br>`403` - error body - Caller is not an owner |
-| Application flow | controller -> n/a |
+| Declared statuses / responses | `200` - JSON array of `DeviceResource` ([`responses/DeviceResource.json`](responses/DeviceResource.json)), or `PagedDeviceResource` (`content`, `page`, `size`, `total_elements`, `total_pages`) when both `page` and `size` are sent - Devices found<br>`400` - `ErrorResource` - VALIDATION_ERROR - unknown status, search above 64 characters, negative page or size below 1<br>`401` - error body - Missing or invalid JWT<br>`403` - error body - Caller is not an owner<br>`404` - `ErrorResource` - SITE_NOT_FOUND or EQUIPMENT_NOT_FOUND - the site or unit of a filter is not reachable by the caller |
+| Application flow | controller -> `deviceQueryService` |
+
+Behavior change: `equipment_id` used to be required, and a unit of another owner used to answer an empty list. It is now optional, and a unit or site that is not the caller's answers `404`.
 
 ## `POST /api/v1/devices/{deviceId}/unpair`
 

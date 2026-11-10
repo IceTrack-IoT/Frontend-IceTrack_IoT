@@ -88,6 +88,13 @@
     "download_url": {
       "type": "string",
       "description": "Signed download URL valid for 15 minutes; only for a COMPLETED report read by id"
+    },
+    "kpis": {
+      "type": "array",
+      "items": {
+        "$ref": "KpiResource.schema.json"
+      },
+      "description": "The KPIs of a COMPLETED report as a JSON array; omitted when not COMPLETED and in summaries"
     }
   },
   "x-source": "src/main/java/pe/edu/upc/ice/track/platform/reporting/interfaces/rest/resources/ReportResource.java"

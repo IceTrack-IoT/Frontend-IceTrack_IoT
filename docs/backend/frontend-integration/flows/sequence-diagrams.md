@@ -331,9 +331,9 @@ sequenceDiagram
 
 ## 13. Device offline detection and recovery
 
-Classes: `EquipmentConnectivityCommandService` (`DetectOfflineEquipmentCommand`), `AlertPolicy.isOfflineSince`, `Alert.raisedForSilence`, `ExternalAssetManagementService` -> `AssetContextFacade.fetchOnlineEquipmentIds` / `markEquipmentOffline`, `AlertRaisedEventHandler`, `AlertRaisedEventListener` (notifications).
+Classes: `OfflineDetectionScheduler` (every 60 s, after taking the `monitoring.offline-detection` lease through `ScheduledTaskLock`), `EquipmentConnectivityCommandService` (`DetectOfflineEquipmentCommand`), `AlertPolicy.isOfflineSince`, `Alert.raisedForSilence`, `ExternalAssetManagementService` -> `AssetContextFacade.fetchOnlineEquipmentIds` / `markEquipmentOffline`, `AlertRaisedEventHandler`, `AlertRaisedEventListener` (notifications), `EquipmentConnectivityChangedEventHandler` (assets) -> `ConnectivityStreamEventListener` (stream event `connectivity-changed`).
 
-**Pending:** nothing invokes the detection periodically yet; the trigger belongs to the development team. The recovery half (diagram 10) runs on every reading.
+The recovery half (diagram 10) runs on every reading.
 
 ```mermaid
 sequenceDiagram

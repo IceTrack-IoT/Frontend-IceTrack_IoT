@@ -53,6 +53,21 @@ Legend: **Required** = enforced by Bean Validation (`@NotNull` / `@NotBlank`). O
 | `min_celsius` | number | yes | min 0.0; max 30.0 | Lowest acceptable temperature in Celsius, within 0 to 30 and strictly below max_celsius |
 | `max_celsius` | number | yes | min 0.0; max 30.0 | Highest acceptable temperature in Celsius, within 0 to 30 and strictly above min_celsius |
 
+## `EquipmentDirectoryEntryResource` (response)
+
+- Source: `src/main/java/pe/edu/upc/ice/track/platform/assets/interfaces/rest/resources/EquipmentDirectoryEntryResource.java`
+- Used by: `GET /api/v1/assets/equipments/directory`
+
+| JSON property | Type | Required | Validation | Notes |
+|---|---|---|---|---|
+| `id` | integer | no |  | Equipment unique identifier |
+| `uid` | string | no |  | The unit's own identifier, unique across the platform |
+| `name` | string | no |  | Name assigned to the unit |
+| `equipment_type` | string enum | no |  | values: `DISPLAY_CASE`, `COLD_ROOM`, `REFRIGERATOR`, `OTHER`; Kind of refrigeration unit |
+| `status` | string enum | no |  | values: `ACTIVE`, `MAINTENANCE`, `REPAIR`, `DEACTIVATED`; Current lifecycle status |
+| `site_id` | integer | no |  | Identifier of the site the unit is installed at |
+| `site_name` | string | no |  | Name of that site at the time of the read |
+
 ## `EquipmentResource` (response)
 
 - Source: `src/main/java/pe/edu/upc/ice/track/platform/assets/interfaces/rest/resources/EquipmentResource.java`
@@ -64,17 +79,36 @@ Legend: **Required** = enforced by Bean Validation (`@NotNull` / `@NotBlank`). O
 |---|---|---|---|---|
 | `id` | integer | no |  | Equipment unique identifier |
 | `site_id` | integer | no |  | Identifier of the site the unit is installed at |
+| `site_name` | string | no |  | Name of the site the unit is installed at, at the time of the read; read-only |
 | `uid` | string | no |  | The unit's own identifier, unique across the platform |
 | `name` | string | no |  | Name assigned to the unit |
 | `equipment_type` | string enum | no |  | values: `DISPLAY_CASE`, `COLD_ROOM`, `REFRIGERATOR`, `OTHER`; Kind of refrigeration unit |
 | `status` | string enum | no |  | values: `ACTIVE`, `MAINTENANCE`, `REPAIR`, `DEACTIVATED`; Current lifecycle status |
-| `online` | boolean | no |  | Whether the unit is reporting: true once a reading batch is stored; false before the first one, after offline detection and while DEACTIVATED |
+| `online` | boolean | no |  | Deprecated in favor of `connectivity.state`. Whether the unit is reporting: true once a reading batch is stored; false before the first one, after offline detection and while DEACTIVATED |
 | `min_celsius` | number | no |  | Lowest acceptable temperature in Celsius |
 | `max_celsius` | number | no |  | Highest acceptable temperature in Celsius |
 | `reminder_interval_days` | integer | no |  | Preventive maintenance interval in days |
 | `last_reading_at` | string | no |  | When the unit's latest reading batch was taken (its recorded_at); a batch delivered late never moves it back; null when the unit has not reported yet; nullable |
 | `last_known_temperature` | number | no |  | Average temperature of the unit's latest reading batch, in Celsius; null when the unit has not reported yet; nullable |
 | `config_version` | integer | no |  | Version of the configuration the unit's edge gateway enforces; incremented whenever the threshold, the alert policy or the technician grants of the unit change |
+| `connectivity` | object (`EquipmentConnectivityResource`) | no |  | Read-only; evaluated by the server on every read, see below |
+
+## `EquipmentConnectivityResource` (nested object)
+
+- Source: `src/main/java/pe/edu/upc/ice/track/platform/assets/interfaces/rest/resources/EquipmentConnectivityResource.java`
+- Example: [`nested/EquipmentConnectivityResource.json`](nested/EquipmentConnectivityResource.json)
+- Embedded in: `EquipmentResource` (every response that returns one; not in the equipment directory, whose `ETag` would otherwise change on every read)
+
+Evaluated with the rule of the scheduled offline detection, by the server clock, from the server arrival time of the unit's latest batch. Keep it current between reads with `skew = evaluated_at - Date.now()`: the unit is silent once `last_received_at + silent_after_seconds <= Date.now() + skew`. `READING_RECORDED` stream events move `last_received_at` forward (`received_at`), and `connectivity-changed` events carry every state change.
+
+| JSON property | Type | Required | Validation | Notes |
+|---|---|---|---|---|
+| `state` | string enum | no |  | `REPORTING`: a batch arrived within the window. `SILENT`: the last batch arrived longer ago. `NEVER_REPORTED`: no batch stored yet. `NOT_MONITORED`: the unit is `DEACTIVATED` |
+| `last_received_at` | string (date-time, UTC with Z) | no |  | Server arrival time of the latest stored batch; null when `NEVER_REPORTED`. A unit last heard from before this value was recorded falls back to `last_reading_at` until its next batch; nullable |
+| `silent_after_seconds` | integer | no |  | `60 × missed_sync_windows_for_offline` of the applicable alert policy |
+| `silent_since` | string (date-time, UTC with Z) | no |  | `last_received_at + silent_after_seconds`; present only when `SILENT`; nullable |
+| `under_maintenance` | boolean | no |  | A maintenance window covers the evaluation time; detection skips such units, so show it instead of "silent" |
+| `evaluated_at` | string (date-time, UTC with Z) | no |  | Server time of the evaluation |
 
 ## `GeoLocationResource` (nested object)
 

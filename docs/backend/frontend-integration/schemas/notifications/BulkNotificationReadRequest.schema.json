@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BulkNotificationReadRequest",
+  "type": "object",
+  "properties": {
+    "notification_ids": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 100,
+      "items": {
+        "type": "integer",
+        "format": "int64",
+        "exclusiveMinimum": 0
+      },
+      "description": "Identifiers of the notifications to mark as read; identifiers not addressed to the caller, already read or dismissed are skipped"
+    }
+  },
+  "required": ["notification_ids"],
+  "additionalProperties": false,
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/notifications/interfaces/rest/resources/BulkNotificationReadRequest.java"
+}

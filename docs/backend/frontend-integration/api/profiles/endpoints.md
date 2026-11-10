@@ -21,6 +21,23 @@ Base URL: see [../../README.md](../../README.md#5-base-url). All paths are relat
 | 13 | `GET` | `/api/v1/profiles/technicians/{technicianId}/public` | OWNER_ROLE | Get the public profile of a technician |
 | 14 | `GET` | `/api/v1/profiles/technicians/user/{userId}` | Authenticated (any valid bearer token) | Get technician by user ID |
 | 15 | `PUT` | `/api/v1/profiles/technicians/{technicianId}` | TECHNICIAN_ROLE and the technician profile must be the caller's own | Update a technician |
+| 16 | `GET` | `/api/v1/profiles/technicians/public` | OWNER_ROLE | Get the public technician directory |
+
+## `GET /api/v1/profiles/technicians/public`
+
+**Get the public technician directory** - Lists the public profile of the technicians - name, speciality, certification number, `completed_services` and `average_rating` - one page at a time. Optionally searched by name or speciality, filtered by an exact speciality and by a minimum rating, which leaves out technicians not rated yet, and ordered by name, by rating (best first, unrated last) or by completed services (most first). Email, phone and address are never included. A `size` above 100 is capped to 100.
+
+| Field | Value |
+|---|---|
+| Bounded context | Profiles |
+| Controller | `src/main/java/pe/edu/upc/ice/track/platform/profiles/interfaces/rest/TechnicianProfilesController.java` - method `getPublicTechnicianDirectory` |
+| Authentication / authorization | OWNER_ROLE |
+| Headers | `Accept: application/json`, `Authorization: Bearer <access token>` |
+| Path parameters | none |
+| Query parameters | `search` (String; optional; matches the full name or the speciality, case-insensitive)<br>`speciality` (String; optional; exact match, case-insensitive)<br>`min_rating` (Double, 0 to 5; optional)<br>`sort` (String; optional; `name`, `rating` or `completed_services`; default `name`)<br>`page` (Integer, 0 or more; default 0)<br>`size` (Integer, 1 or more, capped at 100; default 20) |
+| Request body | none (no JSON request body) |
+| Declared statuses / responses | `200` - `PagedTechnicianPublicProfileResource` (`content` of `TechnicianPublicProfileResource`, `page`, `size`, `total_elements`, `total_pages`) - Technicians found<br>`400` - error body - VALIDATION_ERROR - unknown sort, min_rating outside 0 to 5, negative page or size below 1<br>`401` - error body - Unauthorized - JWT token required or invalid<br>`403` - error body - Forbidden - the caller is not an owner |
+| Application flow | controller -> `technicianQueryService` |
 
 ## `GET /api/v1/profiles/dashboard-configs/user/{userId}`
 

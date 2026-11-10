@@ -36,6 +36,7 @@ Legend: **Required** = enforced by Bean Validation (`@NotNull` / `@NotBlank`). O
 | `type` | string enum | yes |  | values: `PREVENTIVE_MAINTENANCE`, `REPAIR`; Kind of work |
 | `priority` | string enum | yes |  | values: `LOW`, `MEDIUM`, `HIGH`, `URGENT`; Urgency |
 | `description` | string | yes | not blank; max length 1000 | What the owner needs |
+| `source_alert_id` | integer | no | > 0 | The alert this corrective request is opened for; must be one of the caller's alerts, raised on the same unit, in any status; nullable |
 
 ## `InterventionResource` (response)
 
@@ -103,6 +104,47 @@ Legend: **Required** = enforced by Bean Validation (`@NotNull` / `@NotBlank`). O
 | `total_elements` | integer | no |  | Total number of requests matching the filters |
 | `total_pages` | integer | no |  | Number of pages the matching requests span |
 
+## `PagedServiceRequestSummaryResource` (response)
+
+- Source: `src/main/java/pe/edu/upc/ice/track/platform/service/request/interfaces/rest/resources/PagedServiceRequestSummaryResource.java`
+- Example: [`responses/PagedServiceRequestSummaryResource.json`](responses/PagedServiceRequestSummaryResource.json) | JSON Schema: [`schemas/service-request/PagedServiceRequestSummaryResource.schema.json`](../../schemas/service-request/PagedServiceRequestSummaryResource.schema.json)
+- Used by: `GET /api/v1/service-requests?view=summary`
+
+| JSON property | Type | Required | Validation | Notes |
+|---|---|---|---|---|
+| `content` | array<object (`ServiceRequestSummaryResource`)> | no |  | Service requests of this page, newest first |
+| `page` | integer | no |  | Zero-based index of this page |
+| `size` | integer | no |  | Maximum number of requests a page may hold |
+| `total_elements` | integer | no |  | Total number of requests matching the filters |
+| `total_pages` | integer | no |  | Number of pages the matching requests span |
+
+## `ServiceRequestSummaryResource` (nested object)
+
+- Source: `src/main/java/pe/edu/upc/ice/track/platform/service/request/interfaces/rest/resources/ServiceRequestSummaryResource.java`
+- Example: [`nested/ServiceRequestSummaryResource.json`](nested/ServiceRequestSummaryResource.json) | JSON Schema: [`schemas/service-request/ServiceRequestSummaryResource.schema.json`](../../schemas/service-request/ServiceRequestSummaryResource.schema.json)
+- Embedded in: `PagedServiceRequestSummaryResource`
+
+| JSON property | Type | Required | Validation | Notes |
+|---|---|---|---|---|
+| `id` | integer | no |  | Service request unique identifier |
+| `equipment_id` | integer | no |  | Unit to service |
+| `site_id` | integer | no |  | Site the unit is installed at |
+| `technician_id` | integer | no |  | Assigned technician; nullable |
+| `type` | string enum | no |  | values: `PREVENTIVE_MAINTENANCE`, `REPAIR` |
+| `priority` | string enum | no |  | values: `LOW`, `MEDIUM`, `HIGH`, `URGENT` |
+| `status` | string enum | no |  | values: `PENDING`, `ACCEPTED`, `IN_PROGRESS`, `COMPLETED`, `CANCELED` |
+| `created_at` | string | no |  | When the request was created, ISO-8601 UTC |
+| `assigned_at` | string | no |  | nullable |
+| `started_at` | string | no |  | nullable |
+| `completed_at` | string | no |  | nullable |
+| `canceled_at` | string | no |  | nullable |
+| `equipment_name` | string | no |  | Name of the unit; nullable |
+| `site_name` | string | no |  | Name of the site; nullable |
+| `technician_name` | string | no |  | Full name of the assigned technician; null while unassigned; nullable |
+| `has_intervention` | boolean | no |  | Whether an intervention was registered (the case once `COMPLETED`) |
+| `has_review` | boolean | no |  | Whether the owner reviewed the request |
+| `source_alert_id` | integer | no |  | The alert the request was opened for; nullable |
+
 ## `RegisterInterventionResource` (request)
 
 - Source: `src/main/java/pe/edu/upc/ice/track/platform/service/request/interfaces/rest/resources/RegisterInterventionResource.java`
@@ -163,9 +205,13 @@ Legend: **Required** = enforced by Bean Validation (`@NotNull` / `@NotBlank`). O
 | `equipment_id` | integer | no |  | Unit to service |
 | `site_id` | integer | no |  | Site the unit is installed at |
 | `technician_id` | integer | no |  | Assigned technician; null while none is assigned; nullable |
+| `equipment_name` | string | no |  | Read-only name of the unit; null when the unit is no longer known; nullable |
+| `site_name` | string | no |  | Read-only name of the site; null when the site is no longer known; nullable |
+| `technician_name` | string | no |  | Read-only full name of the assigned technician; null while none is assigned; nullable |
 | `type` | string enum | no |  | values: `PREVENTIVE_MAINTENANCE`, `REPAIR`; Kind of work |
 | `priority` | string enum | no |  | values: `LOW`, `MEDIUM`, `HIGH`, `URGENT`; Urgency |
 | `description` | string | no |  | What the owner needs |
+| `source_alert_id` | integer | no |  | The alert this corrective request was opened for; null when none; nullable |
 | `status` | string enum | no |  | values: `PENDING`, `ACCEPTED`, `IN_PROGRESS`, `COMPLETED`, `CANCELED`; Current lifecycle status |
 | `created_at` | string | no |  | When the request was created, ISO-8601 UTC |
 | `assigned_at` | string | no |  | When the current technician was assigned; nullable |

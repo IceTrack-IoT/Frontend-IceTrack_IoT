@@ -4,11 +4,16 @@
   "type": "TEMPERATURE_EXCURSION",
   "format": "PDF",
   "status": "COMPLETED",
+  "result_payload": "[{\"key\":\"excursion_count\",\"label\":\"Total excursions\",\"value\":3.0,\"unit\":\"count\"},{\"key\":\"time_in_range_pct.unit_10\",\"label\":\"Time in range - Unit 10\",\"value\":99.2,\"unit\":\"%\"}]",
   "user_id": 42,
   "site_id": 1,
   "from": "2026-10-01T00:00:00Z",
   "to": "2026-10-31T23:59:59Z",
   "requested_at": "2026-11-01T08:00:00Z",
   "completed_at": "2026-11-01T08:00:09Z",
-  "download_url": "https://storage.googleapis.com/icetrack-reports/reports/7/8.pdf?X-Goog-Signature=abc"
+  "download_url": "https://storage.googleapis.com/icetrack-reports/reports/7/8.pdf?X-Goog-Signature=abc",
+  "kpis": [
+    { "key": "excursion_count", "label": "Total excursions", "value": 3.0, "unit": "" },
+    { "key": "time_in_range_pct.unit_10", "label": "Time in range - Unit 10", "value": 99.2, "unit": "%" }
+  ]
 }

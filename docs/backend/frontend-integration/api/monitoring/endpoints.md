@@ -19,6 +19,58 @@ Base URL: see [../../README.md](../../README.md#5-base-url). All paths are relat
 | 11 | `GET` | `/api/v1/telemetry/equipment/{equipmentId}` | OWNER_ROLE or TECHNICIAN_ROLE | Get reading history by equipment |
 | 12 | `POST` | `/api/v1/telemetry/stream-ticket` | OWNER_ROLE | Issue a telemetry stream ticket |
 | 13 | `GET` | `/api/v1/telemetry/stream` | None (no JWT). Single-use stream ticket in `?ticket=` | Open the telemetry stream |
+| 14 | `GET` | `/api/v1/alerts` | OWNER_ROLE | List my alerts |
+| 15 | `GET` | `/api/v1/alert-policies` | OWNER_ROLE | Get the alert policies applicable to my equipment |
+| 16 | `GET` | `/api/v1/dashboard/summary` | OWNER_ROLE | Get my dashboard summary |
+
+## `GET /api/v1/alerts`
+
+**List my alerts** - Lists the alerts of every unit of the authenticated owner in one read, whatever their status, so both the active alerts and the alert history come from here. Optionally filtered by status, unit, site, type, severity and the period the alert was opened in; every filter combines with the others. Always paged, ordered by `opened_at` and then `id`, both descending. A `size` above 100 is capped to 100.
+
+| Field | Value |
+|---|---|
+| Bounded context | Monitoring and Alerting |
+| Controller | `src/main/java/pe/edu/upc/ice/track/platform/monitoring/interfaces/rest/AlertsController.java` - method `getAlerts` |
+| Authentication / authorization | OWNER_ROLE |
+| Headers | `Accept: application/json`, `Authorization: Bearer <access token>` |
+| Path parameters | none |
+| Query parameters | `status` (comma-separated `AlertStatusResource`; optional; values OPEN, ACKNOWLEDGED, RESOLVED, DISMISSED)<br>`equipment_id` (Long; optional)<br>`site_id` (Long; optional)<br>`type` (comma-separated `AlertTypeResource`; optional; values TEMPERATURE_EXCURSION, DEVICE_OFFLINE)<br>`severity` (comma-separated `AlertSeverityResource`; optional; values INFO, WARNING, CRITICAL)<br>`opened_from`, `opened_to` (Instant, inclusive; optional)<br>`page` (Integer, 0 or more; default 0)<br>`size` (Integer, 1 or more, capped at 100; default 20) |
+| Request body | none (no JSON request body) |
+| Declared statuses / responses | `200` - `PagedAlertResource` (`content` of `AlertResource`, `page`, `size`, `total_elements`, `total_pages`) - Alerts found<br>`400` - `ErrorResource` - VALIDATION_ERROR - unknown status, type or severity, opened_from after opened_to, negative page or size below 1<br>`401` - error body - Unauthorized - JWT token required or invalid<br>`403` - error body - Forbidden - the caller is not an owner<br>`404` - `ErrorResource` - SITE_NOT_FOUND or EQUIPMENT_NOT_FOUND - the site or unit of a filter is not reachable by the caller |
+| Application flow | controller -> `alertQueryService` |
+
+## `GET /api/v1/alert-policies`
+
+**Get the alert policies applicable to my equipment** - Resolves, in one read, the alert policy applicable to each unit asked for: the unit's own policy when it has one, otherwise the platform-wide default, with a `source` telling which. Without `equipment_id` it covers every unit of the authenticated owner; with it, at most 100 units. A unit that does not exist or belongs to another owner is left out of the answer rather than refused. Entries are sorted by `equipment_id`. The `ETag` header identifies the answer; sending it back in `If-None-Match` answers `304` with an empty body while nothing changed.
+
+| Field | Value |
+|---|---|
+| Bounded context | Monitoring and Alerting |
+| Controller | `src/main/java/pe/edu/upc/ice/track/platform/monitoring/interfaces/rest/AlertPoliciesController.java` - method `getApplicablePolicies` |
+| Authentication / authorization | OWNER_ROLE |
+| Headers | `Accept: application/json`, `Authorization: Bearer <access token>`, `If-None-Match` (optional) |
+| Path parameters | none |
+| Query parameters | `equipment_id` (comma-separated Long, at most 100; optional) |
+| Request body | none (no JSON request body) |
+| Response headers | `ETag` (quoted digest of the answer), `Cache-Control: no-cache, private`, `Vary: Authorization` |
+| Declared statuses / responses | `200` - JSON array of `ApplicablePolicyResource` - Policies resolved; the ETag header identifies the answer<br>`304` - no JSON body (Answer unchanged since the ETag in If-None-Match)<br>`400` - `ErrorResource` - VALIDATION_ERROR - a malformed identifier or more than 100 of them<br>`401` - error body - Unauthorized - JWT token required or invalid<br>`403` - `ErrorResource` - Forbidden - the caller is not an owner |
+| Application flow | controller -> `alertPolicyQueryService` |
+
+## `GET /api/v1/dashboard/summary`
+
+**Get my dashboard summary** - Returns, in one read, the totals of the authenticated owner's dashboard: sites, units per status, units reporting, silent or never heard from, active alerts per status and severity, service requests per status and linked devices. A unit is reporting while its `last_reading_at` lies within 60 seconds times `missed_sync_windows_for_offline` of its applicable alert policy, judged by the server clock. `site_id` restricts every figure to one site.
+
+| Field | Value |
+|---|---|
+| Bounded context | Monitoring and Alerting |
+| Controller | `src/main/java/pe/edu/upc/ice/track/platform/monitoring/interfaces/rest/DashboardSummaryController.java` - method `getDashboardSummary` |
+| Authentication / authorization | OWNER_ROLE |
+| Headers | `Accept: application/json`, `Authorization: Bearer <access token>` |
+| Path parameters | none |
+| Query parameters | `site_id` (Long; optional) |
+| Request body | none (no JSON request body) |
+| Declared statuses / responses | `200` - `DashboardSummaryResource` - Summary computed<br>`400` - `ErrorResource` - VALIDATION_ERROR - site_id is not a number<br>`401` - error body - Unauthorized - JWT token required or invalid<br>`403` - `ErrorResource` - Forbidden - the caller is not an owner<br>`404` - `ErrorResource` - SITE_NOT_FOUND - no such site is reachable by the caller |
+| Application flow | controller -> `dashboardSummaryQueryService` |
 
 ## `GET /api/v1/alert-policies/equipment/{equipmentId}`
 
@@ -182,7 +234,7 @@ Base URL: see [../../README.md](../../README.md#5-base-url). All paths are relat
 
 ## `GET /api/v1/telemetry/equipment/{equipmentId}`
 
-**Get reading history by equipment** - Retrieves the sensor readings recorded for an equipment within the given date range. Owners read their own units; technicians read units they hold an active service request on. Any other unit answers 404.
+**Get reading history by equipment** - Retrieves the sensor readings recorded for an equipment within the given date range. Owners read their own units; technicians read units they hold an active service request on. Any other unit answers 404. Without `bucket` every stored batch is returned, exactly as before. With `bucket` the batches are aggregated into epoch-aligned buckets (by `recorded_at`), oldest first; empty buckets are **omitted**, so a gap in the array is a real gap in reporting. `auto` picks the smallest bucket that keeps the answer at or below `max_points`. Use raw batches for 2 h and 6 h ranges and buckets for 24 h and 7 days, and fold live readings into the last bucket on the client.
 
 | Field | Value |
 |---|---|
@@ -191,10 +243,11 @@ Base URL: see [../../README.md](../../README.md#5-base-url). All paths are relat
 | Authentication / authorization | OWNER_ROLE or TECHNICIAN_ROLE |
 | Headers | `Accept: application/json`, `Authorization: Bearer <access token>` |
 | Path parameters | `equipmentId` (Long; Java `equipmentId`) |
-| Query parameters | `from` (Instant, ISO 8601 with Z; required)<br>`to` (Instant, ISO 8601 with Z; required) |
+| Query parameters | `from` (Instant, ISO 8601 with Z; required)<br>`to` (Instant, ISO 8601 with Z; required)<br>`bucket` (String; optional; `1m`, `5m`, `15m`, `1h`, `6h` or `auto`)<br>`max_points` (int; optional; 10 to 2000, default 500; used by `auto` only) |
 | Request body | none (no JSON request body) |
-| Declared statuses / responses | `200` - JSON array of `SensorReadingResource` ([`responses/SensorReadingResource.json`](responses/SensorReadingResource.json)) - Readings found<br>`401` - error body - Unauthorized - JWT token required or invalid<br>`404` - error body - EQUIPMENT_NOT_FOUND - no such equipment is reachable by the caller |
-| Application flow | controller -> `sensorReadingQueryService` |
+| Response headers | `X-Telemetry-Bucket` (only with `bucket`): the bucket used, e.g. the one `auto` chose. Exposed to browsers by CORS |
+| Declared statuses / responses | `200` - JSON array of `SensorReadingResource` ([`responses/SensorReadingResource.json`](responses/SensorReadingResource.json)), or of `TelemetryBucketResource` ([`responses/TelemetryBucketResource.json`](responses/TelemetryBucketResource.json)) with `bucket` - Readings found<br>`400` - `ErrorResource` - VALIDATION_ERROR - unknown bucket (`Parameter 'bucket' must be one of [1m, 5m, 15m, 1h, 6h, auto]`), max_points outside 10 to 2000, from after to, or a fixed bucket that would exceed 2000 points<br>`401` - error body - Unauthorized - JWT token required or invalid<br>`404` - error body - EQUIPMENT_NOT_FOUND - no such equipment is reachable by the caller |
+| Application flow | controller -> `sensorReadingQueryService` (with `bucket`: the batches of the range are read once and aggregated by `TelemetryBucket.aggregate`) |
 
 ## `POST /api/v1/telemetry/stream-ticket`
 
@@ -214,7 +267,9 @@ Base URL: see [../../README.md](../../README.md#5-base-url). All paths are relat
 
 ## `GET /api/v1/telemetry/stream`
 
-**Open the telemetry stream** - Server-Sent Events stream of the readings and alert status changes of the ticket owner's units, and of no other owner's. Authenticated by the ticket query parameter only; no JWT is accepted here. The ticket is consumed by this request whatever its outcome. Events: stream-opened first (with the reconnection delay), then telemetry-update, whose JSON data is a TelemetryReadingUpdate (type READING_RECORDED) or a TelemetryAlertUpdate (type ALERT_STATUS_CHANGED); a heartbeat comment every 25 seconds. The stream closes after 30 minutes. An EventSource does not retry a 401: request a new ticket and reconnect.
+**Open the owner event stream** - Server-Sent Events stream of the events of the ticket owner, and of no other owner. Authenticated by the ticket query parameter only; no JWT is accepted here. The ticket is consumed by this request whatever its outcome. Events: `stream-opened` first (reconnection delay, `replayed`, `replay_complete`), then the events replayed after `last_event_id`, then live events: `telemetry-update` (a TelemetryReadingUpdate of type READING_RECORDED or a TelemetryAlertUpdate of type ALERT_STATUS_CHANGED), `notification-created`, `unread-count-changed`, `report-status-changed`, `device-status-changed` and `connectivity-changed`; a heartbeat comment every 25 seconds. Every event but `stream-opened` carries an SSE `id`. The stream closes after 30 minutes. An EventSource does not retry a 401: request a new ticket and reconnect.
+
+Reconnect with the `id` of the last event received in `last_event_id`. The instance keeps each owner's last 1000 events of the last 5 minutes (whichever is fewer) while the owner has a stream open and for 5 minutes after the last one closed. `replay_complete: false` means events the client missed are no longer kept, or the id was issued by another instance or before a restart: reload over REST, as before. Without `last_event_id`, nothing is replayed and `replay_complete` is `true`.
 
 | Field | Value |
 |---|---|
@@ -223,7 +278,7 @@ Base URL: see [../../README.md](../../README.md#5-base-url). All paths are relat
 | Authentication / authorization | None (no JWT). Single-use stream ticket in `?ticket=` |
 | Headers | `Accept: text/event-stream` (set by `EventSource`); no `Authorization` header |
 | Path parameters | none |
-| Query parameters | `ticket` (string; declared optional in code but always required in practice: a missing, spent or expired ticket answers `401`; see [telemetry-sse](../../integrations/telemetry-sse.md)) |
+| Query parameters | `ticket` (string; declared optional in code but always required in practice: a missing, spent or expired ticket answers `401`; see [telemetry-sse](../../integrations/telemetry-sse.md))<br>`last_event_id` (string; optional; id of the last event received, e.g. `1731164560123-17`) |
 | Request body | none (no JSON request body) |
-| Declared statuses / responses | `200` - SSE stream (`text/event-stream`) of `ReadingRecordedStreamResource`, `AlertStatusChangedStreamResource` ([`responses/ReadingRecordedStreamResource.json`](responses/ReadingRecordedStreamResource.json)) - Stream opened<br>`401` - `ErrorResource` - UNAUTHORIZED - the ticket is missing, malformed, unknown, already used or expired |
+| Declared statuses / responses | `200` - SSE stream (`text/event-stream`) of `ReadingRecordedStreamResource`, `AlertStatusChangedStreamResource` ([`responses/ReadingRecordedStreamResource.json`](responses/ReadingRecordedStreamResource.json)), `NotificationCreatedStreamResource`, `UnreadCountChangedStreamResource`, `ReportStatusChangedStreamResource`, `DeviceStatusChangedStreamResource`, `ConnectivityChangedStreamResource` (see [contracts.md](contracts.md#owner-stream-events)) - Stream opened<br>`401` - `ErrorResource` - UNAUTHORIZED - the ticket is missing, malformed, unknown, already used or expired |
 | Application flow | controller -> `telemetryStreamCommandService` |

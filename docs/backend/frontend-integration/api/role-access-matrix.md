@@ -36,15 +36,17 @@ Every endpoint grouped by who may call it, derived from `@PreAuthorize` and the 
 | `PUT` | `/api/v1/notifications/{notificationId}/read` | Mark notification as read | notifications |
 | `PUT` | `/api/v1/notifications/{notificationId}/dismiss` | Dismiss notification | notifications |
 
-## OWNER_ROLE only (web) (33)
+## OWNER_ROLE only (web) (38)
 
 | Method | Path | Summary | Context |
 |---|---|---|---|
 | `GET` | `/api/v1/profiles/owners` | Get all owners | profiles |
 | `GET` | `/api/v1/profiles/technicians` | Get all technicians | profiles |
+| `GET` | `/api/v1/profiles/technicians/public` | Get the public technician directory | profiles |
 | `GET` | `/api/v1/profiles/technicians/{technicianId}/public` | Get the public profile of a technician | profiles |
 | `POST` | `/api/v1/assets/equipments` | Register an equipment | assets |
 | `GET` | `/api/v1/assets/equipments` | List my equipment | assets |
+| `GET` | `/api/v1/assets/equipments/directory` | Get my equipment directory | assets |
 | `PUT` | `/api/v1/assets/equipments/{equipmentId}` | Update an equipment | assets |
 | `PUT` | `/api/v1/assets/equipments/{equipmentId}/threshold` | Change the temperature threshold | assets |
 | `PUT` | `/api/v1/assets/equipments/{equipmentId}/status` | Change the equipment status | assets |
@@ -55,11 +57,14 @@ Every endpoint grouped by who may call it, derived from `@PreAuthorize` and the 
 | `PUT` | `/api/v1/assets/sites/{siteId}/address` | Change the address of a site | assets |
 | `POST` | `/api/v1/devices` | Pair a device with an owned equipment unit | device |
 | `GET` | `/api/v1/devices/{deviceId}` | Get a device by ID | device |
-| `GET` | `/api/v1/devices` | List the devices of an equipment unit | device |
+| `GET` | `/api/v1/devices` | List my devices | device |
 | `POST` | `/api/v1/devices/{deviceId}/unpair` | Unpair a device | device |
 | `POST` | `/api/v1/devices/{deviceId}/rotate-api-key` | Rotate the API key of a device | device |
 | `PUT` | `/api/v1/devices/{deviceId}/status` | Change the lifecycle status of a device | device |
+| `GET` | `/api/v1/alert-policies` | Get the alert policies applicable to my equipment | monitoring |
 | `PUT` | `/api/v1/alert-policies` | Create or update an alert policy | monitoring |
+| `GET` | `/api/v1/alerts` | List my alerts | monitoring |
+| `GET` | `/api/v1/dashboard/summary` | Get my dashboard summary | monitoring |
 | `PUT` | `/api/v1/alerts/{alertId}/acknowledge` | Acknowledge an alert | monitoring |
 | `PUT` | `/api/v1/alerts/{alertId}/resolve` | Resolve an alert | monitoring |
 | `PUT` | `/api/v1/alerts/{alertId}/dismiss` | Dismiss an alert | monitoring |

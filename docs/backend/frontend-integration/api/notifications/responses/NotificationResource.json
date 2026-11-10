@@ -4,10 +4,12 @@
   "equipment_id": 10,
   "device_id": 7,
   "source_alert_id": 301,
+  "service_request_id": null,
   "message": "Equipment 10 is above its maximum temperature",
   "type": "TEMPERATURE_EXCURSION",
   "severity": "CRITICAL",
   "is_read": false,
+  "created_at": "2026-11-09T10:02:01Z",
   "read_at": null,
   "dismissed_at": null
 }

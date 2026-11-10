@@ -1,6 +1,6 @@
 # Consolidated REST endpoint inventory
 
-85 endpoints across 8 bounded contexts, discovered from 23 controllers. Detailed contracts are in `api/<context>/endpoints.md`.
+90 endpoints across 8 bounded contexts, discovered from 24 controllers. Detailed contracts are in `api/<context>/endpoints.md`.
 
 | Context | Method | Path | Auth | Request body | Controller.method |
 |---|---|---|---|---|---|
@@ -28,12 +28,14 @@
 | profiles | `GET` | `/api/v1/profiles/owners/user/{userId}` | Authenticated (any valid bearer token) | none | `OwnerProfilesController.getOwnerByUserId` |
 | profiles | `PUT` | `/api/v1/profiles/owners/{ownerId}` | OWNER_ROLE and the owner profile must be the caller's own | `UpdateOwnerResource` | `OwnerProfilesController.updateOwner` |
 | profiles | `GET` | `/api/v1/profiles/technicians` | OWNER_ROLE | none | `TechnicianProfilesController.getAllTechnicians` |
+| profiles | `GET` | `/api/v1/profiles/technicians/public` | OWNER_ROLE | none | `TechnicianProfilesController.getPublicTechnicianDirectory` |
 | profiles | `GET` | `/api/v1/profiles/technicians/{technicianId}` | Authenticated (any valid bearer token) | none | `TechnicianProfilesController.getTechnicianById` |
 | profiles | `GET` | `/api/v1/profiles/technicians/{technicianId}/public` | OWNER_ROLE | none | `TechnicianProfilesController.getTechnicianPublicProfile` |
 | profiles | `GET` | `/api/v1/profiles/technicians/user/{userId}` | Authenticated (any valid bearer token) | none | `TechnicianProfilesController.getTechnicianByUserId` |
 | profiles | `PUT` | `/api/v1/profiles/technicians/{technicianId}` | TECHNICIAN_ROLE and the technician profile must be the caller's own | `UpdateTechnicianResource` | `TechnicianProfilesController.updateTechnician` |
 | assets | `POST` | `/api/v1/assets/equipments` | OWNER_ROLE | `RegisterEquipmentResource` | `EquipmentController.registerEquipment` |
 | assets | `GET` | `/api/v1/assets/equipments` | OWNER_ROLE | none | `EquipmentController.getMyEquipment` |
+| assets | `GET` | `/api/v1/assets/equipments/directory` | OWNER_ROLE | none | `EquipmentController.getMyEquipmentDirectory` |
 | assets | `GET` | `/api/v1/assets/equipments/{equipmentId}` | OWNER_ROLE or TECHNICIAN_ROLE | none | `EquipmentController.getEquipmentById` |
 | assets | `PUT` | `/api/v1/assets/equipments/{equipmentId}` | OWNER_ROLE | `UpdateEquipmentResource` | `EquipmentController.updateEquipment` |
 | assets | `PUT` | `/api/v1/assets/equipments/{equipmentId}/threshold` | OWNER_ROLE | `ChangeThresholdResource` | `EquipmentController.changeThreshold` |
@@ -47,18 +49,21 @@
 | assets | `PUT` | `/api/v1/assets/sites/{siteId}/address` | OWNER_ROLE | `UpdateSiteAddressResource` | `SiteController.updateSiteAddress` |
 | device | `POST` | `/api/v1/devices` | OWNER_ROLE | `RegisterDeviceResource` | `DeviceController.registerDevice` |
 | device | `GET` | `/api/v1/devices/{deviceId}` | OWNER_ROLE | none | `DeviceController.getDevice` |
-| device | `GET` | `/api/v1/devices` | OWNER_ROLE | none | `DeviceController.getDevicesByEquipment` |
+| device | `GET` | `/api/v1/devices` | OWNER_ROLE | none | `DeviceController.getDevices` |
 | device | `POST` | `/api/v1/devices/{deviceId}/unpair` | OWNER_ROLE | none | `DeviceController.unpairDevice` |
 | device | `POST` | `/api/v1/devices/{deviceId}/rotate-api-key` | OWNER_ROLE | none | `DeviceController.rotateApiKey` |
 | device | `PUT` | `/api/v1/devices/{deviceId}/status` | OWNER_ROLE | `ChangeDeviceStatusResource` | `DeviceController.changeStatus` |
 | device | `GET` | `/api/v1/devices/me/config` | Device API key (`X-API-Key`), authority `DEVICE_ROLE`; no user JWT | none | `EdgeConfigurationController.getConfiguration` |
+| monitoring | `GET` | `/api/v1/alert-policies` | OWNER_ROLE | none | `AlertPoliciesController.getApplicablePolicies` |
 | monitoring | `GET` | `/api/v1/alert-policies/equipment/{equipmentId}` | OWNER_ROLE or TECHNICIAN_ROLE | none | `AlertPoliciesController.getPolicyByEquipment` |
 | monitoring | `PUT` | `/api/v1/alert-policies` | OWNER_ROLE | `UpdateAlertPolicyResource` | `AlertPoliciesController.updatePolicy` |
+| monitoring | `GET` | `/api/v1/alerts` | OWNER_ROLE | none | `AlertsController.getAlerts` |
 | monitoring | `GET` | `/api/v1/alerts/{alertId}` | OWNER_ROLE or TECHNICIAN_ROLE | none | `AlertsController.getAlertById` |
 | monitoring | `GET` | `/api/v1/alerts/equipment/{equipmentId}/open` | OWNER_ROLE or TECHNICIAN_ROLE | none | `AlertsController.getOpenAlertsByEquipment` |
 | monitoring | `PUT` | `/api/v1/alerts/{alertId}/acknowledge` | OWNER_ROLE | none | `AlertsController.acknowledgeAlert` |
 | monitoring | `PUT` | `/api/v1/alerts/{alertId}/resolve` | OWNER_ROLE | none | `AlertsController.resolveAlert` |
 | monitoring | `PUT` | `/api/v1/alerts/{alertId}/dismiss` | OWNER_ROLE | `DismissAlertResource` | `AlertsController.dismissAlert` |
+| monitoring | `GET` | `/api/v1/dashboard/summary` | OWNER_ROLE | none | `DashboardSummaryController.getDashboardSummary` |
 | monitoring | `POST` | `/api/v1/telemetry/events` | Device API key (`X-API-Key`), authority `DEVICE_ROLE`; no user JWT | `RecordEdgeEventResource` | `EdgeEventsController.recordEvent` |
 | monitoring | `GET` | `/api/v1/maintenance-windows` | OWNER_ROLE | none | `MaintenanceWindowsController.getMaintenanceWindows` |
 | monitoring | `POST` | `/api/v1/telemetry` | Device API key (`X-API-Key`), authority `DEVICE_ROLE`; no user JWT | `RecordReadingBatchResource` | `TelemetryController.recordReading` |

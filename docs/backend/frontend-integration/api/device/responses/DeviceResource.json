@@ -5,5 +5,7 @@
   "firmware_version": "1.0.0",
   "status": "PAIRED",
   "paired_equipment_id": 21,
+  "paired_equipment_name": "Cold Room #01",
+  "paired_site_id": 1,
   "last_seen_at": "2026-10-23T17:00:00Z"
 }
