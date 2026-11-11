@@ -36,6 +36,7 @@ export const environment = {
   iceTrackProviderValidateSiteAddressEndpointPath: '/assets/sites/validate-address',
   iceTrackProviderSiteByIdEndpointPath: '/assets/sites/{siteId}',
   iceTrackProviderSiteAddressEndpointPath: '/assets/sites/{siteId}/address',
+  iceTrackProviderSiteGeocodingRetryEndpointPath: '/assets/sites/{siteId}/geocoding/retry',
   iceTrackProviderEquipmentByIdEndpointPath: '/assets/equipments/{equipmentId}',
   iceTrackProviderEquipmentThresholdEndpointPath: '/assets/equipments/{equipmentId}/threshold',
   iceTrackProviderEquipmentStatusEndpointPath: '/assets/equipments/{equipmentId}/status',
@@ -61,6 +62,7 @@ export const environment = {
   iceTrackProviderNotificationsEndpointPath: '/notifications',
   iceTrackProviderUnreadNotificationCountEndpointPath: '/notifications/unread-count',
   iceTrackProviderMarkAllNotificationsAsReadEndpointPath: '/notifications/read-all',
+  iceTrackProviderMarkSeveralNotificationsAsReadEndpointPath: '/notifications/read',
   iceTrackProviderMarkNotificationAsReadEndpointPath: '/notifications/{notificationId}/read',
   iceTrackProviderDismissNotificationEndpointPath: '/notifications/{notificationId}/dismiss',
 
