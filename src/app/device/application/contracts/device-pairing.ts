@@ -23,5 +23,9 @@ export interface DevicePairing {
  */
 export interface IssuedDeviceCredential {
   readonly device: Device;
-  readonly apiKey: string;
+  /**
+   * The plaintext API key. Null only for a pairing whose answer was replayed after a retry: the key was
+   * issued by the first attempt and can only be seen again by rotating it.
+   */
+  readonly apiKey: string | null;
 }

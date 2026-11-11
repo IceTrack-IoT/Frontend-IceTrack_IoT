@@ -69,15 +69,13 @@ export class PairDevice {
   protected readonly keyStored = signal(false);
   private readonly successHeading = viewChild<ElementRef<HTMLElement>>('successHeading');
 
-  /** The pairing just confirmed, with the key issued for it. */
+  /**
+   * The pairing just confirmed, with the key issued for it. The key is null when the pairing was answered
+   * again after a retry: it was issued by the first attempt and can only be seen again by rotating it.
+   */
   protected readonly pairing = computed(() => {
     const state = this.store.actionState();
-    if (
-      state?.action !== 'pair' ||
-      state.status !== 'succeeded' ||
-      state.device === null ||
-      state.issuedApiKey === null
-    ) {
+    if (state?.action !== 'pair' || state.status !== 'succeeded' || state.device === null) {
       return null;
     }
     const equipmentId = state.device.paired_equipment_id;

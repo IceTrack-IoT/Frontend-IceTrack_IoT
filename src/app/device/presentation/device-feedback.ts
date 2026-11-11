@@ -36,6 +36,8 @@ export function deviceActionErrorKey(action: DeviceAction, failure: DeviceFailur
       return 'devices.errors.invalidPairing';
     case 'ACCESS_DENIED':
       return 'devices.errors.accessDenied';
+    case 'IDEMPOTENCY_KEY_CONFLICT':
+      return 'devices.errors.pairingInProgress';
     default:
       return 'devices.errors.unexpected';
   }

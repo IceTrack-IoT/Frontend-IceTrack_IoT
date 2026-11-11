@@ -1,6 +1,7 @@
 import type { HttpClient } from '@angular/common/http';
 import type { Observable } from 'rxjs';
 import { environment } from '@env/environment';
+import { sendIdempotent } from '@shared/infrastructure/http/write-preconditions';
 import type {
   ChangeDeviceStatusRequest,
   RegisterDeviceRequest,
@@ -32,9 +33,14 @@ export class DevicesApiEndpoint {
     return this.http.get<DeviceResource[]>(this.devicesUrl);
   }
 
-  /** `POST /devices` */
+  /**
+   * `POST /devices`, with an `Idempotency-Key` so a retry never pairs twice. A replayed answer carries no
+   * `api_key`.
+   */
   registerDevice(request: RegisterDeviceRequest): Observable<DeviceCredentialResource> {
-    return this.http.post<DeviceCredentialResource>(this.devicesUrl, request);
+    return sendIdempotent((headers) =>
+      this.http.post<DeviceCredentialResource>(this.devicesUrl, request, { headers }),
+    );
   }
 
   /** `POST /devices/{deviceId}/unpair` (no body) */

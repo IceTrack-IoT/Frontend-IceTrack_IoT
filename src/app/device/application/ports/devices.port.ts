@@ -23,11 +23,13 @@ export abstract class DevicesPort {
   abstract listDevices(): Observable<Device[]>;
 
   /**
-   * Pairs a board with one of the owner's equipment items and issues its API key.
-   * Fails with `VALIDATION_ERROR`, `NOT_FOUND` (the equipment is missing or not the owner's) or
-   * `DEVICE_CONFLICT` (the board is already paired, or the equipment already has a paired device).
+   * Pairs a board with one of the owner's equipment items and issues its API key. A pairing whose outcome
+   * is unknown is retried without pairing twice; when the answer is replayed, the key is not returned.
+   * Fails with `VALIDATION_ERROR`, `NOT_FOUND` (the equipment is missing or not the owner's),
+   * `DEVICE_CONFLICT` (the board is already paired, or the equipment already has a paired device) or
+   * `IDEMPOTENCY_KEY_CONFLICT` (the same pairing is still being processed).
    * @param pairing - The equipment and the board.
-   * @returns An Observable of the paired device with its API key.
+   * @returns An Observable of the paired device with its API key, or with a null key when replayed.
    */
   abstract pairDevice(pairing: DevicePairing): Observable<IssuedDeviceCredential>;
 

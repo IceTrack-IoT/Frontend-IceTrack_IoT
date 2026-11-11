@@ -1,4 +1,5 @@
 import { BaseEntity } from '@shared/domain/model/base-entity';
+import type { DeviceConnectivity } from '@device/domain/value-objects/device-connectivity';
 import { DeviceStatus } from '@device/domain/value-objects/device-status';
 
 /**
@@ -6,7 +7,8 @@ import { DeviceStatus } from '@device/domain/value-objects/device-status';
  *
  * `paired_equipment_id` is null while the device is unpaired, `firmware_version` is null when it was not
  * declared, and `last_seen_at` is the arrival time of the device's latest reading batch (null until its
- * first one). The API key is never part of the model: the backend returns it only once, when it is issued.
+ * first one). `connectivity` is the server's evaluation of whether the board is reporting. The API key is
+ * never part of the model: the backend returns it only once, when it is issued.
  *
  * Lifecycle: an UNPAIRED device is paired with a fresh key; a PAIRED device can be REVOKED (the key stops
  * working but the device stays linked); rotating the key of a PAIRED or REVOKED device issues a new one
@@ -20,6 +22,7 @@ export class Device implements BaseEntity {
   private _status: DeviceStatus;
   private _paired_equipment_id: number | null;
   private _last_seen_at: Date | null;
+  private _connectivity: DeviceConnectivity;
 
   /**
    * Creates a new instance of the Device class.
@@ -34,6 +37,7 @@ export class Device implements BaseEntity {
     status: DeviceStatus;
     paired_equipment_id: number | null;
     last_seen_at: Date | null;
+    connectivity: DeviceConnectivity;
   }) {
     this._id = device.id;
     this._device_uid = device.device_uid;
@@ -42,6 +46,7 @@ export class Device implements BaseEntity {
     this._status = device.status;
     this._paired_equipment_id = device.paired_equipment_id;
     this._last_seen_at = device.last_seen_at;
+    this._connectivity = device.connectivity;
   }
 
   get id(): number {
@@ -64,6 +69,9 @@ export class Device implements BaseEntity {
   }
   get last_seen_at(): Date | null {
     return this._last_seen_at;
+  }
+  get connectivity(): DeviceConnectivity {
+    return this._connectivity;
   }
 
   /**

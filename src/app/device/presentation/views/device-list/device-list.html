@@ -161,7 +161,7 @@
                 <th scope="col">{{ 'devices.fields.status' | translate }}</th>
                 <th scope="col">{{ 'devices.fields.equipment' | translate }}</th>
                 <th scope="col">{{ 'devices.fields.credential' | translate }}</th>
-                <th scope="col">{{ 'devices.fields.lastSeen' | translate }}</th>
+                <th scope="col">{{ 'devices.fields.connectivity' | translate }}</th>
                 <th scope="col" class="ui-table__actions">
                   {{ 'shared.actions.label' | translate }}
                 </th>
@@ -232,11 +232,19 @@
                     }
                   </td>
                   <td>
-                    {{
-                      device.last_seen_at
-                        ? (device.last_seen_at | relativeTime)
-                        : ('devices.list.noReadings' | translate)
-                    }}
+                    <app-status-tag
+                      [label]="'devices.connectivity.' + device.connectivity.state | translate"
+                      [appearance]="connectivityAppearance[device.connectivity.state]"
+                    />
+                    <span class="ui-table__secondary">
+                      @if (device.last_seen_at; as lastSeen) {
+                        {{
+                          'devices.list.lastSeen' | translate: { time: (lastSeen | relativeTime) }
+                        }}
+                      } @else {
+                        {{ 'devices.list.noReadings' | translate }}
+                      }
+                    </span>
                   </td>
                   <td class="ui-table__actions">
                     <span class="device-list__actions">

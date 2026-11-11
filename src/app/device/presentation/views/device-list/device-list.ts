@@ -9,7 +9,10 @@ import {
   CredentialActionDialog,
   type CredentialActionResult,
 } from '@device/presentation/components/credential-action-dialog/credential-action-dialog';
-import { DEVICE_STATUS_APPEARANCE } from '@device/presentation/device-appearance';
+import {
+  DEVICE_CONNECTIVITY_APPEARANCE,
+  DEVICE_STATUS_APPEARANCE,
+} from '@device/presentation/device-appearance';
 import {
   DEVICE_ACTION_SUCCESS_KEYS,
   deviceActionErrorKey,
@@ -52,6 +55,7 @@ interface Confirmation {
 export class DeviceList {
   protected readonly store = inject(DevicesStore);
   protected readonly statusAppearance = DEVICE_STATUS_APPEARANCE;
+  protected readonly connectivityAppearance = DEVICE_CONNECTIVITY_APPEARANCE;
   protected readonly DeviceStatus = DeviceStatus;
 
   protected readonly equipmentFilter = this.equipmentIdParam();

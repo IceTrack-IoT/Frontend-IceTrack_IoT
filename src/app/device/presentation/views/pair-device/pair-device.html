@@ -12,7 +12,10 @@
       </h1>
       <p class="pair-device__text">
         {{
-          'devices.pairing.successMessage'
+          (done.apiKey === null
+            ? 'devices.pairing.successMessageNoKey'
+            : 'devices.pairing.successMessage'
+          )
             | translate
               : {
                   uid: done.device.device_uid,
@@ -50,9 +53,16 @@
         </div>
       </dl>
 
-      <app-issued-api-key [apiKey]="done.apiKey" (storedChange)="keyStored.set($event)" />
+      @if (done.apiKey; as apiKey) {
+        <app-issued-api-key [apiKey]="apiKey" (storedChange)="keyStored.set($event)" />
+      } @else {
+        <p class="ui-alert ui-alert--warning" role="status">
+          <app-icon class="ui-alert__icon" name="key" />
+          {{ 'devices.pairing.keyNotReturned' | translate }}
+        </p>
+      }
 
-      @if (keyStored()) {
+      @if (keyStored() || done.apiKey === null) {
         <div class="ui-form__actions pair-device__actions">
           <button class="ui-button ui-button--secondary" type="button" (click)="pairAnother()">
             {{ 'devices.pairing.pairAnother' | translate }}

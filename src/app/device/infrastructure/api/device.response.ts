@@ -13,14 +13,27 @@ export interface DeviceResource {
   paired_equipment_name?: string | null;
   paired_site_id?: number | null;
   last_seen_at?: string | null;
+  connectivity: DeviceConnectivityResource;
+}
+
+/**
+ * DeviceConnectivityResource is the server's evaluation, on every read, of whether a board is reporting.
+ * `silent_after_seconds` is null for an unpaired board and `silent_since` is set only while it is silent.
+ */
+export interface DeviceConnectivityResource {
+  state: string;
+  silent_after_seconds?: number | null;
+  silent_since?: string | null;
+  evaluated_at: string;
 }
 
 /**
  * DeviceCredentialResource is returned by `POST /devices` and `POST /devices/{deviceId}/rotate-api-key`:
  * the device and its plaintext API key (`it_dev_` followed by 64 hexadecimal characters), returned only
- * this once.
+ * this once. A replayed `POST /devices` (same `Idempotency-Key`) answers without `api_key`, which the
+ * backend never stores.
  */
 export interface DeviceCredentialResource {
   device: DeviceResource;
-  api_key: string;
+  api_key?: string | null;
 }
