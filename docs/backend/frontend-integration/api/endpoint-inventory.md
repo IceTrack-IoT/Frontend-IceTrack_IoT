@@ -26,6 +26,9 @@
 | profiles | `GET` | `/api/v1/profiles/owners` | OWNER_ROLE | none | `OwnerProfilesController.getAllOwners` |
 | profiles | `GET` | `/api/v1/profiles/owners/{ownerId}` | Authenticated (any valid bearer token) | none | `OwnerProfilesController.getOwnerById` |
 | profiles | `GET` | `/api/v1/profiles/owners/user/{userId}` | Authenticated (any valid bearer token) | none | `OwnerProfilesController.getOwnerByUserId` |
+| profiles | `GET` | `/api/v1/profiles/owners/me` | OWNER_ROLE | none | `OwnerProfilesController.getMyOwnerProfile` |
+| profiles | `GET` | `/api/v1/profiles/dashboard-configs/me` | Authenticated (any valid bearer token) | none | `DashboardConfigsController.getMyDashboardConfig` |
+| profiles | `GET` | `/api/v1/me/context` | Authenticated (any valid bearer token) | none | `SessionContextController.getSessionContext` |
 | profiles | `PUT` | `/api/v1/profiles/owners/{ownerId}` | OWNER_ROLE and the owner profile must be the caller's own | `UpdateOwnerResource` | `OwnerProfilesController.updateOwner` |
 | profiles | `GET` | `/api/v1/profiles/technicians` | OWNER_ROLE | none | `TechnicianProfilesController.getAllTechnicians` |
 | profiles | `GET` | `/api/v1/profiles/technicians/public` | OWNER_ROLE | none | `TechnicianProfilesController.getPublicTechnicianDirectory` |
@@ -47,6 +50,7 @@
 | assets | `GET` | `/api/v1/assets/sites/{siteId}/equipments` | OWNER_ROLE or TECHNICIAN_ROLE | none | `SiteController.getEquipmentBySite` |
 | assets | `PUT` | `/api/v1/assets/sites/{siteId}` | OWNER_ROLE | `UpdateSiteResource` | `SiteController.updateSite` |
 | assets | `PUT` | `/api/v1/assets/sites/{siteId}/address` | OWNER_ROLE | `UpdateSiteAddressResource` | `SiteController.updateSiteAddress` |
+| assets | `POST` | `/api/v1/assets/sites/{siteId}/geocoding/retry` | OWNER_ROLE | none | `SiteController.retrySiteGeocoding` |
 | device | `POST` | `/api/v1/devices` | OWNER_ROLE | `RegisterDeviceResource` | `DeviceController.registerDevice` |
 | device | `GET` | `/api/v1/devices/{deviceId}` | OWNER_ROLE | none | `DeviceController.getDevice` |
 | device | `GET` | `/api/v1/devices` | OWNER_ROLE | none | `DeviceController.getDevices` |
@@ -80,6 +84,7 @@
 | reporting | `POST` | `/api/v1/reports` | OWNER_ROLE | `CreateReportResource` | `ReportsController.requestReport` |
 | reporting | `GET` | `/api/v1/reports/{reportId}` | OWNER_ROLE | none | `ReportsController.getReportById` |
 | reporting | `GET` | `/api/v1/reports` | OWNER_ROLE | none | `ReportsController.getReportsByUser` |
+| reporting | `DELETE` | `/api/v1/reports/{reportId}` | OWNER_ROLE | none | `ReportsController.deleteReport` |
 | service-request | `GET` | `/api/v1/assets/equipments/{equipmentId}/interventions` | OWNER_ROLE or TECHNICIAN_ROLE | none | `EquipmentInterventionsController.getEquipmentInterventions` |
 | service-request | `POST` | `/api/v1/interventions` | TECHNICIAN_ROLE | `RegisterInterventionResource` | `InterventionsController.registerIntervention` |
 | service-request | `POST` | `/api/v1/reviews` | OWNER_ROLE | `SubmitReviewResource` | `ReviewsController.submitReview` |

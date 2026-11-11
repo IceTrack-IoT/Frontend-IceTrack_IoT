@@ -12,5 +12,14 @@
   "reminder_interval_days": 90,
   "last_reading_at": "2026-02-01T10:15:30Z",
   "last_known_temperature": 4.5,
-  "config_version": 3
+  "config_version": 3,
+  "connectivity": {
+    "state": "REPORTING",
+    "last_received_at": "2026-02-01T10:15:31Z",
+    "silent_after_seconds": 180,
+    "silent_since": null,
+    "under_maintenance": false,
+    "evaluated_at": "2026-02-01T10:17:00Z"
+  },
+  "version": 2
 }

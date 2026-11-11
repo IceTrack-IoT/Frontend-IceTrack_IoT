@@ -33,13 +33,13 @@ Changing any of these would break existing clients; they are left as documented.
 ## Features not implemented by the backend
 
 - No upload endpoint for intervention photos: `photo_evidence` accepts URL strings (up to 20, 2048 characters each) and validates neither scheme nor host. Clients that display them should only open `https` URLs.
-- Notification texts are English only; the recipient's language is not resolved.
+- Notification `message` is English only. Clients localize from `message_key` and `message_params`; a key they do not know must fall back to `message`. Notifications stored before templates existed carry `notification.untemplated`.
 - Technicians receive no push for thermal alerts on the units they serve; only owners are notified of alerts.
 - Notification types `MAINTENANCE_REMINDER`, `LOW_BATTERY` and `SENSOR_FAILURE` have no producer.
 
 ## Security and deployment settings (development team)
 
-- CORS allows every origin. It exposes `ETag`, `Retry-After` and `X-Telemetry-Bucket` (`Access-Control-Expose-Headers`), so browsers can read them cross-origin; no other response header is exposed.
+- CORS allows every origin. It exposes `ETag`, `Retry-After`, `X-Telemetry-Bucket` and `Idempotent-Replayed` (`Access-Control-Expose-Headers`), so browsers can read them cross-origin; no other response header is exposed.
 - Sign-in throttling counts failures per client address; behind a reverse proxy the forwarded-header strategy must be configured, otherwise all clients share the proxy's address.
 - Access tokens are stateless for their lifetime (30 minutes by default); `logout` revokes only the refresh token.
 - `GET /api/v1/roles` is open to any authenticated user.

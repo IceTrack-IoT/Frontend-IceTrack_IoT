@@ -126,8 +126,35 @@ Decode by HTTP status first, then by content type; if the body is empty, use onl
 | `POST /interventions` with the same `client_generated_id` | yes (`200` with the stored record); the id must be generated once per intervention and stored with the offline queue entry |
 | `PUT /notifications/device-tokens`, `DELETE ...device-tokens`, `POST /logout`, `PUT .../read`, `PUT .../dismiss` | yes |
 | `POST /authentication/refresh-token` | **no**: the refresh token is single use; serialize and store the new one |
-| `POST /service-requests`, `/reviews`, `/devices`, `/assets/equipments`, `/assets/sites`, `/reports` | no idempotency key; a retry after an unknown outcome can create a duplicate (equipment `uid` and device `device_uid` are unique so those answer `409`). Check the list before retrying |
+| `POST /service-requests`, `/reviews`, `/devices`, `/assets/equipments`, `/assets/sites`, `/reports` | yes, when the request carries an `Idempotency-Key` header (a UUID generated once per submission and reused only for its retries). The same key with the same body answers the first result again with `Idempotent-Replayed: true`; the same key with another body, or while the first request still runs, answers `409 IDEMPOTENCY_KEY_CONFLICT`. A key is remembered for 24 hours per caller and endpoint. Without the header, a retry after an unknown outcome can create a duplicate (equipment `uid` and device `device_uid` are unique so those answer `409`) |
 | `POST /devices/{id}/rotate-api-key`, `/service-requests/{id}/edge-grant` | each call issues a new secret and invalidates the previous one |
+| `POST /assets/sites/{siteId}/geocoding/retry` | yes in effect: a retry on a `RESOLVED` site answers `409 INVALID_STATUS_TRANSITION`; a retry while `PENDING` is refused by the shared quota (`429`) when sent too often |
+
+**Idempotency-Key replay (creating endpoints).** A replay repeats the stored status and body of the first answer. The body of a replayed `201` from `POST /devices` has no `api_key`, because the plaintext key is never stored. Only a 2xx answer is remembered; a first request that failed frees its key, so the corrected request can reuse it. A key that is not a UUID answers `400 VALIDATION_ERROR`. Generate a new key for each new submission, never for a different body.
+
+## 7.1 Concurrent edits (`If-Match`)
+
+Every resource that can be edited by two clients at once carries an integer `version`: `SiteResource`, `EquipmentResource`, `OwnerProfileResource`, `DashboardConfigResource`. The version grows on every change of what the owner edits; for an equipment, telemetry (readings, `online`, maintenance coverage) does not move it.
+
+| Endpoint | Accepts `If-Match` |
+|---|---|
+| `PUT /assets/sites/{siteId}`, `PUT /assets/sites/{siteId}/address` | yes |
+| `PUT /assets/equipments/{id}`, `PUT /assets/equipments/{id}/threshold`, `PUT /assets/equipments/{id}/status` | yes |
+| `PUT /profiles/owners/{ownerId}` | yes |
+| `PUT .../dashboard-configs/user/{userId}/layout`, `PATCH .../cards/{cardId}/visibility`, `PUT .../defaults` | yes |
+
+Send the `version` you read, quoted or bare (`If-Match: "3"` or `If-Match: 3`). A stale version answers `409 CONCURRENT_MODIFICATION_CONFLICT` with `details` naming the current version and changes nothing: reload, show the change, and let the owner retry. A malformed `If-Match` answers `400`. Without the header, only writes that overlap in time are refused.
+
+## 7.2 Session bootstrap
+
+`GET /api/v1/me/context` answers the signed-in account, its owner profile (with the address parts), its dashboard configuration (`null` while not set up), the owner's site and unit counts, and the server time, in one request. Use it instead of chaining `/authentication/me`, the owner profile and the dashboard reads after sign-in. Keep `/authentication/me` for session restoration. `server_time` lets the client compute its clock skew once. The answer is never cached.
+
+| Helper | Owner | Technician |
+|---|---|---|
+| `GET /api/v1/profiles/owners/me` | yes | `403` |
+| `GET /api/v1/profiles/dashboard-configs/me` | yes | yes |
+
+Both `/me` reads answer `404` (`OWNER_NOT_FOUND`, `DASHBOARD_CONFIG_NOT_FOUND`) when there is nothing to show yet.
 
 ## 8. Secrets that appear exactly once
 

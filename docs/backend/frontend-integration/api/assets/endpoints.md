@@ -28,7 +28,7 @@ Every `EquipmentResource` returned by these endpoints carries the read-only `sit
 
 ## `POST /api/v1/assets/equipments`
 
-**Register an equipment** - Registers a refrigeration unit at a site of the authenticated owner. The unit starts ACTIVE and disconnected, and its uid must be unique across the platform.
+**Register an equipment** - Registers a refrigeration unit at a site of the authenticated owner. The unit starts ACTIVE and disconnected, and its uid must be unique across the platform. Accepts an optional `Idempotency-Key` header (UUID): a retry with the same key and body answers the first result with `Idempotent-Replayed: true`; another body under the same key answers `409 IDEMPOTENCY_KEY_CONFLICT`.
 
 | Field | Value |
 |---|---|
@@ -93,50 +93,50 @@ Every `EquipmentResource` returned by these endpoints carries the read-only `sit
 
 ## `PUT /api/v1/assets/equipments/{equipmentId}`
 
-**Update an equipment** - Replaces the name, type and preventive maintenance interval of one of the authenticated owner's units. The uid, the site and the threshold are not editable here.
+**Update an equipment** - Replaces the name, type and preventive maintenance interval of one of the authenticated owner's units. The uid, the site and the threshold are not editable here. Accepts `If-Match: "<version>"`: a stale version answers `409 CONCURRENT_MODIFICATION_CONFLICT`, and a malformed header `400`.
 
 | Field | Value |
 |---|---|
 | Bounded context | Assets |
 | Controller | `src/main/java/pe/edu/upc/ice/track/platform/assets/interfaces/rest/EquipmentController.java` - method `updateEquipment` |
 | Authentication / authorization | OWNER_ROLE |
-| Headers | `Accept: application/json`, `Content-Type: application/json`, `Authorization: Bearer <access token>` |
+| Headers | `Accept: application/json`, `Content-Type: application/json`, `Authorization: Bearer <access token>`, `If-Match: "<version>"` (optional) |
 | Path parameters | `equipmentId` (Long; Java `equipmentId`) |
 | Query parameters | none |
 | Request body | `UpdateEquipmentResource` - [`requests/UpdateEquipmentResource.json`](requests/UpdateEquipmentResource.json), schema [`UpdateEquipmentResource.schema.json`](../../schemas/assets/UpdateEquipmentResource.schema.json) |
-| Declared statuses / responses | `200` - `EquipmentResource` ([`responses/EquipmentResource.json`](responses/EquipmentResource.json)) - Equipment updated<br>`400` - error body - Invalid input data, such as a non-positive maintenance interval<br>`401` - error body - Unauthorized - JWT token required or invalid<br>`403` - error body - Forbidden - the authenticated account has no owner profile<br>`404` - error body - No such equipment is reachable by the caller |
+| Declared statuses / responses | `200` - `EquipmentResource` ([`responses/EquipmentResource.json`](responses/EquipmentResource.json)) - Equipment updated<br>`400` - error body - Invalid input data, such as a non-positive maintenance interval<br>`401` - error body - Unauthorized - JWT token required or invalid<br>`403` - error body - Forbidden - the authenticated account has no owner profile<br>`404` - error body - No such equipment is reachable by the caller |<br>`409` - error body - CONCURRENT_MODIFICATION_CONFLICT - If-Match names a version other than the current one (`details` gives the current version); a malformed If-Match is `400`
 | Application flow | controller -> `equipmentCommandService` |
 
 ## `PUT /api/v1/assets/equipments/{equipmentId}/threshold`
 
-**Change the temperature threshold** - Replaces the acceptable temperature band of one of the authenticated owner's units. Both bounds must lie within 0 to 30 °C and the minimum must be strictly below the maximum; otherwise the request is rejected with 400, the previous band stays active and no domain event is emitted. An accepted band increments config_version, returned in the response, so the unit's edge gateway downloads it on its next poll.
+**Change the temperature threshold** - Replaces the acceptable temperature band of one of the authenticated owner's units. Both bounds must lie within 0 to 30 °C and the minimum must be strictly below the maximum; otherwise the request is rejected with 400, the previous band stays active and no domain event is emitted. An accepted band increments config_version, returned in the response, so the unit's edge gateway downloads it on its next poll. Accepts `If-Match: "<version>"` (`409 CONCURRENT_MODIFICATION_CONFLICT` when stale).
 
 | Field | Value |
 |---|---|
 | Bounded context | Assets |
 | Controller | `src/main/java/pe/edu/upc/ice/track/platform/assets/interfaces/rest/EquipmentController.java` - method `changeThreshold` |
 | Authentication / authorization | OWNER_ROLE |
-| Headers | `Accept: application/json`, `Content-Type: application/json`, `Authorization: Bearer <access token>` |
+| Headers | `Accept: application/json`, `Content-Type: application/json`, `Authorization: Bearer <access token>`, `If-Match: "<version>"` (optional) |
 | Path parameters | `equipmentId` (Long; Java `equipmentId`) |
 | Query parameters | none |
 | Request body | `ChangeThresholdResource` - [`requests/ChangeThresholdResource.json`](requests/ChangeThresholdResource.json), schema [`ChangeThresholdResource.schema.json`](../../schemas/assets/ChangeThresholdResource.schema.json) |
-| Declared statuses / responses | `200` - `EquipmentResource` ([`responses/EquipmentResource.json`](responses/EquipmentResource.json)) - Threshold updated<br>`400` - error body - Invalid band: a bound outside 0 to 30 °C, or a minimum greater than or equal to its maximum<br>`401` - error body - Unauthorized - JWT token required or invalid<br>`403` - error body - Forbidden - the authenticated account has no owner profile<br>`404` - error body - No such equipment is reachable by the caller |
+| Declared statuses / responses | `200` - `EquipmentResource` ([`responses/EquipmentResource.json`](responses/EquipmentResource.json)) - Threshold updated<br>`400` - error body - Invalid band: a bound outside 0 to 30 °C, or a minimum greater than or equal to its maximum<br>`401` - error body - Unauthorized - JWT token required or invalid<br>`403` - error body - Forbidden - the authenticated account has no owner profile<br>`404` - error body - No such equipment is reachable by the caller |<br>`409` - error body - CONCURRENT_MODIFICATION_CONFLICT - If-Match names a version other than the current one (`details` gives the current version); a malformed If-Match is `400`
 | Application flow | controller -> `equipmentCommandService` |
 
 ## `PUT /api/v1/assets/equipments/{equipmentId}/status`
 
-**Change the equipment status** - Moves one of the caller's own equipment units to a new lifecycle status. Owner only: technicians cannot change a unit's status directly. Allowed transitions: ACTIVE to MAINTENANCE, REPAIR or DEACTIVATED; MAINTENANCE to ACTIVE, REPAIR or DEACTIVATED; REPAIR to ACTIVE or DEACTIVATED; DEACTIVATED to ACTIVE. Maintenance is only entered from ACTIVE, and a deactivated unit must be reactivated first. Re-sending the current status is a no-op. A forbidden transition is rejected with 409.
+**Change the equipment status** - Moves one of the caller's own equipment units to a new lifecycle status. Owner only: technicians cannot change a unit's status directly. Allowed transitions: ACTIVE to MAINTENANCE, REPAIR or DEACTIVATED; MAINTENANCE to ACTIVE, REPAIR or DEACTIVATED; REPAIR to ACTIVE or DEACTIVATED; DEACTIVATED to ACTIVE. Maintenance is only entered from ACTIVE, and a deactivated unit must be reactivated first. Re-sending the current status is a no-op. A forbidden transition is rejected with 409. Accepts `If-Match: "<version>"` (`409 CONCURRENT_MODIFICATION_CONFLICT` when stale).
 
 | Field | Value |
 |---|---|
 | Bounded context | Assets |
 | Controller | `src/main/java/pe/edu/upc/ice/track/platform/assets/interfaces/rest/EquipmentController.java` - method `changeStatus` |
 | Authentication / authorization | OWNER_ROLE |
-| Headers | `Accept: application/json`, `Content-Type: application/json`, `Authorization: Bearer <access token>` |
+| Headers | `Accept: application/json`, `Content-Type: application/json`, `Authorization: Bearer <access token>`, `If-Match: "<version>"` (optional) |
 | Path parameters | `equipmentId` (Long; Java `equipmentId`) |
 | Query parameters | none |
 | Request body | `ChangeStatusResource` - [`requests/ChangeStatusResource.json`](requests/ChangeStatusResource.json), schema [`ChangeStatusResource.schema.json`](../../schemas/assets/ChangeStatusResource.schema.json) |
-| Declared statuses / responses | `200` - `EquipmentResource` ([`responses/EquipmentResource.json`](responses/EquipmentResource.json)) - Status changed<br>`400` - error body - Invalid input data<br>`401` - error body - Unauthorized - JWT token required or invalid<br>`403` - error body - Forbidden - the authenticated account is not an owner, or is an owner without an owner profile<br>`404` - error body - No such equipment is reachable by the caller<br>`409` - error body - The requested status transition is not allowed |
+| Declared statuses / responses | `200` - `EquipmentResource` ([`responses/EquipmentResource.json`](responses/EquipmentResource.json)) - Status changed<br>`400` - error body - Invalid input data<br>`401` - error body - Unauthorized - JWT token required or invalid<br>`403` - error body - Forbidden - the authenticated account is not an owner, or is an owner without an owner profile<br>`404` - error body - No such equipment is reachable by the caller<br>`409` - error body - The requested status transition is not allowed, or CONCURRENT_MODIFICATION_CONFLICT when If-Match is stale (`details` gives the current version) |
 | Application flow | controller -> `equipmentCommandService` |
 
 ## `POST /api/v1/assets/sites/validate-address`
@@ -157,7 +157,7 @@ Every `EquipmentResource` returned by these endpoints carries the read-only `sit
 
 ## `POST /api/v1/assets/sites`
 
-**Register a site** - Registers a new site for the authenticated owner at the address carried by a validation_token issued by POST /validate-address. The owner is taken from the authenticated identity and cannot be supplied in the payload. An optional pin must lie within 150 meters of the verified point. The site is saved as RESOLVED; the maps service is not queried.
+**Register a site** - Registers a new site for the authenticated owner at the address carried by a validation_token issued by POST /validate-address. The owner is taken from the authenticated identity and cannot be supplied in the payload. An optional pin must lie within 150 meters of the verified point. The site is saved as RESOLVED; the maps service is not queried. Accepts an optional `Idempotency-Key` header (UUID; see the retry rules in the conventions guide).
 
 | Field | Value |
 |---|---|
@@ -221,30 +221,30 @@ Every `EquipmentResource` returned by these endpoints carries the read-only `sit
 
 ## `PUT /api/v1/assets/sites/{siteId}`
 
-**Update a site** - Replaces the name, contact name and contact phone number of one of the authenticated owner's sites. The address and coordinates are not changed here: use PUT /{siteId}/address with a validation_token. The owner of a site never changes.
+**Update a site** - Replaces the name, contact name and contact phone number of one of the authenticated owner's sites. The address and coordinates are not changed here: use PUT /{siteId}/address with a validation_token. The owner of a site never changes. Accepts `If-Match: "<version>"` (`409 CONCURRENT_MODIFICATION_CONFLICT` when stale; `400` when malformed).
 
 | Field | Value |
 |---|---|
 | Bounded context | Assets |
 | Controller | `src/main/java/pe/edu/upc/ice/track/platform/assets/interfaces/rest/SiteController.java` - method `updateSite` |
 | Authentication / authorization | OWNER_ROLE |
-| Headers | `Accept: application/json`, `Content-Type: application/json`, `Authorization: Bearer <access token>` |
+| Headers | `Accept: application/json`, `Content-Type: application/json`, `Authorization: Bearer <access token>`, `If-Match: "<version>"` (optional) |
 | Path parameters | `siteId` (Long; Java `siteId`) |
 | Query parameters | none |
 | Request body | `UpdateSiteResource` - [`requests/UpdateSiteResource.json`](requests/UpdateSiteResource.json), schema [`UpdateSiteResource.schema.json`](../../schemas/assets/UpdateSiteResource.schema.json) |
-| Declared statuses / responses | `200` - `SiteResource` ([`responses/SiteResource.json`](responses/SiteResource.json)) - Site updated<br>`400` - error body - Invalid input data<br>`401` - error body - Unauthorized - JWT token required or invalid<br>`403` - error body - Forbidden - the authenticated account has no owner profile<br>`404` - error body - No such site is reachable by the caller<br>`409` - error body - The site exists but belongs to another owner |
+| Declared statuses / responses | `200` - `SiteResource` ([`responses/SiteResource.json`](responses/SiteResource.json)) - Site updated<br>`400` - error body - Invalid input data<br>`401` - error body - Unauthorized - JWT token required or invalid<br>`403` - error body - Forbidden - the authenticated account has no owner profile<br>`404` - error body - No such site is reachable by the caller<br>`409` - error body - The site exists but belongs to another owner |<br>`409` - error body - CONCURRENT_MODIFICATION_CONFLICT - If-Match names a version other than the current one (`details` gives the current version); a malformed If-Match is `400`
 | Application flow | controller -> `siteCommandService` |
 
 ## `PUT /api/v1/assets/sites/{siteId}/address`
 
-**Change the address of a site** - Moves one of the authenticated owner's sites to the address carried by a validation_token issued by POST /validate-address, keeping its equipment. An optional pin must lie within 150 meters of the verified point. The site is answered RESOLVED with its new location.
+**Change the address of a site** - Moves one of the authenticated owner's sites to the address carried by a validation_token issued by POST /validate-address, keeping its equipment. An optional pin must lie within 150 meters of the verified point. The site is answered RESOLVED with its new location. Accepts `If-Match: "<version>"` (`409 CONCURRENT_MODIFICATION_CONFLICT` when stale).
 
 | Field | Value |
 |---|---|
 | Bounded context | Assets |
 | Controller | `src/main/java/pe/edu/upc/ice/track/platform/assets/interfaces/rest/SiteController.java` - method `updateSiteAddress` |
 | Authentication / authorization | OWNER_ROLE |
-| Headers | `Accept: application/json`, `Content-Type: application/json`, `Authorization: Bearer <access token>` |
+| Headers | `Accept: application/json`, `Content-Type: application/json`, `Authorization: Bearer <access token>`, `If-Match: "<version>"` (optional) |
 | Path parameters | `siteId` (Long; Java `siteId`) |
 | Query parameters | none |
 | Request body | `UpdateSiteAddressResource` - [`requests/UpdateSiteAddressResource.json`](requests/UpdateSiteAddressResource.json), schema [`UpdateSiteAddressResource.schema.json`](../../schemas/assets/UpdateSiteAddressResource.schema.json) |

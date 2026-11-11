@@ -1,0 +1,27 @@
+{
+  "user": {
+    "id": 42,
+    "username": "maria",
+    "email": "maria.lopez@example.com",
+    "role": "OWNER_ROLE",
+    "provider": "LOCAL"
+  },
+  "owner_profile": {
+    "id": 3,
+    "user_id": 42,
+    "full_name": "Maria Lopez",
+    "email": "maria.lopez@example.com",
+    "phone": "+51 987654321",
+    "address": "Av. Primavera 123, Lima, 15023, Peru",
+    "street": "Av. Primavera",
+    "number": "123",
+    "city": "Lima",
+    "postal_code": "15023",
+    "country": "Peru",
+    "ruc": 20123456789,
+    "version": 0
+  },
+  "dashboard_config": null,
+  "counts": { "sites": 2, "equipment": 7 },
+  "server_time": "2026-11-09T15:02:40Z"
+}

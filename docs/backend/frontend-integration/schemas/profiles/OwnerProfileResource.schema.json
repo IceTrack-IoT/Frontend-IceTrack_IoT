@@ -33,6 +33,16 @@
       "type": "integer",
       "format": "int64",
       "description": "11 digit taxpayer registration number (RUC)"
+    },
+    "street": { "type": "string", "description": "Street of the address" },
+    "number": { "type": ["string", "null"], "description": "Street number or apartment; null when the address has none" },
+    "city": { "type": "string", "description": "City of the address" },
+    "postal_code": { "type": "string", "description": "Postal code of the address" },
+    "country": { "type": "string", "description": "Country of the address" },
+    "version": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Concurrency version; grows on every change. Send it back in If-Match to update the profile"
     }
   },
   "x-source": "src/main/java/pe/edu/upc/ice/track/platform/profiles/interfaces/rest/resources/OwnerProfileResource.java"

@@ -9,6 +9,9 @@ Values are exchanged as upper-case strings exactly as written. A value outside t
 | `ClientChannelResource` | `WEB`, `MOBILE` | iam | `src/main/java/pe/edu/upc/ice/track/platform/iam/interfaces/rest/resources/ClientChannelResource.java` |
 | `EquipmentTypeResource` | `DISPLAY_CASE`, `COLD_ROOM`, `REFRIGERATOR`, `OTHER` | assets | `src/main/java/pe/edu/upc/ice/track/platform/assets/interfaces/rest/resources/EquipmentTypeResource.java` |
 | `GeocodingStatusResource` | `PENDING`, `RESOLVED`, `FAILED`, `NOT_FOUND` | assets | `src/main/java/pe/edu/upc/ice/track/platform/assets/interfaces/rest/resources/GeocodingStatusResource.java` |
+| `GeocodingFailureReasonResource` | `ADDRESS_NOT_FOUND`, `PROVIDER_UNAVAILABLE`, `OUT_OF_COVERAGE`, `UNKNOWN` | assets | `src/main/java/pe/edu/upc/ice/track/platform/assets/interfaces/rest/resources/GeocodingFailureReasonResource.java` |
+| `ReportTypeResource` | `MAINTENANCE_COMPLIANCE`, `EQUIPMENT_UPTIME`, `TECHNICIAN_PERFORMANCE`, `TEMPERATURE_EXCURSION`, `SERVICE_INTERVENTION` | reporting | `src/main/java/pe/edu/upc/ice/track/platform/reporting/interfaces/rest/resources/ReportTypeResource.java` |
+| `DeviceConnectivityStateResource` | `REPORTING`, `SILENT`, `NEVER_REPORTED`, `KEY_REVOKED`, `UNPAIRED` | device | `src/main/java/pe/edu/upc/ice/track/platform/device/interfaces/rest/resources/DeviceConnectivityStateResource.java` |
 | `StatusEquipmentResource` | `ACTIVE`, `MAINTENANCE`, `REPAIR`, `DEACTIVATED` | assets | `src/main/java/pe/edu/upc/ice/track/platform/assets/interfaces/rest/resources/StatusEquipmentResource.java` |
 | `DeviceStatusResource` | `UNPAIRED`, `PAIRED`, `REVOKED` | device | `src/main/java/pe/edu/upc/ice/track/platform/device/interfaces/rest/resources/DeviceStatusResource.java` |
 | `ClosureReasonResource` | `MANUAL_APP`, `MANUAL_BUTTON`, `INTERVENTION_COMPLETED`, `EXPIRED`, `SAFETY_LIMIT` | monitoring | `src/main/java/pe/edu/upc/ice/track/platform/monitoring/interfaces/rest/resources/ClosureReasonResource.java` |
@@ -50,11 +53,12 @@ Values are exchanged as upper-case strings exactly as written. A value outside t
 | `closure_reason` | `MANUAL_APP`, `MANUAL_BUTTON`, `INTERVENTION_COMPLETED`, `EXPIRED`, `SAFETY_LIMIT` | `MaintenanceWindowResource` | monitoring |
 | `type` | `READING_RECORDED` | `ReadingRecordedStreamResource` | monitoring |
 | `type` | `MAINTENANCE_REMINDER`, `TEMPERATURE_EXCURSION`, `DEVICE_OFFLINE`, `LOW_BATTERY`, `SENSOR_FAILURE`, `SERVICE_REQUEST_UPDATE`, `MAINTENANCE_WINDOW`, `UNLINKED_MAINTENANCE_WINDOW` | `NotificationResource` | notifications |
+| `message_key` | `alert.temperature_excursion.raised`, `alert.device_offline.raised`, `alert.sensor_failure.raised`, `service_request.assigned`, `service_request.unassigned`, `service_request.rejected`, `service_request.canceled`, `maintenance_window.opened`, `maintenance_window.closed`, `notification.untemplated` | `NotificationResource` | notifications |
 | `severity` | `INFO`, `WARNING`, `CRITICAL` | `NotificationResource` | notifications |
 | `platform` | `ANDROID`, `IOS`, `WEB` | `RegisterDeviceTokenResource` | notifications |
-| `type` | `MAINTENANCE_COMPLIANCE`, `EQUIPMENT_UPTIME`, `TECHNICIAN_PERFORMANCE`, `TEMPERATURE_EXCURSION` | `CreateReportResource` | reporting |
+| `type` | `MAINTENANCE_COMPLIANCE`, `EQUIPMENT_UPTIME`, `TECHNICIAN_PERFORMANCE`, `TEMPERATURE_EXCURSION`, `SERVICE_INTERVENTION` | `CreateReportResource` | reporting |
 | `format` | `PDF`, `XLSX`, `CSV` | `CreateReportResource` | reporting |
-| `type` | `MAINTENANCE_COMPLIANCE`, `EQUIPMENT_UPTIME`, `TECHNICIAN_PERFORMANCE`, `TEMPERATURE_EXCURSION` | `ReportResource` | reporting |
+| `type` | `MAINTENANCE_COMPLIANCE`, `EQUIPMENT_UPTIME`, `TECHNICIAN_PERFORMANCE`, `TEMPERATURE_EXCURSION`, `SERVICE_INTERVENTION` | `ReportResource` | reporting |
 | `format` | `PDF`, `XLSX`, `CSV` | `ReportResource` | reporting |
 | `status` | `PENDING`, `GENERATING`, `COMPLETED`, `FAILED` | `ReportResource` | reporting |
 | `origin` | `APP`, `BUTTON` | `MaintenanceWindowLinkResource` | service-request |

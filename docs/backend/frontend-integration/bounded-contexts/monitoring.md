@@ -57,6 +57,8 @@ Outbound: `ExternalAssetManagementService` (thresholds, ownership, unit owner, t
 
 A unit is offline once the platform received no reading from it for `60 s × missed_sync_windows_for_offline` of its alert policy (default 3 windows, so 3 minutes). Silence is measured from the arrival time of the latest stored reading (server clock), never from the device clock.
 
+The detection is scheduled: `OfflineDetectionScheduler.detectOfflineEquipment` runs every `monitoring.offline-detection.fixed-delay-ms` (`OFFLINE_DETECTION_DELAY_MS`, 60 s by default), after an initial delay of the same length, and can be switched off with `OFFLINE_DETECTION_ENABLED=false`. Each round first takes a lease in the `scheduled_task_locks` table (`OFFLINE_DETECTION_LOCK_LEASE_MS`, 50 s), so with several instances only one runs it; a failed round is logged and the next one still runs. Units under a maintenance window are skipped. Consequently `DEVICE_OFFLINE` alerts and `EQUIPMENT_UPTIME` figures are produced in normal operation.
+
 | Step | Where | Behavior |
 |---|---|---|
 | Schedule | `OfflineDetectionScheduler` | Runs the detection every `OFFLINE_DETECTION_DELAY_MS` (60 s, one synchronization window), so a unit is flagged at most one window after its threshold. With several instances only one runs each round: it takes a lease of `OFFLINE_DETECTION_LOCK_LEASE_MS` (50 s) in the `scheduled_task_locks` table first, and the others skip the round. Each run is logged; the last completed run is kept by the scheduler. `OFFLINE_DETECTION_ENABLED=false` turns it off |

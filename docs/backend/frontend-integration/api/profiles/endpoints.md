@@ -78,34 +78,34 @@ Base URL: see [../../README.md](../../README.md#5-base-url). All paths are relat
 
 ## `PUT /api/v1/profiles/dashboard-configs/user/{userId}/layout`
 
-**Update the dashboard layout** - Replaces the position and visibility of every card on the dashboard of the caller's own account. The layout must place each card of the dashboard exactly once, at the positions 1 to N.
+**Update the dashboard layout** - Replaces the position and visibility of every card on the dashboard of the caller's own account. The layout must place each card of the dashboard exactly once, at the positions 1 to N. Accepts `If-Match: "<version>"` (`409 CONCURRENT_MODIFICATION_CONFLICT` when stale).
 
 | Field | Value |
 |---|---|
 | Bounded context | Profiles |
 | Controller | `src/main/java/pe/edu/upc/ice/track/platform/profiles/interfaces/rest/DashboardConfigsController.java` - method `updateLayout` |
 | Authentication / authorization | caller must be the account in the path/body (`user_id`) |
-| Headers | `Accept: application/json`, `Content-Type: application/json`, `Authorization: Bearer <access token>` |
+| Headers | `Accept: application/json`, `Content-Type: application/json`, `Authorization: Bearer <access token>`, `If-Match: "<version>"` (optional) |
 | Path parameters | `userId` (Long; Java `userId`) |
 | Query parameters | none |
 | Request body | `UpdateDashboardLayoutResource` - [`requests/UpdateDashboardLayoutResource.json`](requests/UpdateDashboardLayoutResource.json), schema [`UpdateDashboardLayoutResource.schema.json`](../../schemas/profiles/UpdateDashboardLayoutResource.schema.json) |
-| Declared statuses / responses | `200` - `DashboardConfigResource` ([`responses/DashboardConfigResource.json`](responses/DashboardConfigResource.json)) - Dashboard layout updated<br>`400` - error body - Invalid layout, such as a missing, unknown or repeated card, or a repeated or out of range position<br>`403` - error body - Forbidden - the caller is not this account<br>`404` - error body - The account has no dashboard configuration |
+| Declared statuses / responses | `200` - `DashboardConfigResource` ([`responses/DashboardConfigResource.json`](responses/DashboardConfigResource.json)) - Dashboard layout updated<br>`400` - error body - Invalid layout, such as a missing, unknown or repeated card, or a repeated or out of range position<br>`403` - error body - Forbidden - the caller is not this account<br>`404` - error body - The account has no dashboard configuration |<br>`409` - error body - CONCURRENT_MODIFICATION_CONFLICT - If-Match names a version other than the current one (`details` gives the current version); a malformed If-Match is `400`
 | Application flow | controller -> `dashboardConfigCommandService` |
 
 ## `PATCH /api/v1/profiles/dashboard-configs/user/{userId}/cards/{cardId}/visibility`
 
-**Toggle a dashboard card's visibility** - Shows the card when hidden, hides it when shown. A hidden card keeps its data and its position.
+**Toggle a dashboard card's visibility** - Shows the card when hidden, hides it when shown. A hidden card keeps its data and its position. Accepts `If-Match: "<version>"` (`409 CONCURRENT_MODIFICATION_CONFLICT` when stale).
 
 | Field | Value |
 |---|---|
 | Bounded context | Profiles |
 | Controller | `src/main/java/pe/edu/upc/ice/track/platform/profiles/interfaces/rest/DashboardConfigsController.java` - method `toggleCardVisibility` |
 | Authentication / authorization | caller must be the account in the path/body (`user_id`) |
-| Headers | `Accept: application/json`, `Authorization: Bearer <access token>` |
+| Headers | `Accept: application/json`, `Authorization: Bearer <access token>`, `If-Match: "<version>"` (optional) |
 | Path parameters | `userId` (Long; Java `userId`)<br>`cardId` (Long; Java `cardId`) |
 | Query parameters | none |
 | Request body | none (no JSON request body) |
-| Declared statuses / responses | `200` - `DashboardConfigResource` ([`responses/DashboardConfigResource.json`](responses/DashboardConfigResource.json)) - Card visibility toggled<br>`403` - error body - Forbidden - the caller is not this account<br>`404` - error body - The account has no dashboard configuration, or the dashboard has no such card |
+| Declared statuses / responses | `200` - `DashboardConfigResource` ([`responses/DashboardConfigResource.json`](responses/DashboardConfigResource.json)) - Card visibility toggled<br>`403` - error body - Forbidden - the caller is not this account<br>`404` - error body - The account has no dashboard configuration, or the dashboard has no such card |<br>`409` - error body - CONCURRENT_MODIFICATION_CONFLICT - If-Match names a version other than the current one (`details` gives the current version); a malformed If-Match is `400`
 | Application flow | controller -> `dashboardConfigCommandService` |
 
 ## `POST /api/v1/profiles/dashboard-configs/user/{userId}/reset-defaults`
@@ -126,18 +126,18 @@ Base URL: see [../../README.md](../../README.md#5-base-url). All paths are relat
 
 ## `PUT /api/v1/profiles/dashboard-configs/user/{userId}/defaults`
 
-**Update dashboard defaults** - Replaces the site and temperature range the dashboard of the caller's own account opens on.
+**Update dashboard defaults** - Replaces the site and temperature range the dashboard of the caller's own account opens on. Accepts `If-Match: "<version>"` (`409 CONCURRENT_MODIFICATION_CONFLICT` when stale).
 
 | Field | Value |
 |---|---|
 | Bounded context | Profiles |
 | Controller | `src/main/java/pe/edu/upc/ice/track/platform/profiles/interfaces/rest/DashboardConfigsController.java` - method `updateDefaults` |
 | Authentication / authorization | caller must be the account in the path/body (`user_id`) |
-| Headers | `Accept: application/json`, `Content-Type: application/json`, `Authorization: Bearer <access token>` |
+| Headers | `Accept: application/json`, `Content-Type: application/json`, `Authorization: Bearer <access token>`, `If-Match: "<version>"` (optional) |
 | Path parameters | `userId` (Long; Java `userId`) |
 | Query parameters | none |
 | Request body | `UpdateDashboardDefaultsResource` - [`requests/UpdateDashboardDefaultsResource.json`](requests/UpdateDashboardDefaultsResource.json), schema [`UpdateDashboardDefaultsResource.schema.json`](../../schemas/profiles/UpdateDashboardDefaultsResource.schema.json) |
-| Declared statuses / responses | `200` - `DashboardConfigResource` ([`responses/DashboardConfigResource.json`](responses/DashboardConfigResource.json)) - Dashboard defaults updated<br>`400` - error body - Invalid input data<br>`403` - error body - Forbidden - the caller is not this account<br>`404` - error body - The account has no dashboard configuration |
+| Declared statuses / responses | `200` - `DashboardConfigResource` ([`responses/DashboardConfigResource.json`](responses/DashboardConfigResource.json)) - Dashboard defaults updated<br>`400` - error body - Invalid input data<br>`403` - error body - Forbidden - the caller is not this account<br>`404` - error body - The account has no dashboard configuration |<br>`409` - error body - CONCURRENT_MODIFICATION_CONFLICT - If-Match names a version other than the current one (`details` gives the current version); a malformed If-Match is `400`
 | Application flow | controller -> `dashboardConfigCommandService` |
 
 ## `GET /api/v1/profiles/owners`
@@ -190,18 +190,18 @@ Base URL: see [../../README.md](../../README.md#5-base-url). All paths are relat
 
 ## `PUT /api/v1/profiles/owners/{ownerId}`
 
-**Update an owner** - Replaces the name, contact details and RUC of the caller's own owner profile. The email address belongs to the platform account and cannot be changed here.
+**Update an owner** - Replaces the name, contact details and RUC of the caller's own owner profile. The email address belongs to the platform account and cannot be changed here. Accepts `If-Match: "<version>"` (`409 CONCURRENT_MODIFICATION_CONFLICT` when stale; `400` when malformed).
 
 | Field | Value |
 |---|---|
 | Bounded context | Profiles |
 | Controller | `src/main/java/pe/edu/upc/ice/track/platform/profiles/interfaces/rest/OwnerProfilesController.java` - method `updateOwner` |
 | Authentication / authorization | OWNER_ROLE and the owner profile must be the caller's own |
-| Headers | `Accept: application/json`, `Content-Type: application/json`, `Authorization: Bearer <access token>` |
+| Headers | `Accept: application/json`, `Content-Type: application/json`, `Authorization: Bearer <access token>`, `If-Match: "<version>"` (optional) |
 | Path parameters | `ownerId` (Long; Java `ownerId`) |
 | Query parameters | none |
 | Request body | `UpdateOwnerResource` - [`requests/UpdateOwnerResource.json`](requests/UpdateOwnerResource.json), schema [`UpdateOwnerResource.schema.json`](../../schemas/profiles/UpdateOwnerResource.schema.json) |
-| Declared statuses / responses | `200` - `OwnerProfileResource` ([`responses/OwnerProfileResource.json`](responses/OwnerProfileResource.json)) - Owner updated<br>`400` - error body - Invalid input data, such as a RUC that is not 11 digits<br>`401` - error body - Unauthorized - JWT token required or invalid<br>`403` - error body - Forbidden - the caller is not this owner |
+| Declared statuses / responses | `200` - `OwnerProfileResource` ([`responses/OwnerProfileResource.json`](responses/OwnerProfileResource.json)) - Owner updated<br>`400` - error body - Invalid input data, such as a RUC that is not 11 digits<br>`401` - error body - Unauthorized - JWT token required or invalid<br>`403` - error body - Forbidden - the caller is not this owner |<br>`409` - error body - CONCURRENT_MODIFICATION_CONFLICT - If-Match names a version other than the current one (`details` gives the current version); a malformed If-Match is `400`
 | Application flow | controller -> `ownerCommandService` |
 
 ## `GET /api/v1/profiles/technicians`

@@ -28,6 +28,11 @@
         "$ref": "DashboardCardResource.schema.json"
       },
       "description": "Cards of the dashboard, one per card type, sorted by their order"
+    },
+    "version": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Concurrency version; grows on every change, cards included. Send it back in If-Match on the layout, visibility and defaults updates"
     }
   },
   "x-source": "src/main/java/pe/edu/upc/ice/track/platform/profiles/interfaces/rest/resources/DashboardConfigResource.java"

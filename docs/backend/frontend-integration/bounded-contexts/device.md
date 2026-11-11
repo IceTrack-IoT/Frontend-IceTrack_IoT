@@ -43,6 +43,10 @@ An equipment can have at most one paired device and a board at most one equipmen
 
 Authenticated by `X-API-Key` only. `EdgeConfigurationQueryService` assembles: equipment `config_version`, thresholds (`ExternalAssetManagementServiceForDevice`), alert policy values (`ExternalMonitoringServiceForDevice` -> `MonitoringContextFacade.fetchApplicableAlertPolicy`) and active technician grants (`ExternalServiceRequestServiceForDevice` -> `ServiceRequestContextFacade.fetchActiveEdgeGrants`, returned as SHA-256 digests, never the plaintext token). The response carries an `ETag`; sending `If-None-Match` with the same value answers `304` with an empty body. Missing unit: `404 EQUIPMENT_NOT_FOUND`. Edge routes answer a failed authentication with `401` and an empty body.
 
+## Connectivity of a board (owner read)
+
+`DeviceResource.connectivity` is evaluated on every owner read from `last_seen_at` (server arrival time) with the offline window of the paired unit's alert policy: `REPORTING`, `SILENT` (with `silent_since`), `NEVER_REPORTED`, `KEY_REVOKED` (status `REVOKED`) or `UNPAIRED`. `DeviceQueryServiceImpl` reads the windows of a whole listing in one call through `ExternalMonitoringServiceForDevice.fetchOfflineWindows` (`MonitoringContextFacade.fetchOfflineSilenceSeconds`). `GET /api/v1/devices` accepts `connectivity` (comma-separated states); the filter is applied after evaluation and before paging. The device lifecycle is unchanged.
+
 ## Not exposed to frontends
 
 `DeviceContextFacade.recordActivity` is called by Monitoring (`ExternalDeviceServiceForMonitoring`) for every stored reading batch, so `DeviceResource.last_seen_at` is the arrival time of the device's latest reading batch (`null` until the first one; edge events and configuration polls do not move it). Only a `PAIRED` device is updated. `Device*IntegrationEvent` has no subscribers.

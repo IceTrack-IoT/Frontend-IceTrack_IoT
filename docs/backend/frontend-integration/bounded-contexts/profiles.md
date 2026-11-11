@@ -30,6 +30,10 @@ profiles/
 - Certification number: 3 to 50 letters, digits, `-`, `.` or `/`, starting with a letter or digit (`@Pattern` on `UpdateTechnicianResource`, message `must be 3 to 50 letters, digits, '-', '.' or '/', starting with a letter or digit`).
 - A street number is optional; `street`, `city`, `postal_code`, `country` are required (`StreetAddress`).
 - Email belongs to the platform account/profile and cannot be changed through `PUT` owner/technician.
+- Address: `OwnerProfileResource` answers the composed `address` and its parts (`street`, `number`, `city`, `postal_code`, `country`), built from the same `StreetAddress` value object an update validates. `number` is optional.
+- Versions: `Profile.version` (owner and technician profiles, one `@Version` on the root entity) and `DashboardConfig.version` (bumped by a forced increment on every save, because card changes live in child rows). `PUT /profiles/owners/{id}`, the dashboard layout, defaults and visibility endpoints check `If-Match` through `VersionPrecondition`.
+- `/me` reads: `GET /profiles/owners/me` (`OWNER_ROLE`) and `GET /profiles/dashboard-configs/me` resolve the caller from the token through `ProfileAccessEvaluator.resolveOwnerProfile` and `resolveAccountId`, so no account identifier is threaded through the client.
+- Session bootstrap: `GET /api/v1/me/context` (`SessionContextController`, `SessionContextQueryServiceImpl`) reads the account through `ExternalIamService.fetchAccountByUsername` (`IamContextFacade`), the profile and dashboard configuration from this context, and for an owner the site and unit counts through `ExternalAssetsService` (`AssetContextFacade.countSitesByOwner`, `countEquipmentByOwner`). It returns `Cache-Control: no-store` and never a token.
 - A dashboard has exactly the four cards `MONITORED_EQUIPMENT`, `OPEN_ALERTS`, `ACTIVE_ORDERS`, `EQUIPMENT_STATUS` with positions 1 to N without gaps or repeats; an account has at most one configuration.
 
 ## Authorization model (`ProfileAccessEvaluator`)

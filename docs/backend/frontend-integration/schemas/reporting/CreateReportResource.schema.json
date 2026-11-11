@@ -15,6 +15,7 @@
         "MAINTENANCE_COMPLIANCE",
         "EQUIPMENT_UPTIME",
         "TECHNICIAN_PERFORMANCE",
+        "SERVICE_INTERVENTION",
         "TEMPERATURE_EXCURSION"
       ],
       "minLength": 1,
