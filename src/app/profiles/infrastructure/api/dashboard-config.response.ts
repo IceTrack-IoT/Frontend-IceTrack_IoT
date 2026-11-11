@@ -8,6 +8,8 @@ export interface DashboardConfigResponse {
   default_site_id: number;
   default_temperature_range: TemperatureRangeResource;
   cards: DashboardCardResource[];
+  /** Concurrency version, sent back in `If-Match` on the layout and defaults updates. */
+  version: number;
 }
 
 /**

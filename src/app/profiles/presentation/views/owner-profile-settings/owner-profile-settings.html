@@ -107,13 +107,10 @@
           </div>
         </div>
 
-        <fieldset class="ui-fieldset" aria-describedby="owner-profile-address-note">
+        <fieldset class="ui-fieldset">
           <legend class="ui-fieldset__legend">
             {{ 'profiles.ownerProfile.addressSection' | translate }}
           </legend>
-          <p class="ui-field__hint" id="owner-profile-address-note">
-            {{ 'profiles.ownerProfile.addressNote' | translate: { address: current.address } }}
-          </p>
           <div class="ui-form__grid">
             @let streetError = fieldErrorKey('street');
             <div class="ui-field">

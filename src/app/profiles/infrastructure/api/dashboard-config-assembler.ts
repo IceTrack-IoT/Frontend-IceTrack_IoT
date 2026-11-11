@@ -33,6 +33,7 @@ export class DashboardConfigAssembler {
       default_site_id: response.default_site_id,
       default_temperature_range: this.toTemperatureRange(response.default_temperature_range),
       cards: response.cards.flatMap((card) => this.toCards(card)),
+      version: response.version,
     });
   }
 

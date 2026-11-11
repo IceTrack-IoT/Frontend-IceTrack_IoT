@@ -36,8 +36,8 @@ const FORMAT_ERROR_KEYS: Partial<Record<OwnerProfileControl, string>> = {
  * phone, address and RUC). The settings view renders it in its outlet.
  *
  * The owner can edit the name, phone, address and RUC; the email belongs to the account and cannot be
- * changed. The backend returns the address as one text but stores it as separate parts, so the address is
- * entered again in full on every save, with the current one shown for reference.
+ * changed. The form starts from the stored profile, address parts included. A save made from an outdated
+ * profile is refused; the current profile is then loaded again and the owner's edits are kept.
  */
 @Component({
   imports: [ReactiveFormsModule, TranslatePipe, Icon, StatePanel],
@@ -111,11 +111,11 @@ export class OwnerProfileSettings {
       fullName: profile.full_name,
       phone: profile.phone,
       ruc: String(profile.ruc),
-      street: '',
-      number: '',
-      city: '',
-      postalCode: '',
-      country: '',
+      street: profile.street,
+      number: profile.number ?? '',
+      city: profile.city,
+      postalCode: profile.postal_code,
+      country: profile.country,
     });
     this.editing.set(true);
     this.focus('#owner-profile-fullName');

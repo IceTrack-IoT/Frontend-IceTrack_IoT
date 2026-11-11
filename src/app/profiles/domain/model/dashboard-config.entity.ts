@@ -14,6 +14,7 @@ export class DashboardConfig {
   private _default_site_id: number;
   private _default_temperature_range: TemperatureRange;
   private _cards: DashboardCard[];
+  private _version: number;
 
   /**
    * Creates an instance of DashboardConfig with the specified configuration.
@@ -25,12 +26,14 @@ export class DashboardConfig {
     default_site_id: number;
     default_temperature_range: TemperatureRange;
     cards: DashboardCard[];
+    version: number;
   }) {
     this._id = dashboardConfig.id;
     this._user_id = dashboardConfig.user_id;
     this._default_site_id = dashboardConfig.default_site_id;
     this._default_temperature_range = dashboardConfig.default_temperature_range;
     this._cards = dashboardConfig.cards;
+    this._version = dashboardConfig.version;
   }
 
   get id(): number {
@@ -62,6 +65,13 @@ export class DashboardConfig {
   }
   set cards(cards: DashboardCard[]) {
     this._cards = cards;
+  }
+  /** The concurrency version; it grows on every change of the configuration, cards included. */
+  get version(): number {
+    return this._version;
+  }
+  set version(version: number) {
+    this._version = version;
   }
 
   /**

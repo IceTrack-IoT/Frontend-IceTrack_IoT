@@ -1,6 +1,7 @@
 import type { HttpClient } from '@angular/common/http';
 import type { Observable } from 'rxjs';
 import { environment } from '@env/environment';
+import { ifMatchHeaders } from '@shared/infrastructure/http/write-preconditions';
 import type { CreateDashboardConfigRequest } from '@profiles/infrastructure/api/create-dashboard-config.request';
 import type { DashboardConfigResponse } from '@profiles/infrastructure/api/dashboard-config.response';
 import type { UpdateDashboardDefaultsRequest } from '@profiles/infrastructure/api/update-dashboard-defaults.request';
@@ -43,35 +44,43 @@ export class DashboardConfigApiEndpoint {
 
   /**
    * Replaces the layout of the dashboard of an account
-   * (`PUT /profiles/dashboard-configs/user/{userId}/layout`).
+   * (`PUT /profiles/dashboard-configs/user/{userId}/layout`), only when the configuration is still at the
+   * given version (`If-Match`).
    * @param userId - The caller's own platform account id.
+   * @param version - The version of the configuration the change was made from.
    * @param request - The UpdateDashboardLayoutRequest.
    * @returns An Observable of the updated DashboardConfigResponse.
    */
   updateLayout(
     userId: number,
+    version: number,
     request: UpdateDashboardLayoutRequest,
   ): Observable<DashboardConfigResponse> {
     return this.http.put<DashboardConfigResponse>(
       this.withUserId(this.layoutEndpointUrl, userId),
       request,
+      { headers: ifMatchHeaders(version) },
     );
   }
 
   /**
    * Replaces the defaults of the dashboard of an account
-   * (`PUT /profiles/dashboard-configs/user/{userId}/defaults`).
+   * (`PUT /profiles/dashboard-configs/user/{userId}/defaults`), only when the configuration is still at
+   * the given version (`If-Match`).
    * @param userId - The caller's own platform account id.
+   * @param version - The version of the configuration the change was made from.
    * @param request - The UpdateDashboardDefaultsRequest.
    * @returns An Observable of the updated DashboardConfigResponse.
    */
   updateDefaults(
     userId: number,
+    version: number,
     request: UpdateDashboardDefaultsRequest,
   ): Observable<DashboardConfigResponse> {
     return this.http.put<DashboardConfigResponse>(
       this.withUserId(this.defaultsEndpointUrl, userId),
       request,
+      { headers: ifMatchHeaders(version) },
     );
   }
 

@@ -105,7 +105,8 @@ export class DashboardConfigStore {
 
   /**
    * Saves the layout and defaults chosen for the loaded configuration. Each stored part is kept even when
-   * a later part fails.
+   * a later part fails. When the configuration changed since it was loaded
+   * (`CONCURRENT_MODIFICATION_CONFLICT`), the current one is loaded again so the owner can save once more.
    * @param change - The chosen layout and defaults.
    */
   saveConfig(change: DashboardConfigChange): void {
@@ -119,7 +120,13 @@ export class DashboardConfigStore {
       .pipe(finalize(() => this.savingSignal.set(false)))
       .subscribe({
         next: (stored) => this.configSignal.set(stored),
-        error: (error: unknown) => this.saveFailureSignal.set(toProfilesFailure(error)),
+        error: (error: unknown) => {
+          const failure = toProfilesFailure(error);
+          this.saveFailureSignal.set(failure);
+          if (failure === 'CONCURRENT_MODIFICATION_CONFLICT') {
+            this.loadConfig(config.user_id);
+          }
+        },
         complete: () => this.saveOutcomeSignal.set('saved'),
       });
   }

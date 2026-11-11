@@ -78,7 +78,9 @@ export class ProfilesStore {
   }
 
   /**
-   * Replaces the data of the loaded owner profile on the backend and keeps the stored version.
+   * Replaces the data of the loaded owner profile on the backend and keeps the stored version. When the
+   * profile changed since it was loaded (`CONCURRENT_MODIFICATION_CONFLICT`), nothing is saved and the
+   * current profile is loaded again, so the owner can review it and save once more.
    * @param update - The new profile data, with the complete address.
    */
   updateOwnerProfile(update: OwnerProfileUpdate): void {
@@ -87,15 +89,24 @@ export class ProfilesStore {
       return;
     }
     this.ownerProfileSavedSignal.set(false);
-    this.run(
-      this.updateOwnerProfileUseCase.execute(profile.id, update),
-      this.ownerProfileSavingSignal,
-      this.ownerProfileSaveFailureSignal,
-      (updated) => {
-        this.ownerProfileSignal.set(updated);
-        this.ownerProfileSavedSignal.set(true);
-      },
-    );
+    this.ownerProfileSavingSignal.set(true);
+    this.ownerProfileSaveFailureSignal.set(null);
+    this.updateOwnerProfileUseCase
+      .execute(profile, update)
+      .pipe(finalize(() => this.ownerProfileSavingSignal.set(false)))
+      .subscribe({
+        next: (updated) => {
+          this.ownerProfileSignal.set(updated);
+          this.ownerProfileSavedSignal.set(true);
+        },
+        error: (error: unknown) => {
+          const failure = toProfilesFailure(error);
+          this.ownerProfileSaveFailureSignal.set(failure);
+          if (failure === 'CONCURRENT_MODIFICATION_CONFLICT') {
+            this.loadOwnerProfile(profile.user_id);
+          }
+        },
+      });
   }
 
   /**

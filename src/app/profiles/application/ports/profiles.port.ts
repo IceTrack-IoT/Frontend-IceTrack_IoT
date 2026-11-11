@@ -22,15 +22,18 @@ export abstract class ProfilesPort {
   abstract getOwnerProfileByUserId(userId: number): Observable<OwnerProfile>;
 
   /**
-   * Replaces the name, contact details, address and RUC of the caller's own owner profile.
-   * Fails with ProfilesError code `VALIDATION_ERROR` (e.g. a RUC that is not 11 digits) or
-   * `ACCESS_DENIED` (not the caller's own profile).
+   * Replaces the name, contact details, address and RUC of the caller's own owner profile, only when the
+   * profile is still at the version it was read in. Fails with ProfilesError code `VALIDATION_ERROR`
+   * (e.g. a RUC that is not 11 digits), `ACCESS_DENIED` (not the caller's own profile) or
+   * `CONCURRENT_MODIFICATION_CONFLICT` (the profile changed since that version; nothing is changed).
    * @param ownerId - The identifier of the owner profile (not the account id).
+   * @param version - The version of the profile the update was made from.
    * @param update - The new profile data.
    * @returns An Observable of the updated owner profile.
    */
   abstract updateOwnerProfile(
     ownerId: number,
+    version: number,
     update: OwnerProfileUpdate,
   ): Observable<OwnerProfile>;
 

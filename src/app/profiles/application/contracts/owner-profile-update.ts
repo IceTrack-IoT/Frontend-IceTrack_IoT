@@ -1,7 +1,7 @@
 /**
  * OwnerProfileUpdate replaces the name, contact details, address and RUC of the signed-in owner's profile.
- * The email belongs to the platform account and cannot be changed. The backend stores the address as
- * separate parts, so every update carries the complete address.
+ * The email belongs to the platform account and cannot be changed. The backend replaces the whole profile,
+ * so every update carries the complete address, in parts.
  */
 export interface OwnerProfileUpdate {
   readonly fullName: string;
