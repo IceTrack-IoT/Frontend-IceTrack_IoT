@@ -16,6 +16,7 @@ import { WatchNotificationChangesUseCase } from '@notifications/application/use-
 import { LoadNotificationPageUseCase } from '@notifications/application/use-cases/load-notification-page.use-case';
 import { LoadNotifiedEquipmentUseCase } from '@notifications/application/use-cases/load-notified-equipment.use-case';
 import { MarkNotificationAsReadUseCase } from '@notifications/application/use-cases/mark-notification-as-read.use-case';
+import { MarkNotificationsAsReadUseCase } from '@notifications/application/use-cases/mark-notifications-as-read.use-case';
 
 /** The number of notifications per page of the notification center. */
 export const NOTIFICATION_PAGE_SIZE = 10;
@@ -23,7 +24,7 @@ export const NOTIFICATION_PAGE_SIZE = 10;
 /** The actions the user runs on a notification. */
 export type NotificationAction = 'read' | 'dismiss';
 
-/** The outcome of marking every matching notification as read, until it is cleared. */
+/** The outcome of marking several notifications as read at once (all matching, or the selected ones). */
 export interface MarkAllState {
   readonly status: 'pending' | 'succeeded' | 'failed';
   readonly failure: NotificationsFailure | null;
@@ -44,8 +45,8 @@ export interface NotificationActionState {
 /**
  * Notifications Store manages the signed-in user's notifications: the unread count shown by the badge,
  * kept current by the live notification feed, the current page of the active inbox with its read,
- * severity and type filters, the names of the equipment the notifications concern, and the outcome of
- * marking as read (one or all) and dismissing.
+ * severity and type filters, the notifications selected on that page, the names of the equipment the
+ * notifications concern, and the outcome of marking as read (one, the selected ones or all) and dismissing.
  *
  * It holds signal-based state only and delegates every operation to Notifications use cases. Actions are
  * not applied optimistically: the notification is replaced by the one the backend answers, and the page
@@ -62,6 +63,7 @@ export class NotificationsStore {
   private readonly dismissNotificationUseCase = inject(DismissNotificationUseCase);
   private readonly loadNotifiedEquipmentUseCase = inject(LoadNotifiedEquipmentUseCase);
   private readonly markAllNotificationsAsReadUseCase = inject(MarkAllNotificationsAsReadUseCase);
+  private readonly markNotificationsAsReadUseCase = inject(MarkNotificationsAsReadUseCase);
   private readonly watchNotificationChangesUseCase = inject(WatchNotificationChangesUseCase);
 
   // Unread badge.
@@ -93,6 +95,22 @@ export class NotificationsStore {
   /** The names of the owner's equipment by id; empty when they could not be read. */
   readonly equipmentNames = this.equipmentNamesSignal.asReadonly();
 
+  // Selection.
+  private readonly selectedIdsSignal = signal<ReadonlySet<number>>(new Set());
+  /** The notifications of the current page that can be selected: the ones that can be marked as read. */
+  readonly selectableNotifications = computed(() =>
+    this.notifications().filter((notification) => notification.canBeMarkedAsRead()),
+  );
+  /** The selected notifications of the current page that can still be marked as read. */
+  readonly selectedNotifications = computed(() => {
+    const selected = this.selectedIdsSignal();
+    return this.selectableNotifications().filter((notification) => selected.has(notification.id));
+  });
+  /** The identifiers of the selected notifications that can still be marked as read. */
+  readonly selectedIds = computed(
+    () => new Set(this.selectedNotifications().map((notification) => notification.id)),
+  );
+
   // Actions.
   private readonly actionSignal = signal<NotificationActionState | null>(null);
   readonly actionState = this.actionSignal.asReadonly();
@@ -100,12 +118,16 @@ export class NotificationsStore {
   private readonly markAllSignal = signal<MarkAllState | null>(null);
   readonly markAllState = this.markAllSignal.asReadonly();
   readonly markAllPending = computed(() => this.markAllSignal()?.status === 'pending');
+  private readonly markSelectedSignal = signal<MarkAllState | null>(null);
+  readonly markSelectedState = this.markSelectedSignal.asReadonly();
+  readonly markSelectedPending = computed(() => this.markSelectedSignal()?.status === 'pending');
 
   private countSubscription: Subscription | null = null;
   private pageSubscription: Subscription | null = null;
   private equipmentSubscription: Subscription | null = null;
   private actionSubscription: Subscription | null = null;
   private markAllSubscription: Subscription | null = null;
+  private markSelectedSubscription: Subscription | null = null;
 
   /**
    * Keeps the unread count while the caller lives, current with the live notification feed; it is
@@ -194,7 +216,12 @@ export class NotificationsStore {
    * @param pageIndex - The zero-based page index; the current one when omitted.
    */
   loadPage(pageIndex: number = this.pageIndexSignal()): void {
-    this.pageIndexSignal.set(Math.max(0, pageIndex));
+    const index = Math.max(0, pageIndex);
+    // The selection belongs to a page; reloading the same page keeps what is still selectable.
+    if (index !== this.pageIndexSignal()) {
+      this.clearSelection();
+    }
+    this.pageIndexSignal.set(index);
     this.pageSubscription?.unsubscribe();
     this.loadingSignal.set(true);
     this.failureSignal.set(null);
@@ -226,6 +253,7 @@ export class NotificationsStore {
   setUnreadOnly(unreadOnly: boolean): void {
     if (this.unreadOnlySignal() !== unreadOnly) {
       this.unreadOnlySignal.set(unreadOnly);
+      this.clearSelection();
       this.loadPage(0);
     }
   }
@@ -236,6 +264,7 @@ export class NotificationsStore {
    */
   setFilters(filters: NotificationFilters): void {
     this.filtersSignal.set(filters);
+    this.clearSelection();
     this.loadPage(0);
   }
 
@@ -266,6 +295,75 @@ export class NotificationsStore {
             failure: toNotificationsFailure(error),
             updatedCount: null,
           }),
+      });
+  }
+
+  /**
+   * Selects a notification of the current page, or unselects it.
+   * @param notificationId - The identifier of the notification.
+   * @param selected - Whether it is selected.
+   */
+  setSelected(notificationId: number, selected: boolean): void {
+    this.selectedIdsSignal.update((ids) => {
+      const next = new Set(ids);
+      if (selected) {
+        next.add(notificationId);
+      } else {
+        next.delete(notificationId);
+      }
+      return next;
+    });
+  }
+
+  /**
+   * Selects every notification of the current page that can be marked as read, or none.
+   * @param selected - Whether they are selected.
+   */
+  setAllSelected(selected: boolean): void {
+    this.selectedIdsSignal.set(
+      selected
+        ? new Set(this.selectableNotifications().map((notification) => notification.id))
+        : new Set(),
+    );
+  }
+
+  /** Unselects every notification. */
+  clearSelection(): void {
+    this.selectedIdsSignal.set(new Set());
+  }
+
+  /**
+   * Marks the selected notifications as read, in one request, then clears the selection and reads the
+   * page again. Ignored without a selection or while it is already pending.
+   */
+  markSelectedAsRead(): void {
+    const selected = this.selectedNotifications();
+    if (selected.length === 0 || this.markSelectedPending()) {
+      return;
+    }
+    this.markSelectedSignal.set({ status: 'pending', failure: null, updatedCount: null });
+    this.markSelectedSubscription = this.markNotificationsAsReadUseCase
+      .execute(selected)
+      .subscribe({
+        next: (result) => {
+          this.unreadCountSignal.set(result.unreadCount);
+          this.markSelectedSignal.set({
+            status: 'succeeded',
+            failure: null,
+            updatedCount: result.updatedCount,
+          });
+          this.clearSelection();
+          this.loadPage();
+        },
+        error: (error: unknown) => {
+          this.markSelectedSignal.set({
+            status: 'failed',
+            failure: toNotificationsFailure(error),
+            updatedCount: null,
+          });
+          // Some of them may have changed meanwhile, so the page is read again.
+          this.loadPage();
+        },
       });
   }
 
@@ -308,6 +406,9 @@ export class NotificationsStore {
     }
     if (!this.markAllPending()) {
       this.markAllSignal.set(null);
+    }
+    if (!this.markSelectedPending()) {
+      this.markSelectedSignal.set(null);
     }
   }
 
@@ -357,9 +458,13 @@ export class NotificationsStore {
       this.equipmentSubscription,
       this.actionSubscription,
       this.markAllSubscription,
+      this.markSelectedSubscription,
     ].forEach((subscription) => subscription?.unsubscribe());
     this.markAllSubscription = null;
     this.markAllSignal.set(null);
+    this.markSelectedSubscription = null;
+    this.markSelectedSignal.set(null);
+    this.selectedIdsSignal.set(new Set());
     this.filtersSignal.set(NO_FILTERS);
     this.pageSubscription = null;
     this.equipmentSubscription = null;

@@ -43,6 +43,16 @@ export class NotificationsApi extends BaseApi implements NotificationsPort {
     );
   }
 
+  markSeveralAsRead(notificationIds: readonly number[]): Observable<BulkReadResult> {
+    return this.endpoint.markSeveralAsRead({ notification_ids: [...notificationIds] }).pipe(
+      mapNotificationsErrors(),
+      map((resource) => ({
+        updatedCount: resource.updated_count,
+        unreadCount: resource.unread_count,
+      })),
+    );
+  }
+
   countUnread(): Observable<number> {
     return this.endpoint.countUnread().pipe(
       mapNotificationsErrors(),

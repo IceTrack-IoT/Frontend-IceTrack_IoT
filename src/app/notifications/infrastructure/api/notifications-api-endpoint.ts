@@ -1,6 +1,7 @@
 import { type HttpClient, HttpParams } from '@angular/common/http';
 import type { Observable } from 'rxjs';
 import { environment } from '@env/environment';
+import type { BulkNotificationReadRequest } from '@notifications/infrastructure/api/notification.requests';
 import type {
   BulkReadResultResource,
   NotificationResource,
@@ -26,6 +27,7 @@ export class NotificationsApiEndpoint {
   private readonly unreadCountUrl = `${baseUrl}${environment.iceTrackProviderUnreadNotificationCountEndpointPath}`;
   private readonly readUrl = `${baseUrl}${environment.iceTrackProviderMarkNotificationAsReadEndpointPath}`;
   private readonly readAllUrl = `${baseUrl}${environment.iceTrackProviderMarkAllNotificationsAsReadEndpointPath}`;
+  private readonly readSeveralUrl = `${baseUrl}${environment.iceTrackProviderMarkSeveralNotificationsAsReadEndpointPath}`;
   private readonly dismissUrl = `${baseUrl}${environment.iceTrackProviderDismissNotificationEndpointPath}`;
 
   constructor(private readonly http: HttpClient) {}
@@ -49,6 +51,11 @@ export class NotificationsApiEndpoint {
     return this.http.put<BulkReadResultResource>(this.readAllUrl, null, {
       params: withFilters(new HttpParams(), filters),
     });
+  }
+
+  /** `PUT /notifications/read`: the listed notifications. */
+  markSeveralAsRead(request: BulkNotificationReadRequest): Observable<BulkReadResultResource> {
+    return this.http.put<BulkReadResultResource>(this.readSeveralUrl, request);
   }
 
   /** `GET /notifications/unread-count` */

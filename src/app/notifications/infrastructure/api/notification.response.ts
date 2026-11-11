@@ -10,7 +10,11 @@ export interface NotificationResource {
   device_id?: number | null;
   source_alert_id?: number | null;
   service_request_id?: number | null;
+  /** The English text, shown when `message_key` is unknown. */
   message: string;
+  message_key?: string | null;
+  /** Values filled into the template: strings or numbers, never markup; possibly `{}`. */
+  message_params?: Record<string, unknown> | null;
   type: string;
   severity: string;
   is_read: boolean;
