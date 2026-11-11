@@ -15,6 +15,14 @@ export interface ServiceRequestQuery {
   readonly priorities: readonly ServicePriority[];
   /** The equipment item to keep, or null for every item. */
   readonly equipmentId: number | null;
+  /** The site to keep, or null for every site. */
+  readonly siteId: number | null;
+  /** The earliest creation instant to keep (inclusive), or null for no lower bound. */
+  readonly createdFrom: Date | null;
+  /** The latest creation instant to keep (inclusive), or null for no upper bound. */
+  readonly createdTo: Date | null;
+  /** The alert whose corrective requests to keep, or null for every request. */
+  readonly sourceAlertId: number | null;
   /** The zero-based page index. */
   readonly page: number;
   /** The number of requests per page, from 1 to 100. */

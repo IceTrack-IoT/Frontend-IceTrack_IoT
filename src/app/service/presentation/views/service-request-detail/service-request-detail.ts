@@ -1,7 +1,7 @@
 import { Component, computed, DestroyRef, effect, inject, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ServiceStatus } from '@service/domain/value-objects/service-status';
 import type { ReviewScores } from '@service/application/contracts/review-scores';
 import { isStaleStateFailure } from '@service/application/contracts/service-requests-error';
@@ -38,7 +38,8 @@ const CLOCK_TICK_MS = 30_000;
  * Detail of a service request: equipment and site, description, progress, status history, assigned
  * technician, intervention, maintenance windows and review. The owner assigns a technician, cancels the
  * request with a reason, or reviews the completed service and edits the review while the backend allows
- * it. Only the actions the request's state permits are offered; the backend remains the authority. The
+ * it, or requests the downloadable document of the completed service, which Reporting generates and
+ * serves. Only the actions the request's state permits are offered; the backend remains the authority. The
  * `action` query parameter (`assign` or `review`) opens the matching dialog once the request allows it.
  */
 @Component({
@@ -63,6 +64,7 @@ const CLOCK_TICK_MS = 30_000;
 })
 export class ServiceRequestDetail {
   private readonly route = inject(ActivatedRoute);
+  private readonly translate = inject(TranslateService);
   protected readonly store = inject(ServiceRequestsStore);
   protected readonly statusAppearance = SERVICE_STATUS_APPEARANCE;
   protected readonly priorityAppearance = SERVICE_PRIORITY_APPEARANCE;
@@ -135,6 +137,12 @@ export class ServiceRequestDetail {
     return review === null ? null : { rating: review.rating, comment: review.comment };
   });
 
+  /** The last request of the document of this service request. */
+  protected readonly serviceReport = computed(() => {
+    const report = this.store.serviceReport();
+    return report?.serviceRequestId === this.requestId() ? report : null;
+  });
+
   /** The confirmation of the last successful action. */
   protected readonly announcementKey = computed(() => {
     const state = this.store.actionState();
@@ -205,6 +213,24 @@ export class ServiceRequestDetail {
   protected load(): void {
     this.dialog.set(null);
     this.store.loadServiceRequest(this.requestId());
+  }
+
+  /**
+   * Requests the document of the completed request, named in the language the owner is using.
+   * @param equipmentLabel - The name of the equipment as the page shows it.
+   */
+  protected generateServiceReport(equipmentLabel: string): void {
+    const request = this.request();
+    if (request === null) {
+      return;
+    }
+    const name: unknown = this.translate.instant('serviceRequests.serviceReport.name', {
+      id: request.id,
+      equipment: equipmentLabel,
+    });
+    this.store.requestServiceReport(
+      typeof name === 'string' ? name : `#${request.id} · ${equipmentLabel}`,
+    );
   }
 
   protected openDialog(dialog: DetailDialog): void {

@@ -47,6 +47,8 @@ export function actionErrorKey(
       return 'serviceRequests.errors.alreadyReviewed';
     case 'CONCURRENT_MODIFICATION_CONFLICT':
       return 'serviceRequests.errors.concurrentChange';
+    case 'IDEMPOTENCY_KEY_CONFLICT':
+      return 'serviceRequests.errors.submissionInProgress';
     case 'UNEXPECTED':
       return 'serviceRequests.errors.unexpected';
   }
@@ -74,6 +76,8 @@ export function createErrorKey(
       return alertLinked
         ? 'serviceRequests.errors.equipmentOrAlertNotFound'
         : 'serviceRequests.errors.equipmentNotFound';
+    case 'IDEMPOTENCY_KEY_CONFLICT':
+      return 'serviceRequests.errors.submissionInProgress';
     default:
       return 'serviceRequests.errors.unexpected';
   }

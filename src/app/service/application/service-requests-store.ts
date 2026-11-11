@@ -44,9 +44,23 @@ import { LoadTechnicianCandidatesUseCase } from '@service/application/use-cases/
 import { LoadTechnicianDirectoryUseCase } from '@service/application/use-cases/load-technician-directory.use-case';
 import { SubmitServiceReviewUseCase } from '@service/application/use-cases/submit-service-review.use-case';
 import { UpdateServiceReviewUseCase } from '@service/application/use-cases/update-service-review.use-case';
+import { GenerateServiceReportUseCase } from '@service/application/use-cases/generate-service-report.use-case';
 
 /** The number of service requests per page of the list. */
 export const SERVICE_REQUEST_PAGE_SIZE = 10;
+
+/** The filters of the request list the owner sets; the page and its size are chosen separately. */
+export type ServiceRequestFilters = Omit<ServiceRequestQuery, 'equipmentId' | 'page' | 'size'>;
+
+const SERVICE_REQUEST_FILTER_KEYS: readonly (keyof ServiceRequestFilters)[] = [
+  'statuses',
+  'types',
+  'priorities',
+  'siteId',
+  'createdFrom',
+  'createdTo',
+  'sourceAlertId',
+];
 
 /** The actions the owner runs on the selected service request. */
 export type ServiceRequestAction = 'assign' | 'cancel' | 'submit-review' | 'update-review';
@@ -55,6 +69,14 @@ export type ServiceRequestAction = 'assign' | 'cancel' | 'submit-review' | 'upda
  * The outcome of the last action on the selected service request. A failure meaning the local state was
  * stale has already triggered a reload of the request when it is exposed.
  */
+export interface ServiceReportState {
+  readonly serviceRequestId: number;
+  readonly status: 'pending' | 'succeeded' | 'failed';
+  /** The identifier of the report that documents the request, once it was accepted. */
+  readonly reportId: number | null;
+}
+
+/** The outcome of the last action on the selected request, until it is cleared. */
 export interface ServiceRequestActionState {
   readonly action: ServiceRequestAction;
   readonly status: 'pending' | 'succeeded' | 'failed';
@@ -101,6 +123,7 @@ export class ServiceRequestsStore {
   private readonly loadTechnicianDirectoryUseCase = inject(LoadTechnicianDirectoryUseCase);
   private readonly loadTechnicianCandidatesUseCase = inject(LoadTechnicianCandidatesUseCase);
   private readonly loadAssignedTechnicianUseCase = inject(LoadAssignedTechnicianUseCase);
+  private readonly generateServiceReportUseCase = inject(GenerateServiceReportUseCase);
 
   // List.
   private readonly queryState = signal<ServiceRequestQuery>({
@@ -108,6 +131,10 @@ export class ServiceRequestsStore {
     types: [],
     priorities: [],
     equipmentId: null,
+    siteId: null,
+    createdFrom: null,
+    createdTo: null,
+    sourceAlertId: null,
     page: 0,
     size: SERVICE_REQUEST_PAGE_SIZE,
   });
@@ -129,6 +156,12 @@ export class ServiceRequestsStore {
   /** The owner's equipment by id. */
   readonly equipmentById: Signal<ReadonlyMap<number, ServiceEquipment>> = computed(
     () => new Map(this.equipment().map((item) => [item.id, item])),
+  );
+  /** The owner's sites, sorted by name. */
+  readonly sites = computed(() =>
+    [...(this.equipmentState.value()?.sites ?? [])].sort((first, second) =>
+      first.name.localeCompare(second.name),
+    ),
   );
   /** The owner's sites by id. */
   readonly siteById: Signal<ReadonlyMap<number, ServiceSite>> = computed(
@@ -167,6 +200,11 @@ export class ServiceRequestsStore {
   readonly actionState = this.actionStateSignal.asReadonly();
   readonly actionPending = computed(() => this.actionStateSignal()?.status === 'pending');
 
+  private readonly serviceReportSignal = signal<ServiceReportState | null>(null);
+  /** The last request of the document of a completed service request, until it is cleared. */
+  readonly serviceReport = this.serviceReportSignal.asReadonly();
+  readonly serviceReportPending = computed(() => this.serviceReportSignal()?.status === 'pending');
+
   // Technician candidates.
   private readonly candidatesState = readState<readonly TechnicianCandidate[]>([]);
   readonly technicianCandidates = this.candidatesState.value.asReadonly();
@@ -203,11 +241,9 @@ export class ServiceRequestsStore {
    * filter returns to the first page.
    */
   loadServiceRequests(
-    change: Partial<Pick<ServiceRequestQuery, 'statuses' | 'types' | 'priorities' | 'page'>> = {},
+    change: Partial<ServiceRequestFilters & Pick<ServiceRequestQuery, 'page'>> = {},
   ): void {
-    const filtersChanged = (['statuses', 'types', 'priorities'] as const).some(
-      (key) => change[key] !== undefined,
-    );
+    const filtersChanged = SERVICE_REQUEST_FILTER_KEYS.some((key) => change[key] !== undefined);
     this.queryState.update((query) => ({
       ...query,
       ...change,
@@ -253,6 +289,7 @@ export class ServiceRequestsStore {
       this.assignedTechnicianState.value.set(null);
       this.assignedTechnicianState.failure.set(null);
       this.actionStateSignal.set(null);
+      this.clearServiceReport();
     }
     this.selectedSubscription?.unsubscribe();
     this.selectedSubscription = this.run(
@@ -399,6 +436,35 @@ export class ServiceRequestsStore {
       this.updateServiceReviewUseCase.execute(review.id, scores),
       (updated) => this.reviewState.value.set(updated),
     );
+  }
+
+  /**
+   * Requests the document of the selected request once it is completed. The document is generated and
+   * served by Reporting, which the owner opens with the identifier kept here.
+   * @param name - The display name of the document.
+   */
+  requestServiceReport(name: string): void {
+    const request = this.selectedState.value();
+    if (request === null || this.serviceReportPending()) {
+      return;
+    }
+    const serviceRequestId = request.id;
+    this.serviceReportSignal.set({ serviceRequestId, status: 'pending', reportId: null });
+    this.generateServiceReportUseCase.execute(request, name).subscribe({
+      next: (reportId) =>
+        this.serviceReportSignal.set({ serviceRequestId, status: 'succeeded', reportId }),
+      error: () =>
+        this.serviceReportSignal.set({ serviceRequestId, status: 'failed', reportId: null }),
+    });
+  }
+
+  /**
+   * Clears the outcome of the last document request.
+   */
+  clearServiceReport(): void {
+    if (!this.serviceReportPending()) {
+      this.serviceReportSignal.set(null);
+    }
   }
 
   /**

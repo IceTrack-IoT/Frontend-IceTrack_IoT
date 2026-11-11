@@ -1,6 +1,7 @@
 import { type HttpClient, HttpParams } from '@angular/common/http';
 import type { Observable } from 'rxjs';
 import { environment } from '@env/environment';
+import { sendIdempotent } from '@shared/infrastructure/http/write-preconditions';
 import type { ReviewResource } from '@service/infrastructure/api/review.response';
 import type {
   AssignTechnicianRequest,
@@ -23,6 +24,10 @@ export interface ServiceRequestListParams {
   types: readonly string[];
   priorities: readonly string[];
   equipmentId: number | null;
+  siteId: number | null;
+  createdFrom: Date | null;
+  createdTo: Date | null;
+  sourceAlertId: number | null;
   page: number;
   size: number;
 }
@@ -43,14 +48,17 @@ export class ServiceRequestApiEndpoint {
 
   constructor(private readonly http: HttpClient) {}
 
-  /** `POST /service-requests` */
+  /** `POST /service-requests`, with an `Idempotency-Key` so a retry never creates the request twice. */
   create(request: CreateServiceRequestRequest): Observable<ServiceRequestResource> {
-    return this.http.post<ServiceRequestResource>(this.serviceRequestsUrl, request);
+    return sendIdempotent((headers) =>
+      this.http.post<ServiceRequestResource>(this.serviceRequestsUrl, request, { headers }),
+    );
   }
 
   /**
-   * `GET /service-requests?view=summary&status&type&priority&equipment_id&page&size`: one page of list
-   * summaries. Multi-value filters are comma-separated; an empty filter is not sent.
+   * `GET /service-requests?view=summary&status&type&priority&equipment_id&site_id&created_from&created_to
+   * &source_alert_id&page&size`: one page of list summaries. Multi-value filters are comma-separated, instants
+   * are sent in UTC (`Z`); an empty filter is not sent.
    * @param params - The filters and paging.
    */
   list(params: ServiceRequestListParams): Observable<PagedServiceRequestSummaryResource> {
@@ -69,6 +77,18 @@ export class ServiceRequestApiEndpoint {
     }
     if (params.equipmentId !== null) {
       query = query.set('equipment_id', params.equipmentId);
+    }
+    if (params.siteId !== null) {
+      query = query.set('site_id', params.siteId);
+    }
+    if (params.createdFrom !== null) {
+      query = query.set('created_from', params.createdFrom.toISOString());
+    }
+    if (params.createdTo !== null) {
+      query = query.set('created_to', params.createdTo.toISOString());
+    }
+    if (params.sourceAlertId !== null) {
+      query = query.set('source_alert_id', params.sourceAlertId);
     }
     return this.http.get<PagedServiceRequestSummaryResource>(this.serviceRequestsUrl, {
       params: query,
@@ -111,9 +131,11 @@ export class ServiceRequestApiEndpoint {
     );
   }
 
-  /** `POST /reviews` */
+  /** `POST /reviews`, with an `Idempotency-Key` so a retry never submits the review twice. */
   submitReview(request: SubmitReviewRequest): Observable<ReviewResource> {
-    return this.http.post<ReviewResource>(this.reviewsUrl, request);
+    return sendIdempotent((headers) =>
+      this.http.post<ReviewResource>(this.reviewsUrl, request, { headers }),
+    );
   }
 
   /** `PUT /reviews/{reviewId}` */
