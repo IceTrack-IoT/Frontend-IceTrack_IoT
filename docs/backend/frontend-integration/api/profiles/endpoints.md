@@ -22,6 +22,11 @@ Base URL: see [../../README.md](../../README.md#5-base-url). All paths are relat
 | 14 | `GET` | `/api/v1/profiles/technicians/user/{userId}` | Authenticated (any valid bearer token) | Get technician by user ID |
 | 15 | `PUT` | `/api/v1/profiles/technicians/{technicianId}` | TECHNICIAN_ROLE and the technician profile must be the caller's own | Update a technician |
 | 16 | `GET` | `/api/v1/profiles/technicians/public` | OWNER_ROLE | Get the public technician directory |
+| 17 | `GET` | `/api/v1/profiles/owners/me` | OWNER_ROLE | Get my owner profile (`404 OWNER_NOT_FOUND` without one) |
+| 18 | `GET` | `/api/v1/profiles/dashboard-configs/me` | Authenticated (any valid bearer token) | Get my dashboard configuration (`404 DASHBOARD_CONFIG_NOT_FOUND` while not set up) |
+| 19 | `GET` | `/api/v1/me/context` | Authenticated (any valid bearer token) | Get my session context (`SessionContextResource`, `Cache-Control: no-store`); controller `profiles/interfaces/rest/SessionContextController.java` |
+
+**Concurrent edits.** `PUT /owners/{ownerId}`, `PUT .../layout`, `PATCH .../cards/{cardId}/visibility` and `PUT .../defaults` accept `If-Match: "<version>"` with the `version` of the profile or configuration being edited. A stale version answers `409 CONCURRENT_MODIFICATION_CONFLICT`, `details` naming the current version, and changes nothing; a malformed header answers `400 VALIDATION_ERROR`. Without the header only writes that overlap in time are refused.
 
 ## `GET /api/v1/profiles/technicians/public`
 

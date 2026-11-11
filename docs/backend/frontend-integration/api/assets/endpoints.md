@@ -20,8 +20,11 @@ Base URL: see [../../README.md](../../README.md#5-base-url). All paths are relat
 | 12 | `PUT` | `/api/v1/assets/sites/{siteId}` | OWNER_ROLE | Update a site |
 | 13 | `PUT` | `/api/v1/assets/sites/{siteId}/address` | OWNER_ROLE | Change the address of a site |
 | 14 | `GET` | `/api/v1/assets/equipments/directory` | OWNER_ROLE | Get my equipment directory |
+| 15 | `POST` | `/api/v1/assets/sites/{siteId}/geocoding/retry` | OWNER_ROLE | Retry locating a site |
 
 Every `EquipmentResource` returned by these endpoints carries the read-only `site_name` of the unit's site.
+
+**Retries and concurrent edits.** `POST /assets/equipments` and `POST /assets/sites` accept an optional `Idempotency-Key` header (a UUID): a retry with the same key and body is answered from the first result with `Idempotent-Replayed: true`; the same key with another body, or while the first request runs, answers `409 IDEMPOTENCY_KEY_CONFLICT`. The five `PUT` endpoints accept `If-Match: "<version>"` with the `version` of the resource being edited; a stale version answers `409 CONCURRENT_MODIFICATION_CONFLICT`, `details` naming the current version.
 
 ## `POST /api/v1/assets/equipments`
 
@@ -245,5 +248,21 @@ Every `EquipmentResource` returned by these endpoints carries the read-only `sit
 | Path parameters | `siteId` (Long; Java `siteId`) |
 | Query parameters | none |
 | Request body | `UpdateSiteAddressResource` - [`requests/UpdateSiteAddressResource.json`](requests/UpdateSiteAddressResource.json), schema [`UpdateSiteAddressResource.schema.json`](../../schemas/assets/UpdateSiteAddressResource.schema.json) |
-| Declared statuses / responses | `200` - `SiteResource` ([`responses/SiteResource.json`](responses/SiteResource.json)) - Address changed and located<br>`400` - error body - ADDRESS_VALIDATION_REQUIRED or PIN_OUT_OF_RANGE<br>`401` - error body - Unauthorized - JWT token required or invalid<br>`403` - error body - Forbidden - the authenticated account has no owner profile<br>`404` - error body - No such site is reachable by the caller |
+| Declared statuses / responses | `200` - `SiteResource` ([`responses/SiteResource.json`](responses/SiteResource.json)) - Address changed and located<br>`400` - error body - ADDRESS_VALIDATION_REQUIRED or PIN_OUT_OF_RANGE<br>`401` - error body - Unauthorized - JWT token required or invalid<br>`403` - error body - Forbidden - the authenticated account has no owner profile<br>`404` - error body - No such site is reachable by the caller<br>`409` - error body - CONCURRENT_MODIFICATION_CONFLICT - If-Match names a version other than the current one |
 | Application flow | controller -> `siteCommandService` |
+
+## `POST /api/v1/assets/sites/{siteId}/geocoding/retry`
+
+**Retry locating a site** - Looks the site's current address up again with Google Maps. Charged to the same 20-per-minute quota as `POST /validate-address`. When the maps service cannot answer right away the site is left `PENDING` and the lookup continues in the background (after 5, 20 and 60 seconds), ending `RESOLVED`, `NOT_FOUND` or `FAILED` with `PROVIDER_UNAVAILABLE`.
+
+| Field | Value |
+|---|---|
+| Bounded context | Assets |
+| Controller | `src/main/java/pe/edu/upc/ice/track/platform/assets/interfaces/rest/SiteController.java` - method `retrySiteGeocoding` |
+| Authentication / authorization | OWNER_ROLE; the caller's site |
+| Headers | `Accept: application/json`, `Authorization: Bearer <access token>` |
+| Path parameters | `siteId` (Long; Java `siteId`) |
+| Query parameters | none |
+| Request body | none |
+| Declared statuses / responses | `200` - `SiteResource` - Lookup finished: `RESOLVED`, or `NOT_FOUND` with `geocoding_failure_reason` `ADDRESS_NOT_FOUND` or `OUT_OF_COVERAGE`<br>`202` - `SiteResource` with `geocoding_status: PENDING` - Lookup continues in the background<br>`401` - error body - Unauthorized - JWT token required or invalid<br>`403` - error body - Forbidden - the authenticated account has no owner profile<br>`404` - error body - SITE_NOT_FOUND - no such site is reachable by the caller<br>`409` - error body - INVALID_STATUS_TRANSITION - the site is already RESOLVED<br>`429` - error body - TOO_MANY_REQUESTS - the shared quota is used up; `Retry-After: 60`<br>`503` - error body - GEOCODING_UNAVAILABLE - the maps service refused the request, the site is left `FAILED`; `Retry-After: 30` |
+| Application flow | controller -> `siteCommandService` -> `GeocodingPort`; background attempts by `SiteGeocodingPendingEventHandler` |

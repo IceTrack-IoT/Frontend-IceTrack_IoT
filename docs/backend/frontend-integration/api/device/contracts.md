@@ -43,6 +43,21 @@ Legend: **Required** = enforced by Bean Validation (`@NotNull` / `@NotBlank`). O
 | `paired_equipment_name` | string | no |  | Name of the equipment the device is paired with; null when unpaired; read-only; nullable |
 | `paired_site_id` | integer | no |  | Identifier of the site that equipment is installed at; null when unpaired; read-only; nullable |
 | `last_seen_at` | string | no |  | When the platform received the device's latest reading batch; null before the first one; nullable |
+| `connectivity` | object (`DeviceConnectivityResource`) | no |  | Read-only; evaluated by the server on every read, see below |
+
+## `DeviceConnectivityResource` (nested object)
+
+- Source: `src/main/java/pe/edu/upc/ice/track/platform/device/interfaces/rest/resources/DeviceConnectivityResource.java`
+- Embedded in: `DeviceResource` (every response that returns one, `DeviceCredentialResource.device` included)
+
+Evaluated by the server clock from `last_seen_at`, the server arrival time of the board's latest batch, with the offline window of the alert policy that applies to the paired unit. Every property is always present.
+
+| JSON property | Type | Required | Validation | Notes |
+|---|---|---|---|---|
+| `state` | string enum | no |  | values: `REPORTING`, `SILENT`, `NEVER_REPORTED` (paired, no batch yet), `KEY_REVOKED` (status `REVOKED`), `UNPAIRED` |
+| `silent_after_seconds` | integer | no |  | `60 × missed_sync_windows_for_offline` of the paired unit's policy; `null` when `UNPAIRED`; nullable |
+| `silent_since` | string (date-time, UTC with Z) | no |  | `last_seen_at + silent_after_seconds`; present only when `SILENT`; nullable |
+| `evaluated_at` | string (date-time, UTC with Z) | no |  | Server time of the evaluation |
 
 ## `PagedDeviceResource` (response)
 
@@ -101,5 +116,7 @@ Legend: **Required** = enforced by Bean Validation (`@NotNull` / `@NotBlank`). O
 
 ## Enumerations
 
+- `DeviceConnectivityStateResource`: `REPORTING`, `SILENT`, `NEVER_REPORTED`, `KEY_REVOKED`, `UNPAIRED`  
+  source: `src/main/java/pe/edu/upc/ice/track/platform/device/interfaces/rest/resources/DeviceConnectivityStateResource.java`
 - `DeviceStatusResource`: `UNPAIRED`, `PAIRED`, `REVOKED`  
   source: `src/main/java/pe/edu/upc/ice/track/platform/device/interfaces/rest/resources/DeviceStatusResource.java`

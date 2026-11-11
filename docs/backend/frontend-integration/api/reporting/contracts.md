@@ -13,7 +13,7 @@ Legend: **Required** = enforced by Bean Validation (`@NotNull` / `@NotBlank`). O
 | JSON property | Type | Required | Validation | Notes |
 |---|---|---|---|---|
 | `name` | string | yes | not blank; max length 150 | Display name of the report |
-| `type` | string | yes | not blank | documented values: `MAINTENANCE_COMPLIANCE`, `EQUIPMENT_UPTIME`, `TECHNICIAN_PERFORMANCE`, `TEMPERATURE_EXCURSION`; Report type, by its enum name |
+| `type` | string | yes | not blank | documented values: `MAINTENANCE_COMPLIANCE`, `EQUIPMENT_UPTIME`, `TECHNICIAN_PERFORMANCE`, `TEMPERATURE_EXCURSION`, `SERVICE_INTERVENTION`; Report type, by its enum name |
 | `format` | string | yes | not blank | documented values: `PDF`, `XLSX`, `CSV`; Output format |
 | `filters` | object (`ReportFiltersResource`) | yes | validated recursively | Scope and period of the report |
 
@@ -28,8 +28,9 @@ Legend: **Required** = enforced by Bean Validation (`@NotNull` / `@NotBlank`). O
 | `site_id` | integer | no |  | Site to report on; must belong to the caller; nullable |
 | `equipment_id` | integer | no |  | Single unit to report on; must belong to the caller; nullable |
 | `technician_id` | integer | no |  | Technician to report on; nullable |
-| `from` | string (date-time, UTC with Z) | yes |  | Inclusive start of the period |
-| `to` | string (date-time, UTC with Z) | yes |  | Inclusive end of the period |
+| `service_request_id` | integer | no |  | Completed service request of the caller that a `SERVICE_INTERVENTION` report documents; required for that type (`400` otherwise), refused for every other type (`400`); `404 SERVICE_REQUEST_NOT_FOUND` when not the caller's, `409 INVALID_STATUS_TRANSITION` when not `COMPLETED`; nullable |
+| `from` | string (date-time, UTC with Z) | no (checked by the service) |  | Inclusive start of the period; required (`400`) except for `SERVICE_INTERVENTION`, which defaults to the start of the request's work |
+| `to` | string (date-time, UTC with Z) | no (checked by the service) |  | Inclusive end of the period; required (`400`) except for `SERVICE_INTERVENTION`, which defaults to the request's completion |
 
 ## `ReportResource` (response)
 
@@ -44,7 +45,7 @@ Legend: **Required** = enforced by Bean Validation (`@NotNull` / `@NotBlank`). O
 |---|---|---|---|---|
 | `id` | integer | no |  | Report unique identifier |
 | `name` | string | no |  | Display name of the report |
-| `type` | string | no |  | documented values: `MAINTENANCE_COMPLIANCE`, `EQUIPMENT_UPTIME`, `TECHNICIAN_PERFORMANCE`, `TEMPERATURE_EXCURSION`; Report type's enum name |
+| `type` | string | no |  | documented values: `MAINTENANCE_COMPLIANCE`, `EQUIPMENT_UPTIME`, `TECHNICIAN_PERFORMANCE`, `TEMPERATURE_EXCURSION`, `SERVICE_INTERVENTION`; Report type's enum name |
 | `format` | string | no |  | documented values: `PDF`, `XLSX`, `CSV`; Output format's enum name |
 | `status` | string | no |  | documented values: `PENDING`, `GENERATING`, `COMPLETED`, `FAILED`; Current generation status |
 | `failure_reason` | string | no |  | Why the report failed; present only when FAILED; nullable |
@@ -53,6 +54,7 @@ Legend: **Required** = enforced by Bean Validation (`@NotNull` / `@NotBlank`). O
 | `site_id` | integer | no |  | Site the report covers; nullable |
 | `equipment_id` | integer | no |  | Unit the report covers; nullable |
 | `technician_id` | integer | no |  | Technician the report covers; nullable |
+| `service_request_id` | integer | no |  | Service request a `SERVICE_INTERVENTION` report documents; omitted for other types; nullable |
 | `from` | string (date-time, UTC with Z) | no |  | Inclusive start of the period |
 | `to` | string (date-time, UTC with Z) | no |  | Inclusive end of the period |
 | `requested_at` | string (date-time, UTC with Z) | no |  | When the report was requested |

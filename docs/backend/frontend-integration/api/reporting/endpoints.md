@@ -10,6 +10,13 @@ Base URL: see [../../README.md](../../README.md#5-base-url). All paths are relat
 | 2 | `GET` | `/api/v1/reports/{reportId}` | OWNER_ROLE | Get a report by id |
 | 3 | `GET` | `/api/v1/reports/{reportId}/download-link` | OWNER_ROLE | Get a download link for a report |
 | 4 | `GET` | `/api/v1/reports` | OWNER_ROLE | List my reports |
+| 5 | `DELETE` | `/api/v1/reports/{reportId}` | OWNER_ROLE | Delete a report |
+
+**`DELETE /api/v1/reports/{reportId}`** (controller `ReportsController.deleteReport`). Deletes the caller's `COMPLETED` or `FAILED` report and answers `204` with no body; its stored file is removed once the deletion commits, and a link issued before stops working. `404 REPORT_NOT_FOUND` for a report of another owner or one already deleted; `409 INVALID_STATUS_TRANSITION` while it is `PENDING` or `GENERATING` (`details` names its status).
+
+**`SERVICE_INTERVENTION` reports.** `POST /api/v1/reports` with `type: SERVICE_INTERVENTION` documents one `COMPLETED` service request of the caller, named by `filters.service_request_id`; `from` and `to` may be left out to cover the request's own period. Additional errors: `400` when `service_request_id` is missing for this type or sent for another one, or when another type lacks `from`/`to`; `404 SERVICE_REQUEST_NOT_FOUND`; `409 INVALID_STATUS_TRANSITION` when the request is not completed. The file holds the request, its status history, the intervention and the review.
+
+**Retries.** `POST /api/v1/reports` accepts an optional `Idempotency-Key` header (a UUID); see the README's API conventions.
 
 ## `POST /api/v1/reports`
 

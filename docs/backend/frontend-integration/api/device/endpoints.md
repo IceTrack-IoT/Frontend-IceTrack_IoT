@@ -14,6 +14,10 @@ Base URL: see [../../README.md](../../README.md#5-base-url). All paths are relat
 | 6 | `PUT` | `/api/v1/devices/{deviceId}/status` | OWNER_ROLE | Change the lifecycle status of a device |
 | 7 | `GET` | `/api/v1/devices/me/config` | Device API key (`X-API-Key`), authority `DEVICE_ROLE`; no user JWT | Poll the edge configuration |
 
+**Connectivity.** Every `DeviceResource` carries `connectivity` (see `DeviceConnectivityResource` in [contracts.md](contracts.md)). `GET /api/v1/devices` accepts `connectivity`, comma-separated `DeviceConnectivityStateResource` values (`REPORTING`, `SILENT`, `NEVER_REPORTED`, `KEY_REVOKED`, `UNPAIRED`); an unknown value answers `400 VALIDATION_ERROR` naming the parameter. The states are evaluated before paging, so a paged answer counts only the matching devices.
+
+**Retries.** `POST /api/v1/devices` accepts an optional `Idempotency-Key` header (a UUID). A replay answers the stored `201` with `Idempotent-Replayed: true` but **without `api_key`**, which is never stored: rotate the key to obtain a new one.
+
 ## `POST /api/v1/devices`
 
 **Pair a device with an owned equipment unit** - Pairs an ESP32 board with one of the authenticated owner's units and issues its API key (it_dev_...), returned only in this response and stored as a SHA-256 digest. A board that was unpaired earlier is paired again under the same UID with a new key.

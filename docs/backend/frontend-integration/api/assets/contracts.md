@@ -92,6 +92,7 @@ Legend: **Required** = enforced by Bean Validation (`@NotNull` / `@NotBlank`). O
 | `last_known_temperature` | number | no |  | Average temperature of the unit's latest reading batch, in Celsius; null when the unit has not reported yet; nullable |
 | `config_version` | integer | no |  | Version of the configuration the unit's edge gateway enforces; incremented whenever the threshold, the alert policy or the technician grants of the unit change |
 | `connectivity` | object (`EquipmentConnectivityResource`) | no |  | Read-only; evaluated by the server on every read, see below |
+| `version` | integer | no |  | Concurrency version, starting at 0; grows on every change of name, type, reminder interval, threshold or status, never with telemetry. Send it back in `If-Match` on the three `PUT` endpoints |
 
 ## `EquipmentConnectivityResource` (nested object)
 
@@ -180,7 +181,7 @@ Evaluated with the rule of the scheduled offline detection, by the server clock,
 
 - Source: `src/main/java/pe/edu/upc/ice/track/platform/assets/interfaces/rest/resources/SiteResource.java`
 - Example: [`responses/SiteResource.json`](responses/SiteResource.json) | JSON Schema: [`schemas/assets/SiteResource.schema.json`](../../schemas/assets/SiteResource.schema.json)
-- Used by: `POST /api/v1/assets/sites`, `GET /api/v1/assets/sites`, `GET /api/v1/assets/sites/{siteId}`, `PUT /api/v1/assets/sites/{siteId}`, `PUT /api/v1/assets/sites/{siteId}/address`
+- Used by: `POST /api/v1/assets/sites`, `GET /api/v1/assets/sites`, `GET /api/v1/assets/sites/{siteId}`, `PUT /api/v1/assets/sites/{siteId}`, `PUT /api/v1/assets/sites/{siteId}/address`, `POST /api/v1/assets/sites/{siteId}/geocoding/retry`
 
 | JSON property | Type | Required | Validation | Notes |
 |---|---|---|---|---|
@@ -192,8 +193,10 @@ Evaluated with the rule of the scheduled offline detection, by the server clock,
 | `phone` | string | no |  | Contact phone number |
 | `equipment_count` | integer | no |  | Number of equipment units installed at the site |
 | `geocoding_status` | string enum | no |  | values: `PENDING`, `RESOLVED`, `FAILED`, `NOT_FOUND`; Where the site stands in locating its address |
+| `geocoding_failure_reason` | string enum | no |  | values: `ADDRESS_NOT_FOUND`, `PROVIDER_UNAVAILABLE`, `OUT_OF_COVERAGE`, `UNKNOWN`; always present, `null` unless `geocoding_status` is `FAILED` or `NOT_FOUND`; `UNKNOWN` for a site that failed before reasons were recorded; nullable |
 | `location` | object (`GeoLocationResource`) | no (documented as required but not enforced) |  | Resolved coordinates; omitted unless geocoding_status is RESOLVED |
 | `navigation_url` | string | no (documented as required but not enforced) |  | Google Maps directions link; omitted unless the site is located |
+| `version` | integer | no |  | Concurrency version, starting at 0; grows on every change. Send it back in `If-Match` on `PUT /{siteId}` and `PUT /{siteId}/address` |
 
 ## `UpdateEquipmentResource` (request)
 
@@ -245,6 +248,8 @@ Evaluated with the rule of the scheduled offline detection, by the server clock,
 
 - `EquipmentTypeResource`: `DISPLAY_CASE`, `COLD_ROOM`, `REFRIGERATOR`, `OTHER`  
   source: `src/main/java/pe/edu/upc/ice/track/platform/assets/interfaces/rest/resources/EquipmentTypeResource.java`
+- `GeocodingFailureReasonResource`: `ADDRESS_NOT_FOUND`, `PROVIDER_UNAVAILABLE`, `OUT_OF_COVERAGE`, `UNKNOWN`  
+  source: `src/main/java/pe/edu/upc/ice/track/platform/assets/interfaces/rest/resources/GeocodingFailureReasonResource.java`
 - `GeocodingStatusResource`: `PENDING`, `RESOLVED`, `FAILED`, `NOT_FOUND`  
   source: `src/main/java/pe/edu/upc/ice/track/platform/assets/interfaces/rest/resources/GeocodingStatusResource.java`
 - `StatusEquipmentResource`: `ACTIVE`, `MAINTENANCE`, `REPAIR`, `DEACTIVATED`  

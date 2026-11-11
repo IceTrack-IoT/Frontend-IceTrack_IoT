@@ -42,7 +42,7 @@ For codes whose message template is `{0}`, `message` equals `details` (for examp
 | 401 | `UNAUTHORIZED`, `BAD_CREDENTIALS`, `INVALID_TOKEN` |
 | 403 | `ACCESS_DENIED`, `ROLE_CHANNEL_MISMATCH` |
 | 404 | any code ending in `_NOT_FOUND`: `USER_NOT_FOUND`, `OWNER_NOT_FOUND`, `TECHNICIAN_NOT_FOUND`, `DASHBOARD_CONFIG_NOT_FOUND`, `DASHBOARD_CARD_NOT_FOUND`, `EQUIPMENT_NOT_FOUND`, `SITE_NOT_FOUND`, `DEVICE_NOT_FOUND`, `ALERT_NOT_FOUND`, `NOTIFICATION_NOT_FOUND`, `SERVICE_REQUEST_NOT_FOUND`, `REVIEW_NOT_FOUND`, `REPORT_NOT_FOUND`, `GOOGLE_ACCOUNT_NOT_FOUND` |
-| 409 | `INVALID_STATUS_TRANSITION`, `TECHNICIAN_NOT_ELIGIBLE`, `REVIEW_NOT_ALLOWED`, `ACCOUNT_LINK_REQUIRED`, any code ending in `_CONFLICT` (`USER_CONFLICT`, `PROFILE_CONFLICT`, `OWNER_CONFLICT`, `TECHNICIAN_CONFLICT`, `DASHBOARD_CONFIG_CONFLICT`, `EQUIPMENT_CONFLICT`, `DEVICE_CONFLICT`, `READING_CONFLICT`, `EDGE_EVENT_CONFLICT`, `DUPLICATE_RESOURCE_CONFLICT`, `CONCURRENT_MODIFICATION_CONFLICT`) |
+| 409 | `INVALID_STATUS_TRANSITION`, `TECHNICIAN_NOT_ELIGIBLE`, `REVIEW_NOT_ALLOWED`, `ACCOUNT_LINK_REQUIRED`, any code ending in `_CONFLICT` (`USER_CONFLICT`, `PROFILE_CONFLICT`, `OWNER_CONFLICT`, `TECHNICIAN_CONFLICT`, `DASHBOARD_CONFIG_CONFLICT`, `EQUIPMENT_CONFLICT`, `DEVICE_CONFLICT`, `READING_CONFLICT`, `EDGE_EVENT_CONFLICT`, `DUPLICATE_RESOURCE_CONFLICT`, `CONCURRENT_MODIFICATION_CONFLICT`, `IDEMPOTENCY_KEY_CONFLICT`) |
 | 422 | `BUSINESS_RULE_VIOLATION`, `ADDRESS_OUT_OF_COVERAGE`, `ADDRESS_NOT_VERIFIED` |
 | 429 | `TOO_MANY_REQUESTS` |
 | 503 | `GEOCODING_UNAVAILABLE` |
@@ -58,7 +58,8 @@ For codes whose message template is `{0}`, `message` equals `details` (for examp
 | Missing required query parameter | 400 | `VALIDATION_ERROR`, `Parameter 'equipment_id' is required` |
 | `IllegalArgumentException` from a domain rule (a value object refusing a value, for example a RUC that is not 11 digits) | 400 | `VALIDATION_ERROR`, `details` = the exception message in English (not localized) |
 | `@PreAuthorize` denial | 403 | `ACCESS_DENIED`, `message: "Access denied"`, `details: "You are not allowed to perform this operation"` |
-| Optimistic lock failure | 409 | `CONCURRENT_MODIFICATION_CONFLICT`: re-read the resource and retry |
+| Optimistic lock failure, or a stale `If-Match` version | 409 | `CONCURRENT_MODIFICATION_CONFLICT`: re-read the resource and retry; with `If-Match`, `details` names the current version |
+| `Idempotency-Key` reused with another body, or while its first request runs | 409 | `IDEMPOTENCY_KEY_CONFLICT`: `details` is `in progress` (with `Retry-After: 1`) in the second case |
 | Unique constraint violation (race on a unique value such as an equipment `uid`) | 409 | `DUPLICATE_RESOURCE_CONFLICT` |
 | Anything else | 500 | `UNEXPECTED_ERROR`, `details: "Reference: <uuid>"` |
 
