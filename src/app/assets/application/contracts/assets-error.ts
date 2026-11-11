@@ -4,7 +4,8 @@
  * Every `404` is reported as `NOT_FOUND`, whatever its specific code: the backend answers "not found" for
  * resources that do not exist and for resources the caller may not reach, and the two must not be
  * distinguished. A reused equipment uid is reported as `EQUIPMENT_CONFLICT` or, on a race,
- * `DUPLICATE_RESOURCE_CONFLICT`.
+ * `DUPLICATE_RESOURCE_CONFLICT`. `IDEMPOTENCY_KEY_CONFLICT` means a registration is still being processed
+ * under the same submission.
  */
 export const ASSETS_ERROR_CODES = [
   'VALIDATION_ERROR',
@@ -20,6 +21,7 @@ export const ASSETS_ERROR_CODES = [
   'ADDRESS_OUT_OF_COVERAGE',
   'TOO_MANY_REQUESTS',
   'GEOCODING_UNAVAILABLE',
+  'IDEMPOTENCY_KEY_CONFLICT',
 ] as const;
 
 export type AssetsErrorCode = (typeof ASSETS_ERROR_CODES)[number];

@@ -9,7 +9,8 @@ export interface GeoLocationResource {
 
 /**
  * SiteResource is returned by the site endpoints of `SiteController`. `location` and `navigation_url` are
- * omitted unless the site is located.
+ * omitted unless the site is located; `geocoding_failure_reason` is null unless the site is FAILED or
+ * NOT_FOUND.
  */
 export interface SiteResource {
   id: number;
@@ -20,8 +21,11 @@ export interface SiteResource {
   phone: string;
   equipment_count: number;
   geocoding_status: string;
+  geocoding_failure_reason?: string | null;
   location?: GeoLocationResource | null;
   navigation_url?: string | null;
+  /** Concurrency version, sent back in `If-Match` on `PUT /{siteId}` and `PUT /{siteId}/address`. */
+  version: number;
 }
 
 /**

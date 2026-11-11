@@ -2,6 +2,7 @@ import { computed, inject, Injectable, signal, type WritableSignal } from '@angu
 import { finalize, type Observable, type Subscription } from 'rxjs';
 import type { Equipment } from '@assets/domain/model/equipment.entity';
 import type { Site } from '@assets/domain/model/site.entity';
+import type { GeocodingStatus } from '@assets/domain/value-objects/geocoding-status';
 import type { StatusEquipment } from '@assets/domain/value-objects/status-equipment';
 import type { TemperatureThreshold } from '@assets/domain/value-objects/temperature-threshold';
 import {
@@ -24,6 +25,7 @@ import { LoadEquipmentUseCase } from '@assets/application/use-cases/load-equipme
 import { LoadSitesUseCase } from '@assets/application/use-cases/load-sites.use-case';
 import { RegisterEquipmentUseCase } from '@assets/application/use-cases/register-equipment.use-case';
 import { RegisterSiteUseCase } from '@assets/application/use-cases/register-site.use-case';
+import { RetrySiteGeocodingUseCase } from '@assets/application/use-cases/retry-site-geocoding.use-case';
 import { UpdateEquipmentUseCase } from '@assets/application/use-cases/update-equipment.use-case';
 import { UpdateSiteUseCase } from '@assets/application/use-cases/update-site.use-case';
 import { ValidateSiteAddressUseCase } from '@assets/application/use-cases/validate-site-address.use-case';
@@ -41,6 +43,15 @@ export type EquipmentAction = 'register' | 'update' | 'threshold' | 'status';
 export interface ActionState<TAction> {
   readonly action: TAction;
   readonly status: 'pending' | 'succeeded' | 'failed';
+  readonly failure: AssetsFailure | null;
+}
+
+/** Where the last lookup of a site location asked by the owner stands. */
+export interface GeocodingRetryState {
+  readonly siteId: number;
+  readonly status: 'pending' | 'succeeded' | 'failed';
+  /** The geocoding status the site came back with, once the retry succeeded. */
+  readonly outcome: GeocodingStatus | null;
   readonly failure: AssetsFailure | null;
 }
 
@@ -85,6 +96,12 @@ const STALE_EQUIPMENT_FAILURES: ReadonlySet<AssetsFailure> = new Set([
   'CONCURRENT_MODIFICATION_CONFLICT',
 ]);
 
+/** Failures meaning the loaded sites are stale and must be read again. */
+const STALE_SITE_FAILURES: ReadonlySet<AssetsFailure> = new Set([
+  'INVALID_STATUS_TRANSITION',
+  'CONCURRENT_MODIFICATION_CONFLICT',
+]);
+
 const byName = (first: Site, second: Site): number => first.name.localeCompare(second.name);
 
 /**
@@ -104,6 +121,7 @@ export class AssetsStore {
   private readonly registerSiteUseCase = inject(RegisterSiteUseCase);
   private readonly updateSiteUseCase = inject(UpdateSiteUseCase);
   private readonly changeSiteAddressUseCase = inject(ChangeSiteAddressUseCase);
+  private readonly retrySiteGeocodingUseCase = inject(RetrySiteGeocodingUseCase);
   private readonly loadEquipmentPageUseCase = inject(LoadEquipmentPageUseCase);
   private readonly loadEquipmentUseCase = inject(LoadEquipmentUseCase);
   private readonly registerEquipmentUseCase = inject(RegisterEquipmentUseCase);
@@ -130,6 +148,10 @@ export class AssetsStore {
   private readonly siteActionSignal = signal<ActionState<SiteAction> | null>(null);
   readonly siteActionState = this.siteActionSignal.asReadonly();
   readonly siteActionPending = computed(() => this.siteActionSignal()?.status === 'pending');
+
+  private readonly geocodingRetrySignal = signal<GeocodingRetryState | null>(null);
+  /** The last lookup of a site location asked by the owner, until it is cleared. */
+  readonly geocodingRetry = this.geocodingRetrySignal.asReadonly();
 
   // Equipment list.
   private readonly queryState = signal<EquipmentQuery>({
@@ -227,27 +249,73 @@ export class AssetsStore {
   }
 
   /**
-   * Replaces the name, contact name and phone of a site.
+   * Replaces the name, contact name and phone of a site, as it is loaded now. Ignored for a site that is
+   * not loaded.
    * @param siteId - The identifier of the site.
    * @param details - The new contact data.
    */
   updateSite(siteId: number, details: SiteDetails): void {
-    this.runSiteAction('update', this.updateSiteUseCase.execute(siteId, details));
+    const site = this.loadedSite(siteId);
+    if (site !== null) {
+      this.runSiteAction('update', this.updateSiteUseCase.execute(site, details));
+    }
   }
 
   /**
-   * Moves a site to the verified address. Ignored without a verified address.
+   * Moves a site, as it is loaded now, to the verified address. Ignored without a verified address or for
+   * a site that is not loaded.
    * @param siteId - The identifier of the site.
    */
   changeSiteAddress(siteId: number): void {
     const verified = this.addressVerificationSignal().verified;
-    if (verified === null) {
+    const site = this.loadedSite(siteId);
+    if (verified === null || site === null) {
       return;
     }
     this.runSiteAction(
       'change-address',
-      this.changeSiteAddressUseCase.execute(siteId, verified.validationToken),
+      this.changeSiteAddressUseCase.execute(site, verified.validationToken),
     );
+  }
+
+  /**
+   * Looks the address of a site that is not located up again. Ignored while another lookup is pending.
+   * The site is replaced by the answer, which may still be pending while the backend keeps looking. When
+   * the site turns out to be located already, the sites are read again.
+   * @param siteId - The identifier of the site.
+   */
+  retrySiteGeocoding(siteId: number): void {
+    if (this.geocodingRetrySignal()?.status === 'pending') {
+      return;
+    }
+    this.geocodingRetrySignal.set({ siteId, status: 'pending', outcome: null, failure: null });
+    this.retrySiteGeocodingUseCase.execute(siteId).subscribe({
+      next: (site) => {
+        this.applySite(site);
+        this.geocodingRetrySignal.set({
+          siteId,
+          status: 'succeeded',
+          outcome: site.geocoding_status,
+          failure: null,
+        });
+      },
+      error: (error: unknown) => {
+        const failure = toAssetsFailure(error);
+        this.geocodingRetrySignal.set({ siteId, status: 'failed', outcome: null, failure });
+        if (STALE_SITE_FAILURES.has(failure) || failure === 'GEOCODING_UNAVAILABLE') {
+          this.loadSites();
+        }
+      },
+    });
+  }
+
+  /**
+   * Clears the outcome of the last site location lookup.
+   */
+  clearGeocodingRetry(): void {
+    if (this.geocodingRetrySignal()?.status !== 'pending') {
+      this.geocodingRetrySignal.set(null);
+    }
   }
 
   /**
@@ -320,7 +388,7 @@ export class AssetsStore {
     if (equipment !== null) {
       this.runEquipmentAction(
         'update',
-        this.updateEquipmentUseCase.execute(equipment.id, changes),
+        this.updateEquipmentUseCase.execute(equipment, changes),
         (updated) => this.applyEquipment(updated),
       );
     }
@@ -335,7 +403,7 @@ export class AssetsStore {
     if (equipment !== null) {
       this.runEquipmentAction(
         'threshold',
-        this.changeEquipmentThresholdUseCase.execute(equipment.id, threshold),
+        this.changeEquipmentThresholdUseCase.execute(equipment, threshold),
         (updated) => this.applyEquipment(updated),
       );
     }
@@ -350,7 +418,7 @@ export class AssetsStore {
     if (equipment !== null) {
       this.runEquipmentAction(
         'status',
-        this.changeEquipmentStatusUseCase.execute(equipment.id, status),
+        this.changeEquipmentStatusUseCase.execute(equipment, status),
         (updated) => this.applyEquipment(updated),
       );
     }
@@ -380,6 +448,11 @@ export class AssetsStore {
     );
   }
 
+  /** The loaded site with the given identifier, or null when it is not loaded. */
+  private loadedSite(siteId: number): Site | null {
+    return this.sitesState.value()?.find((site) => site.id === siteId) ?? null;
+  }
+
   /** Adds or replaces a site in the loaded list, keeping it sorted by name. */
   private applySite(site: Site): void {
     this.sitesState.value.update((sites) =>
@@ -391,7 +464,8 @@ export class AssetsStore {
 
   /**
    * Runs a site action. An action asked for while another one is pending is ignored. A rejected address
-   * token (missing, expired or foreign) discards the verification, so the owner verifies again.
+   * token (missing, expired or foreign) discards the verification, so the owner verifies again. When the
+   * site changed meanwhile, the sites are read again so the next attempt starts from the current one.
    */
   private runSiteAction(action: SiteAction, operation: Observable<Site>): void {
     if (this.siteActionPending()) {
@@ -409,6 +483,9 @@ export class AssetsStore {
         this.siteActionSignal.set({ action, status: 'failed', failure });
         if (failure === 'ADDRESS_VALIDATION_REQUIRED') {
           this.clearAddressVerification();
+        }
+        if (failure === 'CONCURRENT_MODIFICATION_CONFLICT') {
+          this.loadSites();
         }
       },
     });

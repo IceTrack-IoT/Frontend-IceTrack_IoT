@@ -1,3 +1,5 @@
+import { GeocodingFailureReason } from '@assets/domain/value-objects/geocoding-failure-reason';
+import { GeocodingStatus } from '@assets/domain/value-objects/geocoding-status';
 import type { AssetsFailure } from '@assets/application/contracts/assets-error';
 import type { EquipmentAction, SiteAction } from '@assets/application/assets-store';
 
@@ -52,8 +54,72 @@ export function siteActionErrorKey(failure: AssetsFailure): string {
       return 'assets.errors.addressVerificationExpired';
     case 'PIN_OUT_OF_RANGE':
       return 'assets.errors.invalid';
+    case 'CONCURRENT_MODIFICATION_CONFLICT':
+      return 'assets.errors.siteChangedMeanwhile';
     default:
       return commonErrorKey(failure, 'assets.errors.siteNotFound');
+  }
+}
+
+/**
+ * Resolves the translation key announced once a site location lookup finished.
+ * @param outcome - The geocoding status the site came back with.
+ * @returns The translation key.
+ */
+export function geocodingRetryOutcomeKey(outcome: GeocodingStatus | null): string {
+  switch (outcome) {
+    case GeocodingStatus.RESOLVED:
+      return 'assets.siteList.geocoding.located';
+    case GeocodingStatus.PENDING:
+      return 'assets.siteList.geocoding.stillLocating';
+    default:
+      return 'assets.siteList.geocoding.stillNotLocated';
+  }
+}
+
+/**
+ * Resolves the translation key shown when a site location lookup fails.
+ * @param failure - Why it failed.
+ * @returns The translation key.
+ */
+export function geocodingRetryErrorKey(failure: AssetsFailure): string {
+  switch (failure) {
+    case 'INVALID_STATUS_TRANSITION':
+      return 'assets.siteList.geocoding.alreadyLocated';
+    case 'TOO_MANY_REQUESTS':
+      return 'assets.siteList.geocoding.tooManyRetries';
+    case 'GEOCODING_UNAVAILABLE':
+      return 'assets.siteList.geocoding.unavailable';
+    default:
+      return commonErrorKey(failure, 'assets.errors.siteNotFound');
+  }
+}
+
+/**
+ * Resolves the translation key of the hint shown on a site that is not located.
+ * @param status - The geocoding status of the site.
+ * @param reason - Why it could not be located, when known.
+ * @returns The translation key, or null for a located site.
+ */
+export function geocodingHintKey(
+  status: GeocodingStatus,
+  reason: GeocodingFailureReason | null,
+): string | null {
+  if (status === GeocodingStatus.RESOLVED) {
+    return null;
+  }
+  if (status === GeocodingStatus.PENDING) {
+    return 'assets.siteList.geocoding.pending';
+  }
+  switch (reason) {
+    case GeocodingFailureReason.ADDRESS_NOT_FOUND:
+      return 'assets.siteList.geocoding.addressNotFound';
+    case GeocodingFailureReason.OUT_OF_COVERAGE:
+      return 'assets.siteList.geocoding.outOfCoverage';
+    case GeocodingFailureReason.PROVIDER_UNAVAILABLE:
+      return 'assets.siteList.geocoding.providerUnavailable';
+    default:
+      return 'assets.siteList.geocoding.unknown';
   }
 }
 
@@ -90,6 +156,8 @@ function commonErrorKey(failure: AssetsFailure, notFoundKey: string): string {
       return 'assets.errors.notAllowed';
     case 'NOT_FOUND':
       return notFoundKey;
+    case 'IDEMPOTENCY_KEY_CONFLICT':
+      return 'assets.errors.submissionInProgress';
     default:
       return 'assets.errors.unexpected';
   }

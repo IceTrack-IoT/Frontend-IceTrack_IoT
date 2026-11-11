@@ -36,6 +36,16 @@
   margin: 0;
 }
 
+.site-list__geocoding {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-1);
+}
+
+.site-list__geocoding-feedback:empty {
+  display: none;
+}
+
 .site-list__count {
   display: flex;
   align-items: center;

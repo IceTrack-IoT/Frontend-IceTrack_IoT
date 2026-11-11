@@ -1,5 +1,6 @@
 import { BaseEntity } from '@shared/domain/model/base-entity';
 import type { GeoLocation } from '@assets/domain/value-objects/geo-location';
+import type { GeocodingFailureReason } from '@assets/domain/value-objects/geocoding-failure-reason';
 import { GeocodingStatus } from '@assets/domain/value-objects/geocoding-status';
 import { Phone } from '@assets/domain/value-objects/phone';
 
@@ -7,7 +8,9 @@ import { Phone } from '@assets/domain/value-objects/phone';
  * Represents a site (facility) of an owner where refrigeration equipment is installed.
  *
  * Its address only changes through a verified address. `location` and `navigation_url` are null unless the
- * site is located (`geocoding_status` RESOLVED).
+ * site is located (`geocoding_status` RESOLVED); `geocoding_failure_reason` tells why it could not be
+ * located and is null unless the status is FAILED or NOT_FOUND. `version` grows on every change and
+ * identifies the state an update was made from.
  */
 export class Site implements BaseEntity {
   private _id: number;
@@ -20,6 +23,8 @@ export class Site implements BaseEntity {
   private _geocoding_status: GeocodingStatus;
   private _location: GeoLocation | null;
   private _navigation_url: string | null;
+  private _geocoding_failure_reason: GeocodingFailureReason | null;
+  private _version: number;
 
   /**
    * Creates a new instance of the Site class.
@@ -37,6 +42,8 @@ export class Site implements BaseEntity {
     geocoding_status: GeocodingStatus;
     location: GeoLocation | null;
     navigation_url: string | null;
+    geocoding_failure_reason: GeocodingFailureReason | null;
+    version: number;
   }) {
     this._id = site.id;
     this._owner_id = site.owner_id;
@@ -48,6 +55,8 @@ export class Site implements BaseEntity {
     this._geocoding_status = site.geocoding_status;
     this._location = site.location;
     this._navigation_url = site.navigation_url;
+    this._geocoding_failure_reason = site.geocoding_failure_reason;
+    this._version = site.version;
   }
 
   get id(): number {
@@ -109,5 +118,17 @@ export class Site implements BaseEntity {
   }
   set navigation_url(navigation_url: string | null) {
     this._navigation_url = navigation_url;
+  }
+  get geocoding_failure_reason(): GeocodingFailureReason | null {
+    return this._geocoding_failure_reason;
+  }
+  set geocoding_failure_reason(geocoding_failure_reason: GeocodingFailureReason | null) {
+    this._geocoding_failure_reason = geocoding_failure_reason;
+  }
+  get version(): number {
+    return this._version;
+  }
+  set version(version: number) {
+    this._version = version;
   }
 }

@@ -14,11 +14,11 @@ export class UpdateSiteUseCase {
   private readonly port = inject(SitesPort);
 
   /**
-   * @param siteId - The identifier of the site.
+   * @param site - The site as it was read; the change is refused when it changed since.
    * @param details - The new contact data.
    * @returns An Observable of the updated site.
    */
-  execute(siteId: number, details: SiteDetails): Observable<Site> {
-    return this.port.updateSite(siteId, trimSiteDetails(details));
+  execute(site: Site, details: SiteDetails): Observable<Site> {
+    return this.port.updateSite(site.id, site.version, trimSiteDetails(details));
   }
 }
