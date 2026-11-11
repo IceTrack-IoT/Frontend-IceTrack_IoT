@@ -1,6 +1,7 @@
 import { type HttpClient, HttpParams } from '@angular/common/http';
 import type { Observable } from 'rxjs';
 import { environment } from '@env/environment';
+import { sendIdempotent } from '@shared/infrastructure/http/write-preconditions';
 import type { CreateReportRequest } from '@reporting/infrastructure/api/report.requests';
 import type {
   PagedReportResource,
@@ -31,9 +32,18 @@ export class ReportsApiEndpoint {
 
   constructor(private readonly http: HttpClient) {}
 
-  /** `POST /reports` (answers `202`) */
+  /** `POST /reports` (answers `202`), with an `Idempotency-Key` so a retry never requests it twice. */
   requestReport(request: CreateReportRequest): Observable<ReportResource> {
-    return this.http.post<ReportResource>(this.reportsUrl, request);
+    return sendIdempotent((headers) =>
+      this.http.post<ReportResource>(this.reportsUrl, request, { headers }),
+    );
+  }
+
+  /** `DELETE /reports/{reportId}` (answers `204` without a body) */
+  deleteReport(reportId: number): Observable<void> {
+    return this.http.delete<void>(
+      this.reportByIdUrl.replace('{reportId}', encodeURIComponent(String(reportId))),
+    );
   }
 
   /**

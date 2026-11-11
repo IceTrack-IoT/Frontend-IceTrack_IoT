@@ -2,9 +2,12 @@ import { Report } from '@reporting/domain/model/report.entity';
 import type { KpiValue } from '@reporting/domain/value-objects/kpi-value';
 import { isReportFormat } from '@reporting/domain/value-objects/report-format';
 import { isReportStatus } from '@reporting/domain/value-objects/report-status';
-import { isReportType } from '@reporting/domain/value-objects/report-type';
+import { isReportType, ReportType } from '@reporting/domain/value-objects/report-type';
 import type { ReportPage } from '@reporting/application/contracts/report-page';
-import type { ReportRequest } from '@reporting/application/contracts/report-request';
+import type {
+  ReportRequest,
+  ServiceReportRequest,
+} from '@reporting/application/contracts/report-request';
 import type { CreateReportRequest } from '@reporting/infrastructure/api/report.requests';
 import type {
   KpiResource,
@@ -44,6 +47,7 @@ export class ReportAssembler {
         site_id: resource.site_id ?? null,
         equipment_id: resource.equipment_id ?? null,
         technician_id: resource.technician_id ?? null,
+        service_request_id: resource.service_request_id ?? null,
         date_range: { from: toInstant(resource.from), to: toInstant(resource.to) },
       },
       requested_at: toInstant(resource.requested_at),
@@ -86,6 +90,21 @@ export class ReportAssembler {
         from: request.from.toISOString(),
         to: request.to.toISOString(),
       },
+    };
+  }
+
+  /**
+   * Converts a service report request to the create report request body of a `SERVICE_INTERVENTION`
+   * report, which names only the service request and covers its own period.
+   * @param request - The service request to document.
+   * @returns The request body.
+   */
+  toCreateServiceReportRequest(request: ServiceReportRequest): CreateReportRequest {
+    return {
+      name: request.name,
+      type: ReportType.SERVICE_INTERVENTION,
+      format: request.format,
+      filters: { service_request_id: request.serviceRequestId },
     };
   }
 }

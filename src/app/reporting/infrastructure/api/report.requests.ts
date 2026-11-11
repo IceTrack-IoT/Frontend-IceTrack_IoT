@@ -1,13 +1,15 @@
 /**
  * ReportFiltersResource is the scope and period of a report request; `from` and `to` are UTC instants
- * (`Z`), both inclusive.
+ * (`Z`), both inclusive. A `SERVICE_INTERVENTION` request sends only `service_request_id`, which every
+ * other type must leave out, and covers the request's own period.
  */
 export interface ReportFiltersRequest {
-  site_id: number | null;
-  equipment_id: number | null;
-  technician_id: number | null;
-  from: string;
-  to: string;
+  site_id?: number | null;
+  equipment_id?: number | null;
+  technician_id?: number | null;
+  service_request_id?: number;
+  from?: string;
+  to?: string;
 }
 
 /**

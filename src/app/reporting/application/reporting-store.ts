@@ -12,6 +12,7 @@ import type {
   ReportScope,
   ReportSite,
 } from '@reporting/application/contracts/report-scope';
+import { DeleteReportUseCase } from '@reporting/application/use-cases/delete-report.use-case';
 import { GetReportDownloadUrlUseCase } from '@reporting/application/use-cases/get-report-download-url.use-case';
 import { LoadReportScopeUseCase } from '@reporting/application/use-cases/load-report-scope.use-case';
 import { LoadReportsUseCase } from '@reporting/application/use-cases/load-reports.use-case';
@@ -50,10 +51,23 @@ export interface ReportDownloadState {
   readonly failure: ReportingFailure | null;
 }
 
+/** The outcome of the last report deletion, until it is cleared. */
+export interface ReportDeletionState {
+  readonly reportId: number;
+  readonly status: 'pending' | 'succeeded' | 'failed';
+  readonly failure: ReportingFailure | null;
+}
+
+/** Failures of a deletion meaning the report shown is stale and must be read again. */
+const STALE_DELETION_FAILURES: ReadonlySet<ReportingFailure> = new Set([
+  'NOT_FOUND',
+  'INVALID_STATUS_TRANSITION',
+]);
+
 /**
  * Reporting Store manages the owner's reports: the report history, the selected report while its
  * generation is followed, the sites and equipment a report can be scoped to, the outcome of a report
- * request, and the short-lived download link of a completed report.
+ * request, the deletion of finished reports, and the short-lived download link of a completed report.
  *
  * It holds signal-based state only and delegates every operation to Reporting use cases. The history is
  * searched, filtered and paged by the backend. A report in progress is read again when the live feed
@@ -72,6 +86,7 @@ export class ReportingStore {
   private readonly getReportDownloadUrlUseCase = inject(GetReportDownloadUrlUseCase);
   private readonly loadReportScopeUseCase = inject(LoadReportScopeUseCase);
   private readonly watchReportChangesUseCase = inject(WatchReportChangesUseCase);
+  private readonly deleteReportUseCase = inject(DeleteReportUseCase);
 
   // Report history.
   private readonly reportQuerySignal = signal<ReportQuery>({
@@ -146,12 +161,18 @@ export class ReportingStore {
   readonly downloadState = this.downloadSignal.asReadonly();
   readonly downloadPending = computed(() => this.downloadSignal()?.status === 'pending');
 
+  // Deletion.
+  private readonly deletionSignal = signal<ReportDeletionState | null>(null);
+  readonly deletionState = this.deletionSignal.asReadonly();
+  readonly deletionPending = computed(() => this.deletionSignal()?.status === 'pending');
+
   private reportsSubscription: Subscription | null = null;
   private selectedSubscription: Subscription | null = null;
   private scopeSubscription: Subscription | null = null;
   private requestSubscription: Subscription | null = null;
   private downloadSubscription: Subscription | null = null;
   private downloadExpirySubscription: Subscription | null = null;
+  private deletionSubscription: Subscription | null = null;
   private liveChangesSubscription: Subscription | null = null;
   private attachedViews = 0;
 
@@ -343,6 +364,58 @@ export class ReportingStore {
     this.downloadSignal.set(null);
   }
 
+  /**
+   * Deletes a COMPLETED or FAILED report and its file. Its download link, if any, is dropped at once, the
+   * report stops being the selected one and the page shown is read again. When the report turns out to be
+   * gone or still in progress, what is shown is read again.
+   * @param report - The report to delete.
+   */
+  deleteReport(report: Report): void {
+    if (this.deletionPending()) {
+      return;
+    }
+    const reportId = report.id;
+    this.deletionSignal.set({ reportId, status: 'pending', failure: null });
+    this.deletionSubscription = this.deleteReportUseCase.execute(report).subscribe({
+      complete: () => {
+        this.deletionSignal.set({ reportId, status: 'succeeded', failure: null });
+        if (this.downloadSignal()?.reportId === reportId) {
+          this.clearDownload();
+        }
+        if (this.selectedIdSignal() === reportId) {
+          this.selectedSubscription?.unsubscribe();
+          this.selectedSubscription = null;
+          this.selectedSignal.set(null);
+        }
+        this.reportPageSignal.update((page) =>
+          page === null ? null : { ...page, items: page.items.filter(({ id }) => id !== reportId) },
+        );
+        if (this.reportPageSignal() !== null) {
+          this.loadReports();
+        }
+      },
+      error: (error: unknown) => {
+        const failure = toReportingFailure(error);
+        this.deletionSignal.set({ reportId, status: 'failed', failure });
+        if (STALE_DELETION_FAILURES.has(failure)) {
+          if (this.reportPageSignal() !== null) {
+            this.loadReports();
+          }
+          if (this.selectedIdSignal() === reportId) {
+            this.loadReport(reportId);
+          }
+        }
+      },
+    });
+  }
+
+  /** Forgets the outcome of the last deletion. */
+  clearDeletion(): void {
+    if (!this.deletionPending()) {
+      this.deletionSignal.set(null);
+    }
+  }
+
   /** Puts the report as the backend answered it in the page shown, when it is there. */
   private applyReport(report: Report): void {
     this.reportPageSignal.update((page) =>
@@ -360,12 +433,14 @@ export class ReportingStore {
       this.selectedSubscription,
       this.scopeSubscription,
       this.requestSubscription,
+      this.deletionSubscription,
     ].forEach((subscription) => subscription?.unsubscribe());
     this.liveChangesSubscription = null;
     this.reportsSubscription = null;
     this.selectedSubscription = null;
     this.scopeSubscription = null;
     this.requestSubscription = null;
+    this.deletionSubscription = null;
     this.clearDownload();
     this.reportPageSignal.set(null);
     this.reportQuerySignal.update((query) => ({ ...query, page: 0 }));
@@ -380,5 +455,6 @@ export class ReportingStore {
     this.scopeLoadingSignal.set(false);
     this.scopeFailureSignal.set(null);
     this.requestSignal.set(null);
+    this.deletionSignal.set(null);
   }
 }

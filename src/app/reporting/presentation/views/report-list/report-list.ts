@@ -1,4 +1,4 @@
-import { Component, computed, DestroyRef, inject } from '@angular/core';
+import { Component, computed, DestroyRef, effect, inject, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -8,8 +8,12 @@ import type { Report } from '@reporting/domain/model/report.entity';
 import { ReportStatus } from '@reporting/domain/value-objects/report-status';
 import { ReportType } from '@reporting/domain/value-objects/report-type';
 import { ReportingStore } from '@reporting/application/reporting-store';
+import { DeleteReportDialog } from '@reporting/presentation/components/delete-report-dialog/delete-report-dialog';
 import { ReportDownload } from '@reporting/presentation/components/report-download/report-download';
-import { REPORT_STATUS_APPEARANCE } from '@reporting/presentation/report-appearance';
+import {
+  REPORT_STATUS_APPEARANCE,
+  reportDeletionErrorKey,
+} from '@reporting/presentation/report-appearance';
 import { Icon } from '@shared/presentation/components/icon/icon';
 import { Pagination } from '@shared/presentation/components/pagination/pagination';
 import { StatePanel } from '@shared/presentation/components/state-panel/state-panel';
@@ -32,13 +36,14 @@ function parseDay(value: string): Date | null {
 /**
  * Reports of the owner, searched by name and filtered by type, generation status and request date, all
  * by the backend, which also pages them. Status changes of the listed reports arrive live. A report can be
- * downloaded once its generation is completed.
+ * downloaded once its generation is completed, and deleted, after confirmation, once it finished.
  */
 @Component({
   imports: [
     ReactiveFormsModule,
     RouterLink,
     TranslatePipe,
+    DeleteReportDialog,
     Icon,
     Pagination,
     ReportDownload,
@@ -93,8 +98,27 @@ export class ReportList {
     Math.max(1, this.store.reportPage()?.totalPages ?? 1),
   );
 
+  /** The report whose deletion is being confirmed. */
+  protected readonly deleting = signal<Report | null>(null);
+  /** The failure of the last deletion, shown in its confirmation. */
+  protected readonly deletionErrorKey = computed(() => {
+    const state = this.store.deletionState();
+    return state?.status === 'failed' ? reportDeletionErrorKey(state.failure) : null;
+  });
+  /** The confirmation announced once a deletion succeeded and its dialog is closed. */
+  protected readonly deletionAnnounced = computed(
+    () => this.deleting() === null && this.store.deletionState()?.status === 'succeeded',
+  );
+
   constructor() {
     this.store.attach(inject(DestroyRef));
+    this.store.clearDeletion();
+    // A successful deletion closes its confirmation.
+    effect(() => {
+      if (this.store.deletionState()?.status === 'succeeded') {
+        untracked(() => this.deleting.set(null));
+      }
+    });
     this.filters.valueChanges
       .pipe(debounceTime(FILTER_DEBOUNCE_MS), takeUntilDestroyed())
       .subscribe(() => this.applyFilters());
@@ -126,6 +150,26 @@ export class ReportList {
 
   protected clearFilters(): void {
     this.filters.reset();
+  }
+
+  protected openDeletion(report: Report): void {
+    this.store.clearDeletion();
+    this.deleting.set(report);
+  }
+
+  protected closeDeletion(): void {
+    this.deleting.set(null);
+    if (this.store.deletionState()?.status !== 'succeeded') {
+      this.store.clearDeletion();
+    }
+  }
+
+  protected delete(): void {
+    const report = this.deleting();
+    if (report === null) {
+      return;
+    }
+    this.store.deleteReport(report);
   }
 
   protected download(report: Report): void {

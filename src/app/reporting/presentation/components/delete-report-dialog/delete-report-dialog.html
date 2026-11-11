@@ -1,0 +1,25 @@
+<app-dialog
+  [heading]="'reporting.delete.title' | translate: { name: reportName() }"
+  [description]="'reporting.delete.message' | translate"
+  (closed)="closed.emit()"
+>
+  @if (errorKey(); as error) {
+    <p class="ui-alert ui-alert--critical" role="alert">
+      <app-icon class="ui-alert__icon" name="alert-triangle" />
+      {{ error | translate }}
+    </p>
+  }
+  <div dialogActions class="ui-form__actions">
+    <button class="ui-button ui-button--secondary" type="button" (click)="closed.emit()">
+      {{ 'shared.actions.cancel' | translate }}
+    </button>
+    <button
+      class="ui-button ui-button--danger"
+      type="button"
+      [disabled]="pending()"
+      (click)="confirmed.emit()"
+    >
+      {{ (pending() ? 'reporting.delete.pending' : 'reporting.delete.confirm') | translate }}
+    </button>
+  </div>
+</app-dialog>

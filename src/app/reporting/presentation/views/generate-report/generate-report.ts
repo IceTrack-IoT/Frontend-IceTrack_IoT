@@ -17,7 +17,11 @@ import {
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { isReportFormat, ReportFormat } from '@reporting/domain/value-objects/report-format';
-import { isReportType, ReportType } from '@reporting/domain/value-objects/report-type';
+import {
+  isReportType,
+  PERIOD_REPORT_TYPES,
+  type ReportType,
+} from '@reporting/domain/value-objects/report-type';
 import { ReportingStore } from '@reporting/application/reporting-store';
 import { REPORT_NAME_MAX_LENGTH } from '@reporting/application/contracts/report-request';
 import {
@@ -55,7 +59,8 @@ type ReportFormControl = 'name' | 'type' | 'from' | 'to';
 })
 export class GenerateReport {
   protected readonly store = inject(ReportingStore);
-  protected readonly types = Object.values(ReportType);
+  /** A service document is requested from its completed service request, never from this form. */
+  protected readonly types = PERIOD_REPORT_TYPES;
   protected readonly formats = Object.values(ReportFormat);
   protected readonly statusAppearance = REPORT_STATUS_APPEARANCE;
   protected readonly nameMaxLength = REPORT_NAME_MAX_LENGTH;
@@ -168,7 +173,7 @@ export class GenerateReport {
     const params = route.snapshot.queryParamMap;
     const type = params.get('type');
     const format = params.get('format');
-    if (isReportType(type)) {
+    if (isReportType(type) && PERIOD_REPORT_TYPES.includes(type)) {
       this.form.controls.type.setValue(type);
     }
     if (isReportFormat(format)) {

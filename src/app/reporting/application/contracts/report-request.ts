@@ -9,6 +9,7 @@ export const REPORT_NAME_MAX_LENGTH = 150;
  * it; both ends of the period are inclusive and `from` must not be after `to`.
  */
 export interface ReportRequest {
+  /** One of the period report types; a service document is requested with ServiceReportRequest. */
   /** The display name; not blank, up to 150 characters. */
   readonly name: string;
   readonly type: ReportType;
@@ -18,4 +19,15 @@ export interface ReportRequest {
   readonly technicianId: number | null;
   readonly from: Date;
   readonly to: Date;
+}
+
+/**
+ * Asks for the `SERVICE_INTERVENTION` document of one completed service request of the owner. It covers
+ * the request's own period, so no period is sent.
+ */
+export interface ServiceReportRequest {
+  /** The display name; not blank, up to 150 characters. */
+  readonly name: string;
+  readonly format: ReportFormat;
+  readonly serviceRequestId: number;
 }

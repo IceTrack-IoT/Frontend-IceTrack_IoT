@@ -8,7 +8,10 @@ import type {
   ReportPage,
   ReportQuery,
 } from '@reporting/application/contracts/report-page';
-import type { ReportRequest } from '@reporting/application/contracts/report-request';
+import type {
+  ReportRequest,
+  ServiceReportRequest,
+} from '@reporting/application/contracts/report-request';
 import type { ReportsPort } from '@reporting/application/ports/reports.port';
 import { ReportAssembler } from '@reporting/infrastructure/api/report-assembler';
 import { mapReportingErrors } from '@reporting/infrastructure/api/reporting-error-mapping';
@@ -30,6 +33,17 @@ export class ReportsApi extends BaseApi implements ReportsPort {
       mapReportingErrors(),
       map((resource) => this.assembler.toReportFromResource(resource)),
     );
+  }
+
+  requestServiceReport(request: ServiceReportRequest): Observable<Report> {
+    return this.endpoint.requestReport(this.assembler.toCreateServiceReportRequest(request)).pipe(
+      mapReportingErrors(),
+      map((resource) => this.assembler.toReportFromResource(resource)),
+    );
+  }
+
+  deleteReport(reportId: number): Observable<void> {
+    return this.endpoint.deleteReport(reportId).pipe(mapReportingErrors());
   }
 
   listReports(query: ReportQuery): Observable<ReportPage> {
