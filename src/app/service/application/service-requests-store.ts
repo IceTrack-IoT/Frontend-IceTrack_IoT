@@ -1,12 +1,13 @@
 import {
   computed,
+  type DestroyRef,
   inject,
   Injectable,
   signal,
   type Signal,
   type WritableSignal,
 } from '@angular/core';
-import { finalize, type Observable, type Subscription } from 'rxjs';
+import { finalize, Observable, Subscription } from 'rxjs';
 import type { Intervention } from '@service/domain/model/intervention.entity';
 import type { Review } from '@service/domain/model/review.entity';
 import type { ServiceRequest } from '@service/domain/model/service-request.entity';
@@ -98,13 +99,36 @@ function readState<T>(initial: T): ReadState<T> {
   };
 }
 
+function resetReadState<T>(state: ReadState<T>, initial: T): void {
+  state.value.set(initial);
+  state.loading.set(false);
+  state.failure.set(null);
+}
+
+/** The list query of a new session: no filter, first page. */
+const INITIAL_SERVICE_REQUEST_QUERY: ServiceRequestQuery = {
+  statuses: [],
+  types: [],
+  priorities: [],
+  equipmentId: null,
+  siteId: null,
+  createdFrom: null,
+  createdTo: null,
+  sourceAlertId: null,
+  page: 0,
+  size: SERVICE_REQUEST_PAGE_SIZE,
+};
+
 /**
  * Service Requests Store manages the owner's service requests: the filtered list, the selected request
  * with its review and assigned technician, the technician candidates for an assignment, the intervention
  * history of an equipment item, and the equipment, sites and technicians the requests refer to.
  *
  * It holds signal-based state only and delegates every operation to Service Request Management use cases.
- * Equipment and sites come from Assets and technicians from Profiles, through read-only ports.
+ * Equipment and sites come from Assets and technicians from Profiles, through read-only ports. The loaded
+ * state is kept for the owner session the views retain it for, so a view opened again shows it at once
+ * while it is read again; once that session ends, every operation in progress stops and everything is
+ * discarded.
  */
 @Injectable({
   providedIn: 'root',
@@ -126,18 +150,7 @@ export class ServiceRequestsStore {
   private readonly generateServiceReportUseCase = inject(GenerateServiceReportUseCase);
 
   // List.
-  private readonly queryState = signal<ServiceRequestQuery>({
-    statuses: [],
-    types: [],
-    priorities: [],
-    equipmentId: null,
-    siteId: null,
-    createdFrom: null,
-    createdTo: null,
-    sourceAlertId: null,
-    page: 0,
-    size: SERVICE_REQUEST_PAGE_SIZE,
-  });
+  private readonly queryState = signal<ServiceRequestQuery>(INITIAL_SERVICE_REQUEST_QUERY);
   /** The filters and page of the list, kept while the owner navigates away and back. */
   readonly requestQuery = this.queryState.asReadonly();
   private readonly pageState = readState<ServiceRequestPage | null>(null);
@@ -234,6 +247,27 @@ export class ServiceRequestsStore {
   private reviewSubscription: Subscription | null = null;
   private assignedTechnicianSubscription: Subscription | null = null;
   private interventionsSubscription: Subscription | null = null;
+  /** Every read and write of the session in progress, stopped when the session ends. */
+  private sessionWork = new Subscription();
+  private retainedSession: DestroyRef | null = null;
+
+  /**
+   * Keeps the loaded state until the owner session ends; then every operation in progress stops and the
+   * state is discarded, so nothing reaches the next session.
+   * @param session - The lifetime of the owner session.
+   */
+  retain(session: DestroyRef): void {
+    if (this.retainedSession === session) {
+      return;
+    }
+    this.retainedSession = session;
+    session.onDestroy(() => {
+      if (this.retainedSession === session) {
+        this.retainedSession = null;
+        this.release();
+      }
+    });
+  }
 
   /**
    * Loads a page of the owner's service requests. A newer load supersedes one still in progress.
@@ -357,13 +391,14 @@ export class ServiceRequestsStore {
     }
     this.creatingSignal.set(true);
     this.createFailureSignal.set(null);
-    this.createServiceRequestUseCase
-      .execute(request)
-      .pipe(finalize(() => this.creatingSignal.set(false)))
-      .subscribe({
-        next: (created) => this.createdRequestSignal.set(created),
-        error: (error: unknown) => this.createFailureSignal.set(toServiceRequestsFailure(error)),
-      });
+    this.track(
+      this.createServiceRequestUseCase
+        .execute(request)
+        .pipe(finalize(() => this.creatingSignal.set(false))),
+    ).subscribe({
+      next: (created) => this.createdRequestSignal.set(created),
+      error: (error: unknown) => this.createFailureSignal.set(toServiceRequestsFailure(error)),
+    });
   }
 
   /**
@@ -450,7 +485,7 @@ export class ServiceRequestsStore {
     }
     const serviceRequestId = request.id;
     this.serviceReportSignal.set({ serviceRequestId, status: 'pending', reportId: null });
-    this.generateServiceReportUseCase.execute(request, name).subscribe({
+    this.track(this.generateServiceReportUseCase.execute(request, name)).subscribe({
       next: (reportId) =>
         this.serviceReportSignal.set({ serviceRequestId, status: 'succeeded', reportId }),
       error: () =>
@@ -553,7 +588,7 @@ export class ServiceRequestsStore {
       return;
     }
     this.actionStateSignal.set({ action, status: 'pending', failure: null });
-    operation.subscribe({
+    this.track(operation).subscribe({
       next: (result) => {
         apply(result);
         this.actionStateSignal.set({ action, status: 'succeeded', failure: null });
@@ -580,10 +615,48 @@ export class ServiceRequestsStore {
   ): Subscription {
     state.loading.set(true);
     state.failure.set(null);
-    return operation.pipe(finalize(() => state.loading.set(false))).subscribe({
+    return this.track(operation.pipe(finalize(() => state.loading.set(false)))).subscribe({
       next: apply,
       error: (error: unknown) => state.failure.set(toServiceRequestsFailure(error)),
     });
+  }
+
+  /** Runs an operation within the session, so it stops when the session ends. */
+  private track<T>(operation: Observable<T>): Observable<T> {
+    return new Observable<T>((subscriber) => {
+      const subscription = operation.subscribe(subscriber);
+      this.sessionWork.add(subscription);
+      return () => {
+        subscription.unsubscribe();
+        this.sessionWork.remove(subscription);
+      };
+    });
+  }
+
+  /** Stops every operation in progress and discards every loaded value once the session ends. */
+  private release(): void {
+    this.sessionWork.unsubscribe();
+    this.sessionWork = new Subscription();
+    this.pageSubscription = null;
+    this.selectedSubscription = null;
+    this.reviewSubscription = null;
+    this.assignedTechnicianSubscription = null;
+    this.interventionsSubscription = null;
+    this.queryState.set(INITIAL_SERVICE_REQUEST_QUERY);
+    resetReadState(this.pageState, null);
+    resetReadState(this.equipmentState, null);
+    resetReadState(this.techniciansState, []);
+    resetReadState(this.selectedState, null);
+    resetReadState(this.reviewState, null);
+    resetReadState(this.assignedTechnicianState, null);
+    resetReadState(this.candidatesState, []);
+    resetReadState(this.interventionsState, []);
+    this.interventionsEquipmentIdSignal.set(null);
+    this.actionStateSignal.set(null);
+    this.serviceReportSignal.set(null);
+    this.createdRequestSignal.set(null);
+    this.creatingSignal.set(false);
+    this.createFailureSignal.set(null);
   }
 }
 

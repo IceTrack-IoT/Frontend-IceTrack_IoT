@@ -15,6 +15,7 @@ import {
 import { SiteAddressDialog } from '@assets/presentation/components/site-address-dialog/site-address-dialog';
 import { SiteFormDialog } from '@assets/presentation/components/site-form-dialog/site-form-dialog';
 import { Icon } from '@shared/presentation/components/icon/icon';
+import { SHELL_LIFETIME } from '@shared/presentation/components/private-layout/shell-lifetime';
 import { StatePanel } from '@shared/presentation/components/state-panel/state-panel';
 
 /** The site dialog being shown: register a site, edit a site, or move a site to another address. */
@@ -85,6 +86,7 @@ export class SiteList {
     site.geocoding_status === GeocodingStatus.PENDING;
 
   constructor() {
+    this.store.retain(inject(SHELL_LIFETIME));
     this.store.clearSiteActionState();
     this.store.clearGeocodingRetry();
     this.store.loadSites();

@@ -1,5 +1,12 @@
-import { computed, inject, Injectable, signal, type WritableSignal } from '@angular/core';
-import { finalize, type Observable, type Subscription } from 'rxjs';
+import {
+  computed,
+  type DestroyRef,
+  inject,
+  Injectable,
+  signal,
+  type WritableSignal,
+} from '@angular/core';
+import { finalize, Observable, Subscription } from 'rxjs';
 import type { Equipment } from '@assets/domain/model/equipment.entity';
 import type { Site } from '@assets/domain/model/site.entity';
 import type { GeocodingStatus } from '@assets/domain/value-objects/geocoding-status';
@@ -83,6 +90,22 @@ function readState<T>(initial: T): ReadState<T> {
   };
 }
 
+function resetReadState<T>(state: ReadState<T>, initial: T): void {
+  state.value.set(initial);
+  state.loading.set(false);
+  state.failure.set(null);
+}
+
+/** The equipment list query of a new session: no filter, first page. */
+const INITIAL_EQUIPMENT_QUERY: EquipmentQuery = {
+  search: '',
+  status: null,
+  type: null,
+  siteId: null,
+  page: 0,
+  size: EQUIPMENT_PAGE_SIZE,
+};
+
 const IDLE_VERIFICATION: AddressVerificationState = {
   status: 'idle',
   verified: null,
@@ -110,7 +133,9 @@ const byName = (first: Site, second: Site): number => first.name.localeCompare(s
  * status.
  *
  * It holds signal-based state only and delegates every operation to Assets Management use cases. The
- * backend scopes every read and write to the authenticated owner.
+ * backend scopes every read and write to the authenticated owner. The loaded state is kept for the owner
+ * session the views retain it for, so a view opened again shows it at once while it is read again; once
+ * that session ends, every operation in progress stops and everything is discarded.
  */
 @Injectable({
   providedIn: 'root',
@@ -154,14 +179,7 @@ export class AssetsStore {
   readonly geocodingRetry = this.geocodingRetrySignal.asReadonly();
 
   // Equipment list.
-  private readonly queryState = signal<EquipmentQuery>({
-    search: '',
-    status: null,
-    type: null,
-    siteId: null,
-    page: 0,
-    size: EQUIPMENT_PAGE_SIZE,
-  });
+  private readonly queryState = signal<EquipmentQuery>(INITIAL_EQUIPMENT_QUERY);
   /** The filters and page of the equipment list. */
   readonly equipmentQuery = this.queryState.asReadonly();
   /** Whether any filter narrows the equipment list. */
@@ -193,6 +211,27 @@ export class AssetsStore {
   private verificationSubscription: Subscription | null = null;
   private pageSubscription: Subscription | null = null;
   private selectedSubscription: Subscription | null = null;
+  /** Every read and write of the session in progress, stopped when the session ends. */
+  private sessionWork = new Subscription();
+  private retainedSession: DestroyRef | null = null;
+
+  /**
+   * Keeps the loaded state until the owner session ends; then every operation in progress stops and the
+   * state is discarded, so nothing reaches the next session.
+   * @param session - The lifetime of the owner session.
+   */
+  retain(session: DestroyRef): void {
+    if (this.retainedSession === session) {
+      return;
+    }
+    this.retainedSession = session;
+    session.onDestroy(() => {
+      if (this.retainedSession === session) {
+        this.retainedSession = null;
+        this.release();
+      }
+    });
+  }
 
   /**
    * Loads the owner's sites, keeping the ones in memory until the new ones arrive.
@@ -211,7 +250,9 @@ export class AssetsStore {
   verifyAddress(address: string): void {
     this.verificationSubscription?.unsubscribe();
     this.addressVerificationSignal.set({ ...IDLE_VERIFICATION, status: 'verifying' });
-    this.verificationSubscription = this.validateSiteAddressUseCase.execute(address).subscribe({
+    this.verificationSubscription = this.track(
+      this.validateSiteAddressUseCase.execute(address),
+    ).subscribe({
       next: (verified) =>
         this.addressVerificationSignal.set({ ...IDLE_VERIFICATION, status: 'verified', verified }),
       error: (error: unknown) =>
@@ -289,7 +330,7 @@ export class AssetsStore {
       return;
     }
     this.geocodingRetrySignal.set({ siteId, status: 'pending', outcome: null, failure: null });
-    this.retrySiteGeocodingUseCase.execute(siteId).subscribe({
+    this.track(this.retrySiteGeocodingUseCase.execute(siteId)).subscribe({
       next: (site) => {
         this.applySite(site);
         this.geocodingRetrySignal.set({
@@ -472,7 +513,7 @@ export class AssetsStore {
       return;
     }
     this.siteActionSignal.set({ action, status: 'pending', failure: null });
-    operation.subscribe({
+    this.track(operation).subscribe({
       next: (site) => {
         this.applySite(site);
         this.siteActionSignal.set({ action, status: 'succeeded', failure: null });
@@ -505,7 +546,7 @@ export class AssetsStore {
       return;
     }
     this.equipmentActionSignal.set({ action, status: 'pending', failure: null });
-    operation.subscribe({
+    this.track(operation).subscribe({
       next: (equipment) => {
         apply(equipment);
         this.equipmentActionSignal.set({ action, status: 'succeeded', failure: null });
@@ -532,9 +573,39 @@ export class AssetsStore {
   ): Subscription {
     state.loading.set(true);
     state.failure.set(null);
-    return operation.pipe(finalize(() => state.loading.set(false))).subscribe({
+    return this.track(operation.pipe(finalize(() => state.loading.set(false)))).subscribe({
       next: apply,
       error: (error: unknown) => state.failure.set(toAssetsFailure(error)),
     });
+  }
+
+  /** Runs an operation within the session, so it stops when the session ends. */
+  private track<T>(operation: Observable<T>): Observable<T> {
+    return new Observable<T>((subscriber) => {
+      const subscription = operation.subscribe(subscriber);
+      this.sessionWork.add(subscription);
+      return () => {
+        subscription.unsubscribe();
+        this.sessionWork.remove(subscription);
+      };
+    });
+  }
+
+  /** Stops every operation in progress and discards every loaded value once the session ends. */
+  private release(): void {
+    this.sessionWork.unsubscribe();
+    this.sessionWork = new Subscription();
+    this.sitesSubscription = null;
+    this.verificationSubscription = null;
+    this.pageSubscription = null;
+    this.selectedSubscription = null;
+    resetReadState(this.sitesState, null);
+    resetReadState(this.pageState, null);
+    resetReadState(this.selectedState, null);
+    this.queryState.set(INITIAL_EQUIPMENT_QUERY);
+    this.addressVerificationSignal.set(IDLE_VERIFICATION);
+    this.siteActionSignal.set(null);
+    this.geocodingRetrySignal.set(null);
+    this.equipmentActionSignal.set(null);
   }
 }

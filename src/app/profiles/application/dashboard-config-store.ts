@@ -1,5 +1,5 @@
-import { computed, inject, Injectable, signal } from '@angular/core';
-import { finalize } from 'rxjs';
+import { computed, type DestroyRef, inject, Injectable, signal } from '@angular/core';
+import { finalize, Observable, Subscription } from 'rxjs';
 import type { DashboardConfig } from '@profiles/domain/model/dashboard-config.entity';
 import type {
   DashboardConfigChange,
@@ -19,7 +19,8 @@ import { SaveDashboardConfigUseCase } from '@profiles/application/use-cases/save
  * Dashboard Config Store manages the signed-in account's dashboard configuration (which cards it shows,
  * in what order, and the site and temperature range it opens on) and the sites it can refer to. It holds
  * signal-based state only and delegates operations to Profiles use cases. The data the cards show belongs
- * to other bounded contexts.
+ * to other bounded contexts. The loaded state is kept for the owner session the views retain it for; once
+ * that session ends, every operation in progress stops and everything is discarded.
  */
 @Injectable({
   providedIn: 'root',
@@ -59,6 +60,28 @@ export class DashboardConfigStore {
   /** The outcome of the last successful creation or save, until the save feedback is cleared. */
   readonly saveOutcome = this.saveOutcomeSignal.asReadonly();
 
+  /** Every read and write of the session in progress, stopped when the session ends. */
+  private sessionWork = new Subscription();
+  private retainedSession: DestroyRef | null = null;
+
+  /**
+   * Keeps the loaded state until the owner session ends; then every operation in progress stops and the
+   * state is discarded, so nothing reaches the next session.
+   * @param session - The lifetime of the owner session.
+   */
+  retain(session: DestroyRef): void {
+    if (this.retainedSession === session) {
+      return;
+    }
+    this.retainedSession = session;
+    session.onDestroy(() => {
+      if (this.retainedSession === session) {
+        this.retainedSession = null;
+        this.release();
+      }
+    });
+  }
+
   /**
    * Loads the dashboard configuration of an account and the sites it can refer to. A configuration of
    * another account is discarded first.
@@ -83,24 +106,25 @@ export class DashboardConfigStore {
       return;
     }
     this.startSave();
-    this.createDashboardConfigUseCase
-      .execute(userId, defaults)
-      .pipe(finalize(() => this.savingSignal.set(false)))
-      .subscribe({
-        next: (config) => {
-          this.configSignal.set(config);
-          this.configFailureSignal.set(null);
-          this.saveOutcomeSignal.set('created');
-        },
-        error: (error: unknown) => {
-          const failure = toProfilesFailure(error);
-          if (failure === 'DASHBOARD_CONFIG_CONFLICT') {
-            this.loadConfig(userId);
-            return;
-          }
-          this.saveFailureSignal.set(failure);
-        },
-      });
+    this.track(
+      this.createDashboardConfigUseCase
+        .execute(userId, defaults)
+        .pipe(finalize(() => this.savingSignal.set(false))),
+    ).subscribe({
+      next: (config) => {
+        this.configSignal.set(config);
+        this.configFailureSignal.set(null);
+        this.saveOutcomeSignal.set('created');
+      },
+      error: (error: unknown) => {
+        const failure = toProfilesFailure(error);
+        if (failure === 'DASHBOARD_CONFIG_CONFLICT') {
+          this.loadConfig(userId);
+          return;
+        }
+        this.saveFailureSignal.set(failure);
+      },
+    });
   }
 
   /**
@@ -115,20 +139,21 @@ export class DashboardConfigStore {
       return;
     }
     this.startSave();
-    this.saveDashboardConfigUseCase
-      .execute(config, change)
-      .pipe(finalize(() => this.savingSignal.set(false)))
-      .subscribe({
-        next: (stored) => this.configSignal.set(stored),
-        error: (error: unknown) => {
-          const failure = toProfilesFailure(error);
-          this.saveFailureSignal.set(failure);
-          if (failure === 'CONCURRENT_MODIFICATION_CONFLICT') {
-            this.loadConfig(config.user_id);
-          }
-        },
-        complete: () => this.saveOutcomeSignal.set('saved'),
-      });
+    this.track(
+      this.saveDashboardConfigUseCase
+        .execute(config, change)
+        .pipe(finalize(() => this.savingSignal.set(false))),
+    ).subscribe({
+      next: (stored) => this.configSignal.set(stored),
+      error: (error: unknown) => {
+        const failure = toProfilesFailure(error);
+        this.saveFailureSignal.set(failure);
+        if (failure === 'CONCURRENT_MODIFICATION_CONFLICT') {
+          this.loadConfig(config.user_id);
+        }
+      },
+      complete: () => this.saveOutcomeSignal.set('saved'),
+    });
   }
 
   /**
@@ -145,29 +170,58 @@ export class DashboardConfigStore {
   loadSites(): void {
     this.sitesLoadingSignal.set(true);
     this.sitesFailureSignal.set(null);
-    this.loadDashboardSitesUseCase
-      .execute()
-      .pipe(finalize(() => this.sitesLoadingSignal.set(false)))
-      .subscribe({
-        next: (sites) => this.sitesSignal.set(sites),
-        error: (error: unknown) => this.sitesFailureSignal.set(toProfilesFailure(error)),
-      });
+    this.track(
+      this.loadDashboardSitesUseCase
+        .execute()
+        .pipe(finalize(() => this.sitesLoadingSignal.set(false))),
+    ).subscribe({
+      next: (sites) => this.sitesSignal.set(sites),
+      error: (error: unknown) => this.sitesFailureSignal.set(toProfilesFailure(error)),
+    });
   }
 
   private loadConfig(userId: number): void {
     this.configLoadingSignal.set(true);
     this.configFailureSignal.set(null);
-    this.loadDashboardConfigUseCase
-      .execute(userId)
-      .pipe(finalize(() => this.configLoadingSignal.set(false)))
-      .subscribe({
-        next: (config) => this.configSignal.set(config),
-        error: (error: unknown) => this.configFailureSignal.set(toProfilesFailure(error)),
-      });
+    this.track(
+      this.loadDashboardConfigUseCase
+        .execute(userId)
+        .pipe(finalize(() => this.configLoadingSignal.set(false))),
+    ).subscribe({
+      next: (config) => this.configSignal.set(config),
+      error: (error: unknown) => this.configFailureSignal.set(toProfilesFailure(error)),
+    });
   }
 
   private startSave(): void {
     this.savingSignal.set(true);
+    this.saveFailureSignal.set(null);
+    this.saveOutcomeSignal.set(null);
+  }
+
+  /** Runs an operation within the session, so it stops when the session ends. */
+  private track<T>(operation: Observable<T>): Observable<T> {
+    return new Observable<T>((subscriber) => {
+      const subscription = operation.subscribe(subscriber);
+      this.sessionWork.add(subscription);
+      return () => {
+        subscription.unsubscribe();
+        this.sessionWork.remove(subscription);
+      };
+    });
+  }
+
+  /** Stops every operation in progress and discards every loaded value once the session ends. */
+  private release(): void {
+    this.sessionWork.unsubscribe();
+    this.sessionWork = new Subscription();
+    this.configSignal.set(null);
+    this.configLoadingSignal.set(false);
+    this.configFailureSignal.set(null);
+    this.sitesSignal.set(null);
+    this.sitesLoadingSignal.set(false);
+    this.sitesFailureSignal.set(null);
+    this.savingSignal.set(false);
     this.saveFailureSignal.set(null);
     this.saveOutcomeSignal.set(null);
   }

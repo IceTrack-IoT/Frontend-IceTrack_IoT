@@ -13,6 +13,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { ProfilesStore } from '@profiles/application/profiles-store';
 import { ownerProfileSaveErrorKey } from '@profiles/presentation/profiles-feedback';
 import { Icon } from '@shared/presentation/components/icon/icon';
+import { SHELL_LIFETIME } from '@shared/presentation/components/private-layout/shell-lifetime';
 import { SIGNED_IN_ACCOUNT } from '@shared/presentation/components/private-layout/signed-in-account';
 import { StatePanel } from '@shared/presentation/components/state-panel/state-panel';
 
@@ -85,6 +86,7 @@ export class OwnerProfileSettings {
   );
 
   constructor() {
+    this.store.retain(inject(SHELL_LIFETIME));
     this.load();
     // A successful save returns to the profile, which now shows the stored data.
     effect(() => {

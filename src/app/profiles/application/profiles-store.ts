@@ -1,5 +1,5 @@
-import { inject, Injectable, signal, type WritableSignal } from '@angular/core';
-import { finalize, type Observable } from 'rxjs';
+import { type DestroyRef, inject, Injectable, signal, type WritableSignal } from '@angular/core';
+import { finalize, Observable, Subscription } from 'rxjs';
 import type { OwnerProfile } from '@profiles/domain/model/owner-profile.entity';
 import type { TechnicianProfile } from '@profiles/domain/model/technician-profile.entity';
 import type { TechnicianPublicProfile } from '@profiles/domain/model/technician-public-profile.entity';
@@ -15,7 +15,9 @@ import { UpdateOwnerProfileUseCase } from '@profiles/application/use-cases/updat
 
 /**
  * Profiles Store manages the signed-in owner's profile and the technician profiles that owners consult
- * read-only. It holds signal-based state only and delegates profile operations to Profiles use cases.
+ * read-only. It holds signal-based state only and delegates profile operations to Profiles use cases. The
+ * loaded state is kept for the owner session the views retain it for; once that session ends, every
+ * operation in progress stops and everything is discarded.
  */
 @Injectable({
   providedIn: 'root',
@@ -60,6 +62,28 @@ export class ProfilesStore {
   /** Why the public profile could not be loaded; `TECHNICIAN_NOT_FOUND` for an unknown technician. */
   readonly technicianPublicProfileFailure = this.technicianPublicProfileFailureSignal.asReadonly();
 
+  /** Every read and write of the session in progress, stopped when the session ends. */
+  private sessionWork = new Subscription();
+  private retainedSession: DestroyRef | null = null;
+
+  /**
+   * Keeps the loaded state until the owner session ends; then every operation in progress stops and the
+   * state is discarded, so nothing reaches the next session.
+   * @param session - The lifetime of the owner session.
+   */
+  retain(session: DestroyRef): void {
+    if (this.retainedSession === session) {
+      return;
+    }
+    this.retainedSession = session;
+    session.onDestroy(() => {
+      if (this.retainedSession === session) {
+        this.retainedSession = null;
+        this.release();
+      }
+    });
+  }
+
   /**
    * Loads the owner profile bound to a platform account. A profile of another account is discarded first,
    * so it is never shown as the one of this account.
@@ -91,22 +115,23 @@ export class ProfilesStore {
     this.ownerProfileSavedSignal.set(false);
     this.ownerProfileSavingSignal.set(true);
     this.ownerProfileSaveFailureSignal.set(null);
-    this.updateOwnerProfileUseCase
-      .execute(profile, update)
-      .pipe(finalize(() => this.ownerProfileSavingSignal.set(false)))
-      .subscribe({
-        next: (updated) => {
-          this.ownerProfileSignal.set(updated);
-          this.ownerProfileSavedSignal.set(true);
-        },
-        error: (error: unknown) => {
-          const failure = toProfilesFailure(error);
-          this.ownerProfileSaveFailureSignal.set(failure);
-          if (failure === 'CONCURRENT_MODIFICATION_CONFLICT') {
-            this.loadOwnerProfile(profile.user_id);
-          }
-        },
-      });
+    this.track(
+      this.updateOwnerProfileUseCase
+        .execute(profile, update)
+        .pipe(finalize(() => this.ownerProfileSavingSignal.set(false))),
+    ).subscribe({
+      next: (updated) => {
+        this.ownerProfileSignal.set(updated);
+        this.ownerProfileSavedSignal.set(true);
+      },
+      error: (error: unknown) => {
+        const failure = toProfilesFailure(error);
+        this.ownerProfileSaveFailureSignal.set(failure);
+        if (failure === 'CONCURRENT_MODIFICATION_CONFLICT') {
+          this.loadOwnerProfile(profile.user_id);
+        }
+      },
+    });
   }
 
   /**
@@ -157,9 +182,39 @@ export class ProfilesStore {
   ): void {
     inProgress.set(true);
     failure.set(null);
-    operation.pipe(finalize(() => inProgress.set(false))).subscribe({
+    this.track(operation.pipe(finalize(() => inProgress.set(false)))).subscribe({
       next: apply,
       error: (error: unknown) => failure.set(toProfilesFailure(error)),
     });
+  }
+
+  /** Runs an operation within the session, so it stops when the session ends. */
+  private track<T>(operation: Observable<T>): Observable<T> {
+    return new Observable<T>((subscriber) => {
+      const subscription = operation.subscribe(subscriber);
+      this.sessionWork.add(subscription);
+      return () => {
+        subscription.unsubscribe();
+        this.sessionWork.remove(subscription);
+      };
+    });
+  }
+
+  /** Stops every operation in progress and discards every loaded value once the session ends. */
+  private release(): void {
+    this.sessionWork.unsubscribe();
+    this.sessionWork = new Subscription();
+    this.ownerProfileSignal.set(null);
+    this.ownerProfileLoadingSignal.set(false);
+    this.ownerProfileFailureSignal.set(null);
+    this.ownerProfileSavingSignal.set(false);
+    this.ownerProfileSaveFailureSignal.set(null);
+    this.ownerProfileSavedSignal.set(false);
+    this.technicianProfilesSignal.set([]);
+    this.technicianProfilesLoadingSignal.set(false);
+    this.technicianProfilesFailureSignal.set(null);
+    this.technicianPublicProfileSignal.set(null);
+    this.technicianPublicProfileLoadingSignal.set(false);
+    this.technicianPublicProfileFailureSignal.set(null);
   }
 }

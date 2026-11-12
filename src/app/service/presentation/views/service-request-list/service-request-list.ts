@@ -17,6 +17,7 @@ import {
   SERVICE_STATUS_APPEARANCE,
 } from '@service/presentation/service-request-appearance';
 import { Icon } from '@shared/presentation/components/icon/icon';
+import { SHELL_LIFETIME } from '@shared/presentation/components/private-layout/shell-lifetime';
 import { Pagination } from '@shared/presentation/components/pagination/pagination';
 import { StatePanel } from '@shared/presentation/components/state-panel/state-panel';
 import { StatusTag } from '@shared/presentation/components/status-tag/status-tag';
@@ -176,6 +177,7 @@ export class ServiceRequestList {
   );
 
   constructor() {
+    this.store.retain(inject(SHELL_LIFETIME));
     if (this.equipmentFilter === null) {
       // The sites name the site filter.
       this.store.loadEquipmentDirectory();

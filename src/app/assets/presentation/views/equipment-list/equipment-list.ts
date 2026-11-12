@@ -18,6 +18,7 @@ import {
   STATUS_EQUIPMENT_APPEARANCE,
 } from '@assets/presentation/equipment-appearance';
 import { Icon } from '@shared/presentation/components/icon/icon';
+import { SHELL_LIFETIME } from '@shared/presentation/components/private-layout/shell-lifetime';
 import { Pagination } from '@shared/presentation/components/pagination/pagination';
 import { StatePanel } from '@shared/presentation/components/state-panel/state-panel';
 import { StatusTag } from '@shared/presentation/components/status-tag/status-tag';
@@ -99,6 +100,7 @@ export class EquipmentList {
   });
 
   constructor() {
+    this.store.retain(inject(SHELL_LIFETIME));
     const siteId = Number(inject(ActivatedRoute).snapshot.queryParamMap.get('siteId'));
     if (Number.isInteger(siteId) && siteId > 0) {
       this.filters.controls.siteId.setValue(siteId);
