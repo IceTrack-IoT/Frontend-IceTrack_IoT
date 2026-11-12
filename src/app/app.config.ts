@@ -20,6 +20,7 @@ import { provideMonitoring } from '@monitoring/infrastructure/monitoring.provide
 import { provideDevices } from '@device/infrastructure/device.providers';
 import { provideNotifications } from '@notifications/infrastructure/notifications.providers';
 import { provideReporting } from '@reporting/infrastructure/reporting.providers';
+import { provideIconSprite } from '@shared/presentation/components/icon/icon-sprite';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -45,6 +46,7 @@ export const appConfig: ApplicationConfig = {
       const selectedLang = browserLang && ['en', 'es'].includes(browserLang) ? browserLang : 'en';
       return firstValueFrom(translate.use(selectedLang));
     }),
+    provideIconSprite(),
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
   ],
