@@ -50,8 +50,10 @@ export interface NotificationActionState {
  *
  * It holds signal-based state only and delegates every operation to Notifications use cases. Actions are
  * not applied optimistically: the notification is replaced by the one the backend answers, and the page
- * and the unread count are read again whenever an action changes what they hold. The inbox is discarded
- * when the notification center closes and the count when the badge closes, so nothing survives a session.
+ * and the unread count are read again whenever an action changes what they hold. The count is discarded
+ * when the badge closes. The unfiltered inbox is kept for the owner session, so the notification center
+ * opened again shows it at once while it is read again; its filters, selection and action outcomes are
+ * discarded when the center closes, and everything is discarded when the session ends.
  */
 @Injectable({
   providedIn: 'root',
@@ -128,6 +130,8 @@ export class NotificationsStore {
   private actionSubscription: Subscription | null = null;
   private markAllSubscription: Subscription | null = null;
   private markSelectedSubscription: Subscription | null = null;
+  private inboxViews = 0;
+  private retainedSession: DestroyRef | null = null;
 
   /**
    * Keeps the unread count while the caller lives, current with the live notification feed; it is
@@ -142,7 +146,7 @@ export class NotificationsStore {
         switch (event.kind) {
           case 'created':
             this.unreadCountSignal.set(event.unreadCount);
-            if (this.pageSignal() !== null && this.pageIndexSignal() === 0) {
+            if (this.inboxViews > 0 && this.pageIndexSignal() === 0) {
               this.loadPage(0);
             }
             break;
@@ -151,7 +155,7 @@ export class NotificationsStore {
             break;
           case 'resync':
             this.refreshUnreadCount();
-            if (this.pageSignal() !== null) {
+            if (this.inboxViews > 0) {
               this.loadPage();
             }
             break;
@@ -175,11 +179,28 @@ export class NotificationsStore {
   }
 
   /**
-   * Keeps the inbox while the caller lives; it is discarded once the caller is destroyed.
+   * Keeps the inbox for the notification center. Once the center is destroyed, its filters, selection
+   * and action outcomes are discarded; the unfiltered first page is kept until the session ends.
    * @param destroyRef - The lifetime of the notification center.
+   * @param session - The lifetime of the owner session the inbox is kept for.
    */
-  attachInbox(destroyRef: DestroyRef): void {
-    destroyRef.onDestroy(() => this.releaseInbox());
+  attachInbox(destroyRef: DestroyRef, session: DestroyRef): void {
+    if (this.retainedSession !== session) {
+      this.retainedSession = session;
+      session.onDestroy(() => {
+        if (this.retainedSession === session) {
+          this.retainedSession = null;
+          this.releaseInbox();
+        }
+      });
+    }
+    this.inboxViews++;
+    destroyRef.onDestroy(() => {
+      this.inboxViews--;
+      if (this.inboxViews === 0) {
+        this.closeInbox();
+      }
+    });
   }
 
   /**
@@ -452,6 +473,43 @@ export class NotificationsStore {
     );
   }
 
+  /**
+   * Stops every inbox operation and discards the filters, selection and action outcomes once the
+   * notification center closes. Only an unfiltered first page is kept, since the center opens on it.
+   */
+  private closeInbox(): void {
+    [
+      this.pageSubscription,
+      this.equipmentSubscription,
+      this.actionSubscription,
+      this.markAllSubscription,
+      this.markSelectedSubscription,
+    ].forEach((subscription) => subscription?.unsubscribe());
+    this.pageSubscription = null;
+    this.equipmentSubscription = null;
+    this.actionSubscription = null;
+    this.markAllSubscription = null;
+    this.markSelectedSubscription = null;
+    const unfilteredFirstPage =
+      this.pageIndexSignal() === 0 &&
+      !this.unreadOnlySignal() &&
+      this.filtersSignal().severities.length === 0 &&
+      this.filtersSignal().types.length === 0;
+    if (!unfilteredFirstPage) {
+      this.pageSignal.set(null);
+    }
+    this.pageIndexSignal.set(0);
+    this.unreadOnlySignal.set(false);
+    this.filtersSignal.set(NO_FILTERS);
+    this.selectedIdsSignal.set(new Set());
+    this.loadingSignal.set(false);
+    this.failureSignal.set(null);
+    this.markAllSignal.set(null);
+    this.markSelectedSignal.set(null);
+    this.actionSignal.set(null);
+  }
+
+  /** Discards the whole inbox once the session ends. */
   private releaseInbox(): void {
     [
       this.pageSubscription,

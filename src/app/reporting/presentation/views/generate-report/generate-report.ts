@@ -29,6 +29,7 @@ import {
   reportRequestErrorKey,
 } from '@reporting/presentation/report-appearance';
 import { Icon } from '@shared/presentation/components/icon/icon';
+import { SHELL_LIFETIME } from '@shared/presentation/components/private-layout/shell-lifetime';
 import { StatusTag } from '@shared/presentation/components/status-tag/status-tag';
 
 /** A value with at least one non-blank character, as the backend's `@NotBlank` requires. */
@@ -107,7 +108,7 @@ export class GenerateReport {
   });
 
   constructor() {
-    this.store.attach(inject(DestroyRef));
+    this.store.attach(inject(DestroyRef), inject(SHELL_LIFETIME));
     this.store.clearRequest();
     this.store.loadScope();
     this.prefill(inject(ActivatedRoute));

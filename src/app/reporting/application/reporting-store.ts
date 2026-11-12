@@ -29,6 +29,17 @@ const LIVE_CHANGES_DEBOUNCE_MS = 500;
 /** The number of reports per page of the history. */
 export const REPORT_PAGE_SIZE = 6;
 
+/** The report history query of a new session: no search or filter, first page. */
+const INITIAL_REPORT_QUERY: ReportQuery = {
+  search: '',
+  types: [],
+  statuses: [],
+  requestedFrom: null,
+  requestedTo: null,
+  page: 0,
+  size: REPORT_PAGE_SIZE,
+};
+
 /** The search and filters of the report history; the page is chosen separately. */
 export type ReportFilters = Omit<ReportQuery, 'page' | 'size'>;
 
@@ -73,8 +84,12 @@ const STALE_DELETION_FAILURES: ReadonlySet<ReportingFailure> = new Set([
  * searched, filtered and paged by the backend. A report in progress is read again when the live feed
  * reports a status change of it (periodically while the feed is unavailable), and the page shown is read
  * again when one of its reports changes. A download link is read on demand, offered until shortly before
- * its signature expires, and never stored beyond that. Everything is discarded once no reporting view is
- * open.
+ * its signature expires, and never stored beyond that.
+ *
+ * The history, the selected report and the scope are kept for the owner session, so a reporting view opened
+ * again shows them at once while they are read again. Live changes, the follow-up of a report in progress,
+ * the download link and the outcome of requests and deletions stop or are discarded once no reporting view
+ * is open; everything is discarded when the session ends.
  */
 @Injectable({
   providedIn: 'root',
@@ -89,15 +104,7 @@ export class ReportingStore {
   private readonly deleteReportUseCase = inject(DeleteReportUseCase);
 
   // Report history.
-  private readonly reportQuerySignal = signal<ReportQuery>({
-    search: '',
-    types: [],
-    statuses: [],
-    requestedFrom: null,
-    requestedTo: null,
-    page: 0,
-    size: REPORT_PAGE_SIZE,
-  });
+  private readonly reportQuerySignal = signal<ReportQuery>(INITIAL_REPORT_QUERY);
   private readonly reportPageSignal = signal<ReportPage | null>(null);
   private readonly reportsLoadingSignal = signal(false);
   private readonly reportsFailureSignal = signal<ReportingFailure | null>(null);
@@ -175,14 +182,17 @@ export class ReportingStore {
   private deletionSubscription: Subscription | null = null;
   private liveChangesSubscription: Subscription | null = null;
   private attachedViews = 0;
+  private retainedSession: DestroyRef | null = null;
 
   /**
-   * Keeps the reporting state while the caller lives. Every reporting view attaches; while any is
-   * attached, the page shown is read again when one of its reports changes status. Once the last one is
-   * destroyed, watching stops and the state, including any download link, is discarded.
-   * @param destroyRef - The lifetime of the caller.
+   * Keeps the reporting state for a view. While any view is attached, the page shown is read again when
+   * one of its reports changes status. Once the last one is destroyed, watching stops and any download
+   * link and action outcome is discarded; the loaded reports and scope are kept until the session ends.
+   * @param destroyRef - The lifetime of the view.
+   * @param session - The lifetime of the owner session the loaded state is kept for.
    */
-  attach(destroyRef: DestroyRef): void {
+  attach(destroyRef: DestroyRef, session: DestroyRef): void {
+    this.retain(session);
     this.attachedViews++;
     if (this.liveChangesSubscription === null) {
       this.liveChangesSubscription = this.watchReportChangesUseCase
@@ -205,7 +215,7 @@ export class ReportingStore {
     destroyRef.onDestroy(() => {
       this.attachedViews--;
       if (this.attachedViews === 0) {
-        this.release();
+        this.detachViews();
       }
     });
   }
@@ -269,10 +279,11 @@ export class ReportingStore {
   }
 
   /**
-   * Loads the owner's sites and equipment, unless they are already loaded.
+   * Loads the owner's sites and equipment, keeping the ones in memory until the new ones arrive, unless a
+   * load is already in progress.
    */
   loadScope(): void {
-    if (this.scopeSignal() !== null || this.scopeLoadingSignal()) {
+    if (this.scopeLoadingSignal()) {
       return;
     }
     this.scopeLoadingSignal.set(true);
@@ -425,8 +436,24 @@ export class ReportingStore {
     );
   }
 
-  /** Discards every loaded value and any download link once no reporting view is open. */
-  private release(): void {
+  private retain(session: DestroyRef): void {
+    if (this.retainedSession === session) {
+      return;
+    }
+    this.retainedSession = session;
+    session.onDestroy(() => {
+      if (this.retainedSession === session) {
+        this.retainedSession = null;
+        this.release();
+      }
+    });
+  }
+
+  /**
+   * Stops watching and every read in progress, and discards any download link and action outcome once no
+   * reporting view is open. The loaded reports and scope are kept.
+   */
+  private detachViews(): void {
     [
       this.liveChangesSubscription,
       this.reportsSubscription,
@@ -442,8 +469,19 @@ export class ReportingStore {
     this.requestSubscription = null;
     this.deletionSubscription = null;
     this.clearDownload();
+    this.reportsLoadingSignal.set(false);
+    this.selectedLoadingSignal.set(false);
+    this.watchingSignal.set(false);
+    this.scopeLoadingSignal.set(false);
+    this.requestSignal.set(null);
+    this.deletionSignal.set(null);
+  }
+
+  /** Discards every loaded value once the session ends. */
+  private release(): void {
+    this.detachViews();
     this.reportPageSignal.set(null);
-    this.reportQuerySignal.update((query) => ({ ...query, page: 0 }));
+    this.reportQuerySignal.set(INITIAL_REPORT_QUERY);
     this.reportsLoadingSignal.set(false);
     this.reportsFailureSignal.set(null);
     this.selectedIdSignal.set(null);

@@ -17,6 +17,7 @@ import {
   alertActionErrorKey,
 } from '@monitoring/presentation/monitoring-feedback';
 import { Icon } from '@shared/presentation/components/icon/icon';
+import { SHELL_LIFETIME } from '@shared/presentation/components/private-layout/shell-lifetime';
 import { SIGNED_IN_ACCOUNT } from '@shared/presentation/components/private-layout/signed-in-account';
 import { StatePanel } from '@shared/presentation/components/state-panel/state-panel';
 import { StatusTag } from '@shared/presentation/components/status-tag/status-tag';
@@ -157,7 +158,7 @@ export class AlertDetail {
   });
 
   constructor() {
-    this.store.connectLiveUpdates(inject(DestroyRef));
+    this.store.connectLiveUpdates(inject(DestroyRef), inject(SHELL_LIFETIME));
     inject(ActivatedRoute)
       .paramMap.pipe(takeUntilDestroyed())
       .subscribe((params) => {

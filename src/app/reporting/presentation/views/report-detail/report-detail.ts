@@ -12,6 +12,7 @@ import {
   reportDeletionErrorKey,
 } from '@reporting/presentation/report-appearance';
 import { Icon } from '@shared/presentation/components/icon/icon';
+import { SHELL_LIFETIME } from '@shared/presentation/components/private-layout/shell-lifetime';
 import { StatePanel } from '@shared/presentation/components/state-panel/state-panel';
 import { StatusTag } from '@shared/presentation/components/status-tag/status-tag';
 import { LocalizedDatePipe } from '@shared/presentation/pipes/localized-date.pipe';
@@ -77,7 +78,7 @@ export class ReportDetail {
 
   constructor() {
     const router = inject(Router);
-    this.store.attach(inject(DestroyRef));
+    this.store.attach(inject(DestroyRef), inject(SHELL_LIFETIME));
     this.store.clearDeletion();
     // Once this report is deleted there is nothing left to show here.
     effect(() => {

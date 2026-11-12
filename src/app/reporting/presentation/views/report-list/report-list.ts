@@ -15,6 +15,7 @@ import {
   reportDeletionErrorKey,
 } from '@reporting/presentation/report-appearance';
 import { Icon } from '@shared/presentation/components/icon/icon';
+import { SHELL_LIFETIME } from '@shared/presentation/components/private-layout/shell-lifetime';
 import { Pagination } from '@shared/presentation/components/pagination/pagination';
 import { StatePanel } from '@shared/presentation/components/state-panel/state-panel';
 import { StatusTag } from '@shared/presentation/components/status-tag/status-tag';
@@ -111,7 +112,7 @@ export class ReportList {
   );
 
   constructor() {
-    this.store.attach(inject(DestroyRef));
+    this.store.attach(inject(DestroyRef), inject(SHELL_LIFETIME));
     this.store.clearDeletion();
     // A successful deletion closes its confirmation.
     effect(() => {

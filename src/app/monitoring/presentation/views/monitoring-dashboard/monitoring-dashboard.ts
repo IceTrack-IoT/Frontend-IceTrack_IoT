@@ -9,6 +9,7 @@ import {
   ALERT_TYPE_ICONS,
 } from '@monitoring/presentation/monitoring-appearance';
 import { Icon } from '@shared/presentation/components/icon/icon';
+import { SHELL_LIFETIME } from '@shared/presentation/components/private-layout/shell-lifetime';
 import { StatePanel } from '@shared/presentation/components/state-panel/state-panel';
 import { StatusTag } from '@shared/presentation/components/status-tag/status-tag';
 import { LocalizedDatePipe } from '@shared/presentation/pipes/localized-date.pipe';
@@ -84,7 +85,7 @@ export class MonitoringDashboard {
   );
 
   constructor() {
-    this.store.connectLiveUpdates(inject(DestroyRef));
+    this.store.connectLiveUpdates(inject(DestroyRef), inject(SHELL_LIFETIME));
     this.load();
   }
 

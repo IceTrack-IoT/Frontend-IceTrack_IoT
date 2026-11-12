@@ -67,9 +67,11 @@ const byUid = (first: Device, second: Device): number =>
  *
  * It holds signal-based state only and delegates every operation to Device Management use cases. Actions
  * are not applied optimistically: the device is replaced by the one the backend answers, and a rejected
- * action reads the inventory again when it means the shown state is stale. An issued API key is kept only
- * in the action state; it and everything else is discarded once no device view is open, so nothing
- * survives navigation away from Device Management or a new session.
+ * action reads the inventory again when it means the shown state is stale.
+ *
+ * The inventory is kept for the owner session, so a device view opened again shows it at once while it is
+ * read again. An issued API key is kept only in the action state, which is discarded once no device view
+ * is open; everything is discarded when the session ends.
  */
 @Injectable({
   providedIn: 'root',
@@ -127,14 +129,18 @@ export class DevicesStore {
   private actionSubscription: Subscription | null = null;
   private liveChangesSubscription: Subscription | null = null;
   private attachedViews = 0;
+  private retainedSession: DestroyRef | null = null;
 
   /**
-   * Keeps the device state while the caller lives. Every device view attaches; while any is attached, the
-   * loaded inventory is read again whenever a board changes lifecycle status from any session. Once the
-   * last one is destroyed, the state, including any issued API key, is discarded.
-   * @param destroyRef - The lifetime of the caller.
+   * Keeps the device state for a view. While any view is attached, the loaded inventory is read again
+   * whenever a board changes lifecycle status from any session. Once the last one is destroyed, live
+   * changes stop and the action state, including any issued API key, is discarded; the inventory is kept
+   * until the session ends.
+   * @param destroyRef - The lifetime of the view.
+   * @param session - The lifetime of the owner session the inventory is kept for.
    */
-  attach(destroyRef: DestroyRef): void {
+  attach(destroyRef: DestroyRef, session: DestroyRef): void {
+    this.retain(session);
     this.attachedViews++;
     if (this.liveChangesSubscription === null) {
       this.liveChangesSubscription = this.watchDeviceChangesUseCase
@@ -149,7 +155,7 @@ export class DevicesStore {
     destroyRef.onDestroy(() => {
       this.attachedViews--;
       if (this.attachedViews === 0) {
-        this.release();
+        this.detachViews();
       }
     });
   }
@@ -278,14 +284,34 @@ export class DevicesStore {
     );
   }
 
-  /** Discards every loaded value and any issued API key once no device view is open. */
-  private release(): void {
+  private retain(session: DestroyRef): void {
+    if (this.retainedSession === session) {
+      return;
+    }
+    this.retainedSession = session;
+    session.onDestroy(() => {
+      if (this.retainedSession === session) {
+        this.retainedSession = null;
+        this.release();
+      }
+    });
+  }
+
+  /** Stops live changes and discards the action state and any issued API key once no view is open. */
+  private detachViews(): void {
     this.liveChangesSubscription?.unsubscribe();
     this.liveChangesSubscription = null;
     this.inventorySubscription?.unsubscribe();
-    this.actionSubscription?.unsubscribe();
     this.inventorySubscription = null;
+    this.actionSubscription?.unsubscribe();
     this.actionSubscription = null;
+    this.loadingSignal.set(false);
+    this.actionSignal.set(null);
+  }
+
+  /** Discards every loaded value once the session ends. */
+  private release(): void {
+    this.detachViews();
     this.equipmentSignal.set(null);
     this.devicesSignal.set(null);
     this.loadingSignal.set(false);

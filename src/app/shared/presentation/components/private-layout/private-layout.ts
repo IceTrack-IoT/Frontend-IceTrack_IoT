@@ -1,10 +1,11 @@
-import { Component, computed, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { Component, computed, DestroyRef, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { filter, skip } from 'rxjs';
 import { Icon } from '@shared/presentation/components/icon/icon';
 import { HEADER_ACTIONS_OUTLET } from '@shared/presentation/components/private-layout/header-actions-outlet';
+import { SHELL_LIFETIME } from '@shared/presentation/components/private-layout/shell-lifetime';
 import { SIGN_OUT_ACTION } from '@shared/presentation/components/private-layout/sign-out-action';
 import { SIGNED_IN_ACCOUNT } from '@shared/presentation/components/private-layout/signed-in-account';
 import {
@@ -28,7 +29,8 @@ const OWNER_NAVIGATION: readonly NavigationItem[] = [
 /**
  * Shell of the owner platform: primary navigation, header and main content. The routes of the owner area
  * render inside its primary outlet; a context can render header actions, such as the notification bell,
- * through the `header-actions` outlet without the shell depending on it. The authentication context
+ * through the `header-actions` outlet without the shell depending on it. The views routed inside it get the
+ * shell's `SHELL_LIFETIME`, so a context can keep the state it loaded until the owner leaves the shell. The authentication context
  * provides the `SIGNED_IN_ACCOUNT` the sidebar shows and the `SIGN_OUT_ACTION` signing out runs. Below
  * 960px the navigation collapses behind a menu button.
  */

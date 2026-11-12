@@ -71,10 +71,10 @@ export interface AlertActionState {
 export type LiveStatus = 'idle' | 'connecting' | 'live' | 'reconnecting' | 'unavailable';
 
 /**
- * How long the live feed and the loaded state are kept after the last monitoring view closes, so moving
+ * How long the live feed is kept open after the last monitoring view closes, so moving
  * between monitoring views keeps one connection.
  */
-const RELEASE_DELAY_MS = 1_000;
+const FEED_CLOSE_DELAY_MS = 1_000;
 
 /**
  * How long live alert changes are gathered before the totals and the alert page shown are read again, so a
@@ -147,8 +147,9 @@ function withConnectivity(
  * It holds signal-based state only and delegates every operation to Monitoring and Alerting use cases.
  * Alert actions are not applied optimistically: the alert is replaced by the one the backend answers, and
  * a rejected action reads the alert again. Live updates reconcile the loaded state; a (re)connection whose
- * missed events could not all be replayed reads the loaded state again. The state is discarded once no
- * monitoring view uses it, so nothing is kept between sessions.
+ * missed events could not all be replayed reads the loaded state again. The loaded state is kept for the
+ * owner session, so a monitoring view opened again shows it at once while it is read again; the live feed
+ * closes once no monitoring view uses it, and everything is discarded when the session ends.
  */
 @Injectable({
   providedIn: 'root',
@@ -279,8 +280,8 @@ export class MonitoringStore {
   private readonly refreshSubscriptions = new Set<Subscription>();
 
   /**
-   * The live feed, shared by every monitoring view. It is closed, and the loaded state discarded, a moment
-   * after the last view stops using it.
+   * The live feed, shared by every monitoring view. It is closed a moment after the last view stops using
+   * it; the loaded state is kept until the session ends.
    */
   private readonly liveUpdates: Observable<MonitoringUpdate> = defer(() => {
     this.liveStatusSignal.set('connecting');
@@ -292,15 +293,30 @@ export class MonitoringStore {
       this.liveStatusSignal.set('unavailable');
       return NEVER;
     }),
-    share({ resetOnRefCountZero: () => timer(RELEASE_DELAY_MS).pipe(tap(() => this.release())) }),
+    share({
+      resetOnRefCountZero: () =>
+        timer(FEED_CLOSE_DELAY_MS).pipe(tap(() => this.liveStatusSignal.set('idle'))),
+    }),
   );
 
+  private retainedSession: DestroyRef | null = null;
+
   /**
-   * Keeps the live feed open while the caller lives. Every monitoring view connects, so one connection
-   * serves them all.
-   * @param destroyRef - The lifetime of the caller.
+   * Keeps the live feed open while the view lives. Every monitoring view connects, so one connection
+   * serves them all. The loaded state is kept until the session ends.
+   * @param destroyRef - The lifetime of the view.
+   * @param session - The lifetime of the owner session the loaded state is kept for.
    */
-  connectLiveUpdates(destroyRef: DestroyRef): void {
+  connectLiveUpdates(destroyRef: DestroyRef, session: DestroyRef): void {
+    if (this.retainedSession !== session) {
+      this.retainedSession = session;
+      session.onDestroy(() => {
+        if (this.retainedSession === session) {
+          this.retainedSession = null;
+          this.release();
+        }
+      });
+    }
     this.liveUpdates.pipe(takeUntilDestroyed(destroyRef)).subscribe();
   }
 
@@ -656,7 +672,7 @@ export class MonitoringStore {
     this.historyFailureSignal.set(null);
   }
 
-  /** Discards every loaded value once no monitoring view uses them. */
+  /** Discards every loaded value once the session ends. */
   private release(): void {
     [
       this.overviewSubscription,

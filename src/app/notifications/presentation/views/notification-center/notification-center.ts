@@ -18,6 +18,7 @@ import {
   localizedNotificationMessage,
 } from '@notifications/presentation/notification-message';
 import { Icon } from '@shared/presentation/components/icon/icon';
+import { SHELL_LIFETIME } from '@shared/presentation/components/private-layout/shell-lifetime';
 import { Pagination } from '@shared/presentation/components/pagination/pagination';
 import { StatePanel } from '@shared/presentation/components/state-panel/state-panel';
 import { StatusTag } from '@shared/presentation/components/status-tag/status-tag';
@@ -132,7 +133,7 @@ export class NotificationCenter {
   });
 
   constructor() {
-    this.store.attachInbox(inject(DestroyRef));
+    this.store.attachInbox(inject(DestroyRef), inject(SHELL_LIFETIME));
     this.store.openInbox();
     this.store.refreshUnreadCount();
     this.filterForm.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => {
