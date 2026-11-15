@@ -36,6 +36,7 @@ const OWNER_NAVIGATION: readonly NavigationItem[] = [
  */
 @Component({
   imports: [RouterOutlet, TranslatePipe, Icon, SideBar],
+  providers: [{ provide: SHELL_LIFETIME, useFactory: () => inject(DestroyRef) }],
   selector: 'app-private-layout',
   styleUrl: './private-layout.css',
   templateUrl: './private-layout.html',
