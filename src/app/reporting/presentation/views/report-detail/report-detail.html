@@ -17,13 +17,21 @@
           <span class="ui-tag">{{ 'reporting.format.' + item.format | translate }}</span>
         </div>
       </div>
-      @if (item.isDownloadable()) {
+      @if (item.isDownloadable() || item.canBeDeleted()) {
         <div class="ui-page-header__actions">
-          <app-report-download
-            [report]="item"
-            [state]="store.downloadState()"
-            (requested)="download()"
-          />
+          @if (item.isDownloadable()) {
+            <app-report-download
+              [report]="item"
+              [state]="store.downloadState()"
+              (requested)="download()"
+            />
+          }
+          @if (item.canBeDeleted()) {
+            <button class="ui-button ui-button--ghost" type="button" (click)="openDeletion()">
+              <app-icon class="ui-button__icon" name="trash" />
+              {{ 'reporting.actions.delete' | translate }}
+            </button>
+          }
         </div>
       }
     </header>
@@ -83,14 +91,24 @@
                 <span lang="en">{{ reason }}</span>
               </p>
             }
-            <p>{{ 'reporting.detail.failedMessage' | translate }}</p>
-            <a
-              class="ui-button ui-button--secondary report-detail__retry"
-              routerLink="/reports/new"
-              [queryParams]="{ type: item.type, format: item.format }"
-            >
-              {{ 'reporting.detail.requestAgain' | translate }}
-            </a>
+            @if (item.filters.service_request_id; as serviceRequestId) {
+              <p>{{ 'reporting.detail.serviceFailedMessage' | translate }}</p>
+              <a
+                class="ui-button ui-button--secondary report-detail__retry"
+                [routerLink]="['/service-requests', serviceRequestId]"
+              >
+                {{ 'reporting.detail.openServiceRequest' | translate }}
+              </a>
+            } @else {
+              <p>{{ 'reporting.detail.failedMessage' | translate }}</p>
+              <a
+                class="ui-button ui-button--secondary report-detail__retry"
+                routerLink="/reports/new"
+                [queryParams]="{ type: item.type, format: item.format }"
+              >
+                {{ 'reporting.detail.requestAgain' | translate }}
+              </a>
+            }
           </div>
         </div>
       } @else {
@@ -116,14 +134,25 @@
             }}
           </dd>
         </div>
-        <div>
-          <dt>{{ 'reporting.fields.site' | translate }}</dt>
-          <dd>{{ siteLabel() ?? ('reporting.form.allSites' | translate) }}</dd>
-        </div>
-        <div>
-          <dt>{{ 'reporting.fields.equipment' | translate }}</dt>
-          <dd>{{ equipmentLabel() ?? ('reporting.form.allEquipment' | translate) }}</dd>
-        </div>
+        @if (item.filters.service_request_id; as serviceRequestId) {
+          <div>
+            <dt>{{ 'reporting.fields.serviceRequest' | translate }}</dt>
+            <dd>
+              <a class="ui-link" [routerLink]="['/service-requests', serviceRequestId]">
+                {{ 'reporting.detail.serviceRequestLabel' | translate: { id: serviceRequestId } }}
+              </a>
+            </dd>
+          </div>
+        } @else {
+          <div>
+            <dt>{{ 'reporting.fields.site' | translate }}</dt>
+            <dd>{{ siteLabel() ?? ('reporting.form.allSites' | translate) }}</dd>
+          </div>
+          <div>
+            <dt>{{ 'reporting.fields.equipment' | translate }}</dt>
+            <dd>{{ equipmentLabel() ?? ('reporting.form.allEquipment' | translate) }}</dd>
+          </div>
+        }
         <div>
           <dt>{{ 'reporting.fields.requestedAt' | translate }}</dt>
           <dd>{{ item.requested_at | localizedDate }}</dd>
@@ -195,3 +224,15 @@
     <app-state-panel kind="loading" [heading]="'reporting.detail.loading' | translate" />
   }
 </div>
+
+@if (confirmingDeletion()) {
+  @if (report(); as item) {
+    <app-delete-report-dialog
+      [reportName]="item.name"
+      [pending]="store.deletionPending()"
+      [errorKey]="deletionErrorKey()"
+      (confirmed)="delete()"
+      (closed)="closeDeletion()"
+    />
+  }
+}

@@ -15,11 +15,11 @@ export class ChangeEquipmentThresholdUseCase {
   private readonly port = inject(EquipmentPort);
 
   /**
-   * @param equipmentId - The identifier of the equipment.
+   * @param equipment - The equipment as it was read; the change is refused when it changed since.
    * @param threshold - The new threshold.
    * @returns An Observable of the updated equipment.
    */
-  execute(equipmentId: number, threshold: TemperatureThreshold): Observable<Equipment> {
-    return this.port.changeThreshold(equipmentId, threshold);
+  execute(equipment: Equipment, threshold: TemperatureThreshold): Observable<Equipment> {
+    return this.port.changeThreshold(equipment.id, equipment.version, threshold);
   }
 }

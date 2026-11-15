@@ -10,7 +10,9 @@ import { TemperatureThreshold } from '@assets/domain/value-objects/temperature-t
  * `last_reading_at` and `last_known_temperature` are written by Monitoring from the equipment's telemetry
  * and are null while the equipment has not reported yet. `connectivity` is the server's evaluation of
  * whether the equipment is reporting, and `site_name` the name of its site at the time of the read. `config_version` is the version
- * of the configuration its edge gateway enforces.
+ * of the configuration its edge gateway enforces. `version` is the concurrency version: it grows on every
+ * change of name, type, reminder interval, threshold or status (never with telemetry) and identifies the
+ * state an update was made from.
  */
 export class Equipment implements BaseEntity {
   private _id: number;
@@ -26,6 +28,7 @@ export class Equipment implements BaseEntity {
   private _last_reading_at: Date | null;
   private _last_known_temperature: number | null;
   private _config_version: number;
+  private _version: number;
 
   /**
    * Creates a new instance of the Equipment class.
@@ -46,6 +49,7 @@ export class Equipment implements BaseEntity {
     last_reading_at: Date | null;
     last_known_temperature: number | null;
     config_version: number;
+    version: number;
   }) {
     this._id = equipment.id;
     this._equipment_code_uid = equipment.equipment_code_uid;
@@ -60,6 +64,7 @@ export class Equipment implements BaseEntity {
     this._last_reading_at = equipment.last_reading_at;
     this._last_known_temperature = equipment.last_known_temperature;
     this._config_version = equipment.config_version;
+    this._version = equipment.version;
   }
 
   get id(): number {
@@ -139,6 +144,12 @@ export class Equipment implements BaseEntity {
   }
   set config_version(config_version: number) {
     this._config_version = config_version;
+  }
+  get version(): number {
+    return this._version;
+  }
+  set version(version: number) {
+    this._version = version;
   }
 
   /**

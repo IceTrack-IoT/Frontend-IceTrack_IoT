@@ -15,11 +15,14 @@ export class UpdateEquipmentUseCase {
   private readonly port = inject(EquipmentPort);
 
   /**
-   * @param equipmentId - The identifier of the equipment.
+   * @param equipment - The equipment as it was read; the change is refused when it changed since.
    * @param changes - The new values.
    * @returns An Observable of the updated equipment.
    */
-  execute(equipmentId: number, changes: EquipmentChanges): Observable<Equipment> {
-    return this.port.updateEquipment(equipmentId, { ...changes, name: changes.name.trim() });
+  execute(equipment: Equipment, changes: EquipmentChanges): Observable<Equipment> {
+    return this.port.updateEquipment(equipment.id, equipment.version, {
+      ...changes,
+      name: changes.name.trim(),
+    });
   }
 }

@@ -42,33 +42,46 @@ export abstract class EquipmentPort {
   abstract getEquipment(equipmentId: number): Observable<Equipment>;
 
   /**
-   * Replaces the name, type and maintenance interval of one of the owner's equipment items.
-   * Fails with `VALIDATION_ERROR` or `NOT_FOUND`.
+   * Replaces the name, type and maintenance interval of one of the owner's equipment items, only when it
+   * is still at the given version. Fails with `VALIDATION_ERROR`, `NOT_FOUND` or
+   * `CONCURRENT_MODIFICATION_CONFLICT` (it changed since that version; nothing is changed).
    * @param equipmentId - The identifier of the equipment.
+   * @param version - The version of the equipment the change was made from.
    * @param changes - The new values.
    * @returns An Observable of the updated equipment.
    */
-  abstract updateEquipment(equipmentId: number, changes: EquipmentChanges): Observable<Equipment>;
+  abstract updateEquipment(
+    equipmentId: number,
+    version: number,
+    changes: EquipmentChanges,
+  ): Observable<Equipment>;
 
   /**
-   * Replaces the temperature threshold of one of the owner's equipment items.
-   * Fails with `VALIDATION_ERROR` (a bound outside 0 to 30 °C, or a minimum not below the maximum) or
-   * `NOT_FOUND`.
+   * Replaces the temperature threshold of one of the owner's equipment items, only when it is still at the
+   * given version. Fails with `VALIDATION_ERROR` (a bound outside 0 to 30 °C, or a minimum not below the
+   * maximum), `NOT_FOUND` or `CONCURRENT_MODIFICATION_CONFLICT`.
    * @param equipmentId - The identifier of the equipment.
+   * @param version - The version of the equipment the change was made from.
    * @param threshold - The new threshold.
    * @returns An Observable of the updated equipment, with its new configuration version.
    */
   abstract changeThreshold(
     equipmentId: number,
+    version: number,
     threshold: TemperatureThreshold,
   ): Observable<Equipment>;
 
   /**
-   * Moves one of the owner's equipment items to a new lifecycle status.
-   * Fails with `NOT_FOUND` or `INVALID_STATUS_TRANSITION`.
+   * Moves one of the owner's equipment items to a new lifecycle status, only when it is still at the given
+   * version. Fails with `NOT_FOUND`, `INVALID_STATUS_TRANSITION` or `CONCURRENT_MODIFICATION_CONFLICT`.
    * @param equipmentId - The identifier of the equipment.
+   * @param version - The version of the equipment the change was made from.
    * @param status - The status to move to.
    * @returns An Observable of the updated equipment.
    */
-  abstract changeStatus(equipmentId: number, status: StatusEquipment): Observable<Equipment>;
+  abstract changeStatus(
+    equipmentId: number,
+    version: number,
+    status: StatusEquipment,
+  ): Observable<Equipment>;
 }

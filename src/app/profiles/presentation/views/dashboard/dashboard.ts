@@ -9,6 +9,7 @@ import { DashboardCardShell } from '@profiles/presentation/components/dashboard-
 import { DashboardCustomizeDialog } from '@profiles/presentation/components/dashboard-customize-dialog/dashboard-customize-dialog';
 import { dashboardSaveErrorKey } from '@profiles/presentation/profiles-feedback';
 import { Icon } from '@shared/presentation/components/icon/icon';
+import { SHELL_LIFETIME } from '@shared/presentation/components/private-layout/shell-lifetime';
 import { SIGNED_IN_ACCOUNT } from '@shared/presentation/components/private-layout/signed-in-account';
 import { StatePanel } from '@shared/presentation/components/state-panel/state-panel';
 import { LocalizedDatePipe } from '@shared/presentation/pipes/localized-date.pipe';
@@ -98,6 +99,7 @@ export class Dashboard {
   });
 
   constructor() {
+    this.store.retain(inject(SHELL_LIFETIME));
     this.load();
     // The dashboard opens on its default site, again after the defaults change.
     effect(() => {

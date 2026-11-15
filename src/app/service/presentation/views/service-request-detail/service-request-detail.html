@@ -69,8 +69,46 @@
                 {{ 'serviceRequests.actions.cancel' | translate }}
               </button>
             </div>
+          } @else if (item.canBeReviewed()) {
+            <div class="ui-page-header__actions">
+              <button
+                class="ui-button ui-button--secondary"
+                type="button"
+                [disabled]="store.serviceReportPending()"
+                (click)="generateServiceReport(equipmentLabel)"
+              >
+                <app-icon class="ui-button__icon" name="file-text" />
+                {{
+                  (store.serviceReportPending()
+                    ? 'serviceRequests.serviceReport.pending'
+                    : 'serviceRequests.serviceReport.generate'
+                  ) | translate
+                }}
+              </button>
+            </div>
           }
         </header>
+
+        <div aria-live="polite">
+          @if (serviceReport(); as report) {
+            @if (report.status === 'succeeded' && report.reportId !== null) {
+              <p class="ui-alert ui-alert--success" role="status">
+                <app-icon class="ui-alert__icon" name="circle-check" />
+                <span>
+                  {{ 'serviceRequests.serviceReport.requested' | translate }}
+                  <a class="ui-link" [routerLink]="['/reports', report.reportId]">
+                    {{ 'serviceRequests.serviceReport.open' | translate }}
+                  </a>
+                </span>
+              </p>
+            } @else if (report.status === 'failed') {
+              <p class="ui-alert ui-alert--critical" role="alert">
+                <app-icon class="ui-alert__icon" name="alert-triangle" />
+                {{ 'serviceRequests.serviceReport.failed' | translate }}
+              </p>
+            }
+          }
+        </div>
 
         <div aria-live="polite">
           @if (announcementKey(); as key) {

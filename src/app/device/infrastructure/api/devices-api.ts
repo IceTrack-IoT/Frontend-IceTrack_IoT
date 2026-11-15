@@ -36,7 +36,7 @@ export class DevicesApi extends BaseApi implements DevicesPort {
   pairDevice(pairing: DevicePairing): Observable<IssuedDeviceCredential> {
     return this.endpoint.registerDevice(this.assembler.toRegisterDeviceRequest(pairing)).pipe(
       mapDeviceErrors(),
-      map((resource) => this.assembler.toIssuedCredentialFromResource(resource)),
+      map((resource) => this.assembler.toPairingCredentialFromResource(resource)),
     );
   }
 

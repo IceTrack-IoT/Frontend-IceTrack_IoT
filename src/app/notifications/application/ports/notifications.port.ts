@@ -32,6 +32,14 @@ export abstract class NotificationsPort {
   abstract markAllAsRead(filters: NotificationFilters): Observable<BulkReadResult>;
 
   /**
+   * Marks the listed notifications as read; those not addressed to the user, already read or dismissed
+   * are skipped. Fails with `VALIDATION_ERROR` for an empty list or more than 100 identifiers.
+   * @param notificationIds - The identifiers of the notifications, from 1 to 100.
+   * @returns An Observable of how many changed and the unread count afterward.
+   */
+  abstract markSeveralAsRead(notificationIds: readonly number[]): Observable<BulkReadResult>;
+
+  /**
    * Counts the notifications that are neither read nor dismissed.
    * @returns An Observable of the count.
    */

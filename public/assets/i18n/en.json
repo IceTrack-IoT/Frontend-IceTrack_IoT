@@ -247,7 +247,23 @@
       "changeAddressOf": "Change the address of {{site}}",
       "openMap": "Open in maps",
       "openMapOf": "Open {{site}} in maps (new tab)",
-      "addressChanged": "The site address was changed. Its equipment stays registered at the site."
+      "addressChanged": "The site address was changed. Its equipment stays registered at the site.",
+      "geocoding": {
+        "pending": "We're still locating this address on the map.",
+        "addressNotFound": "The map service couldn't find this address. Retry, or change the address if it's wrong.",
+        "outOfCoverage": "The map placed this address outside Metropolitan Lima and Callao. Retry, or change the address.",
+        "providerUnavailable": "The map service wasn't available. Retry locating the site.",
+        "unknown": "This site couldn't be located on the map.",
+        "retry": "Retry locating",
+        "retryOf": "Retry locating {{site}} on the map",
+        "retrying": "Locating…",
+        "located": "The site was located on the map.",
+        "stillLocating": "The map service is slow to answer; locating continues in the background. Check again in a minute.",
+        "stillNotLocated": "The address still couldn’t be located.",
+        "alreadyLocated": "This site is already located. The sites were reloaded.",
+        "tooManyRetries": "Too many address lookups. Wait a minute and try again.",
+        "unavailable": "The map service refused the lookup. Try again in about 30 seconds."
+      }
     },
     "siteForm": {
       "createTitle": "Register site",
@@ -381,7 +397,9 @@
       "addressOutOfCoverage": "The address is outside the service area. IceTrack serves Metropolitan Lima and Callao only.",
       "tooManyVerifications": "Too many address verifications. Wait a minute and try again.",
       "verificationUnavailable": "The address verification service is unavailable. Try again in about 30 seconds.",
-      "unexpected": "Something went wrong. Try again in a moment."
+      "unexpected": "Something went wrong. Try again in a moment.",
+      "siteChangedMeanwhile": "This site was changed somewhere else meanwhile. We reloaded it; review it and try again.",
+      "submissionInProgress": "This registration is still being processed. Wait a moment and refresh the list before trying again."
     },
     "connectivity": {
       "REPORTING": "Reporting",
@@ -405,7 +423,7 @@
       "equipment": "Equipment",
       "site": "Site",
       "credential": "API key",
-      "lastSeen": "Last seen"
+      "connectivity": "Connectivity"
     },
     "list": {
       "title": "Monitoring devices",
@@ -444,7 +462,8 @@
       "revoke": "Revoke key",
       "revokeFor": "Revoke the key of device {{uid}}",
       "unpair": "Unpair",
-      "unpairFor": "Unpair device {{uid}}"
+      "unpairFor": "Unpair device {{uid}}",
+      "lastSeen": "Last seen {{time}}"
     },
     "feedback": {
       "paired": "The device was paired.",
@@ -459,7 +478,8 @@
       "deviceNotFound": "The device doesn't exist or isn't linked to your equipment anymore. The list was refreshed.",
       "invalidPairing": "Check the device data and try again.",
       "accessDenied": "You aren't allowed to do this.",
-      "unexpected": "We couldn't complete the action. Check your connection and try again."
+      "unexpected": "We couldn't complete the action. Check your connection and try again.",
+      "pairingInProgress": "This pairing is still being processed. Wait a moment and check the device list before trying again."
     },
     "credential": {
       "rotate": {
@@ -528,7 +548,16 @@
       "confirmStoredToContinue": "Confirm that you stored the key to continue.",
       "pairAnother": "Pair another device",
       "viewEquipment": "View equipment",
-      "goToDevices": "Go to devices"
+      "goToDevices": "Go to devices",
+      "successMessageNoKey": "Device {{uid}} is now paired with {{equipment}}.",
+      "keyNotReturned": "The pairing was confirmed after a retry, so its API key can't be shown again. Rotate the key from the device list to get a new one for the board."
+    },
+    "connectivity": {
+      "REPORTING": "Reporting",
+      "SILENT": "Silent",
+      "NEVER_REPORTED": "Never reported",
+      "KEY_REVOKED": "Key revoked",
+      "UNPAIRED": "Unpaired"
     }
   },
   "monitoring": {
@@ -652,7 +681,8 @@
       "triggerTitle": {
         "TEMPERATURE_EXCURSION": "Reading that triggered the alert",
         "DEVICE_OFFLINE": "Last reading before the device went offline"
-      }
+      },
+      "viewServiceRequests": "View service requests opened for this alert"
     },
     "dismiss": {
       "title": "Dismiss alert",
@@ -838,7 +868,8 @@
       "alreadyReviewed": "This service was already rated. We reloaded the review.",
       "concurrentChange": "Someone else changed this request at the same time. We reloaded it; try again.",
       "unexpected": "We couldn't complete the action. Check your connection and try again.",
-      "equipmentOrAlertNotFound": "The selected equipment or the alert this request was drafted from doesn't exist or doesn't belong to your account."
+      "equipmentOrAlertNotFound": "The selected equipment or the alert this request was drafted from doesn't exist or doesn't belong to your account.",
+      "submissionInProgress": "This submission is still being processed. Wait a moment and reload before trying again."
     },
     "list": {
       "title": "Service requests",
@@ -855,11 +886,17 @@
       "emptyTitle": "No service requests yet",
       "emptyMessage": "Request a repair or a preventive maintenance for any of your equipment.",
       "noMatchesTitle": "No requests match the filters",
-      "noMatchesMessage": "Try another status, type or priority.",
+      "noMatchesMessage": "Try another status, type, priority, site or date range.",
       "assignFor": "Assign a technician to request #{{id}}",
       "viewFor": "View request #{{id}}",
       "allTypes": "All types",
-      "allPriorities": "All priorities"
+      "allPriorities": "All priorities",
+      "alertFilter": "Showing the requests opened for alert #{{id}}.",
+      "viewAlert": "View the alert",
+      "allSites": "All sites",
+      "createdFrom": "Created from",
+      "createdTo": "Created until",
+      "invalidRange": "The start date must be on or before the end date."
     },
     "interventions": {
       "title": "Service history",
@@ -1051,6 +1088,14 @@
       "submit": "Submit review",
       "save": "Save changes",
       "pending": "Saving…"
+    },
+    "serviceReport": {
+      "generate": "Generate service report",
+      "pending": "Requesting…",
+      "requested": "The service report (PDF) was requested and is being generated.",
+      "open": "Open the report to download it",
+      "failed": "We couldn't request the service report. Try again in a moment.",
+      "name": "Service #{{id}} - {{equipment}}"
     }
   },
   "notifications": {
@@ -1110,12 +1155,52 @@
       "noMatchesTitle": "No notifications match the filters",
       "noMatchesMessage": "Try another severity or type.",
       "receivedAt": "Received {{date}}",
-      "viewServiceRequest": "View service request"
+      "viewServiceRequest": "View service request",
+      "selectAllUnread": "Select all unread on this page",
+      "select": "Select this notification",
+      "markSelectedAsRead": "Mark selected as read ({{count}})",
+      "markingSelectedAsRead": "Marking as read…",
+      "markedSelectedAsRead": "Notifications marked as read: {{count}}."
     },
     "errors": {
       "notificationChanged": "This notification is no longer available or already changed. The list was refreshed.",
       "accessDenied": "You aren't allowed to do this.",
       "unexpected": "We couldn't complete the action. Check your connection and try again."
+    },
+    "messages": {
+      "alert": {
+        "temperature_excursion": {
+          "raised": {
+            "MAX": "{{equipment_name}} reached {{temperature}} °C, above its maximum of {{threshold}} °C.",
+            "MIN": "{{equipment_name}} reached {{temperature}} °C, below its minimum of {{threshold}} °C."
+          }
+        },
+        "device_offline": {
+          "raised": "The monitoring device of {{equipment_name}} has not sent readings for {{silent_minutes}} minutes."
+        },
+        "sensor_failure": {
+          "raised": "The temperature sensor of {{equipment_name}} failed."
+        }
+      },
+      "service_request": {
+        "assigned": "{{technician_name}} was assigned to service request #{{service_request_id}} for {{equipment_name}}.",
+        "unassigned": "The technician was unassigned from service request #{{service_request_id}} for {{equipment_name}}.",
+        "rejected": "Service request #{{service_request_id}} for {{equipment_name}} was rejected. Reason: {{reason}}",
+        "canceled": "Service request #{{service_request_id}} for {{equipment_name}} was canceled. Reason: {{reason}}"
+      },
+      "maintenance_window": {
+        "opened": {
+          "APP": "A maintenance window was opened on {{equipment_name}} from the app.",
+          "BUTTON": "A maintenance window was opened on {{equipment_name}} with the device button."
+        },
+        "closed": {
+          "MANUAL_APP": "The maintenance window on {{equipment_name}} was closed from the app.",
+          "MANUAL_BUTTON": "The maintenance window on {{equipment_name}} was closed with the device button.",
+          "INTERVENTION_COMPLETED": "The maintenance window on {{equipment_name}} closed when the intervention was completed.",
+          "EXPIRED": "The maintenance window on {{equipment_name}} expired.",
+          "SAFETY_LIMIT": "The maintenance window on {{equipment_name}} was closed because the temperature reached the safety limit."
+        }
+      }
     }
   },
   "reporting": {
@@ -1124,7 +1209,8 @@
       "MAINTENANCE_COMPLIANCE": "Maintenance compliance",
       "EQUIPMENT_UPTIME": "Equipment uptime",
       "TECHNICIAN_PERFORMANCE": "Technician performance",
-      "TEMPERATURE_EXCURSION": "Temperature excursions"
+      "TEMPERATURE_EXCURSION": "Temperature excursions",
+      "SERVICE_INTERVENTION": "Service intervention"
     },
     "status": {
       "PENDING": "Pending",
@@ -1147,11 +1233,13 @@
       "dateRange": "Period",
       "requestedAt": "Requested",
       "completedAt": "Completed",
-      "name": "Report name"
+      "name": "Report name",
+      "serviceRequest": "Service request"
     },
     "actions": {
       "view": "View",
-      "download": "Download"
+      "download": "Download",
+      "delete": "Delete"
     },
     "validation": {
       "invalidRange": "The start date must be on or before the end date."
@@ -1185,7 +1273,8 @@
       "viewFor": "View {{title}}",
       "refresh": "Refresh",
       "refreshing": "Refreshing…",
-      "refreshFailed": "We couldn't refresh your reports. The list may be out of date."
+      "refreshFailed": "We couldn't refresh your reports. The list may be out of date.",
+      "deleteFor": "Delete {{title}}"
     },
     "form": {
       "title": "Generate report",
@@ -1235,7 +1324,10 @@
       "watchingHint": "The status updates automatically while the report is generated.",
       "refreshFailed": "We couldn't check the report status. The information shown may be out of date.",
       "failureReason": "Reason:",
-      "period": "{{from}} – {{to}}"
+      "period": "{{from}} – {{to}}",
+      "serviceFailedMessage": "Request the service report again from its service request.",
+      "openServiceRequest": "Open the service request",
+      "serviceRequestLabel": "Request #{{id}}"
     },
     "errors": {
       "invalidRequest": "Check the report data: it needs a name, a type and a valid period.",
@@ -1243,7 +1335,18 @@
       "reportNotFound": "This report doesn't exist or doesn't belong to your account.",
       "accessDenied": "You aren't allowed to do this.",
       "downloadUnavailable": "We couldn't get the download link. Try again in a moment.",
-      "unexpected": "We couldn't complete the request. Check your connection and try again."
+      "unexpected": "We couldn't complete the request. Check your connection and try again.",
+      "requestInProgress": "This report request is still being processed. Wait a moment and check the list before trying again.",
+      "alreadyDeleted": "This report no longer exists. The list was reloaded.",
+      "deleteInProgress": "This report is still being generated, so it can't be deleted yet.",
+      "deleteFailed": "We couldn't delete the report. Try again in a moment."
+    },
+    "delete": {
+      "title": "Delete “{{name}}”?",
+      "message": "The report and its file are deleted for good, and any download link shared before stops working.",
+      "confirm": "Delete report",
+      "pending": "Deleting…",
+      "deleted": "The report was deleted."
     }
   },
   "profiles": {
@@ -1318,7 +1421,8 @@
         "save": "Save layout",
         "create": "Create dashboard",
         "invalid": "Some values were rejected. Review them and try again.",
-        "saveFailed": "We couldn't save your dashboard. Try again."
+        "saveFailed": "We couldn't save your dashboard. Try again.",
+        "changedMeanwhile": "Your dashboard was changed somewhere else meanwhile. We loaded the latest version; review your choices and save again."
       }
     },
     "ownerProfile": {
@@ -1341,7 +1445,6 @@
       "emailNote": "Your email belongs to your account and can't be changed here.",
       "rucHint": "11 digits, numbers only.",
       "addressSection": "Address",
-      "addressNote": "Enter your complete address every time you save. Current address: {{address}}",
       "street": "Street",
       "number": "Number",
       "numberHint": "Optional.",
@@ -1351,7 +1454,8 @@
       "validation": {
         "phone": "Enter a valid phone number: digits, spaces, hyphens or parentheses, with an optional leading +.",
         "ruc": "The RUC must have exactly 11 digits."
-      }
+      },
+      "changedMeanwhile": "Your profile was changed somewhere else while you were editing. We loaded the latest version; review your changes and save again."
     }
   }
 }

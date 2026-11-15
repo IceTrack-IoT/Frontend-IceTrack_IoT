@@ -13,11 +13,11 @@ export class ChangeSiteAddressUseCase {
   private readonly port = inject(SitesPort);
 
   /**
-   * @param siteId - The identifier of the site.
+   * @param site - The site as it was read; the move is refused when it changed since.
    * @param validationToken - The token of the verified address.
    * @returns An Observable of the moved site.
    */
-  execute(siteId: number, validationToken: string): Observable<Site> {
-    return this.port.changeSiteAddress(siteId, validationToken);
+  execute(site: Site, validationToken: string): Observable<Site> {
+    return this.port.changeSiteAddress(site.id, site.version, validationToken);
   }
 }

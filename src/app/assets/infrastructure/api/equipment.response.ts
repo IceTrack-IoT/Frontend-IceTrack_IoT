@@ -18,6 +18,8 @@ export interface EquipmentResource {
   last_known_temperature?: number | null;
   config_version: number;
   connectivity: EquipmentConnectivityResource;
+  /** Concurrency version, sent back in `If-Match` on the three `PUT` endpoints. */
+  version: number;
 }
 
 /**

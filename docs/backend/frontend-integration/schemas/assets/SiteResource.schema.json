@@ -44,6 +44,17 @@
       ],
       "description": "Where the site stands in locating its address"
     },
+    "geocoding_failure_reason": {
+      "type": ["string", "null"],
+      "enum": [
+        "ADDRESS_NOT_FOUND",
+        "PROVIDER_UNAVAILABLE",
+        "OUT_OF_COVERAGE",
+        "UNKNOWN",
+        null
+      ],
+      "description": "Why the site has no location; null unless geocoding_status is FAILED or NOT_FOUND"
+    },
     "location": {
       "$ref": "GeoLocationResource.schema.json",
       "description": "Resolved coordinates; omitted unless geocoding_status is RESOLVED"
@@ -51,6 +62,11 @@
     "navigation_url": {
       "type": "string",
       "description": "Google Maps directions link; omitted unless the site is located"
+    },
+    "version": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Concurrency version; grows on every change. Send it back in If-Match to update the site"
     }
   },
   "x-source": "src/main/java/pe/edu/upc/ice/track/platform/assets/interfaces/rest/resources/SiteResource.java"

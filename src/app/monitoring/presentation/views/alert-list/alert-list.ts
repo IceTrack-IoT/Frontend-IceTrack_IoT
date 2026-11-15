@@ -17,6 +17,7 @@ import {
   alertActionErrorKey,
 } from '@monitoring/presentation/monitoring-feedback';
 import { Icon } from '@shared/presentation/components/icon/icon';
+import { SHELL_LIFETIME } from '@shared/presentation/components/private-layout/shell-lifetime';
 import { Pagination } from '@shared/presentation/components/pagination/pagination';
 import { StatePanel } from '@shared/presentation/components/state-panel/state-panel';
 
@@ -125,7 +126,7 @@ export class AlertList {
 
   constructor() {
     this.store.clearAlertAction();
-    this.store.connectLiveUpdates(inject(DestroyRef));
+    this.store.connectLiveUpdates(inject(DestroyRef), inject(SHELL_LIFETIME));
     this.filters.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.loadPage());
     this.load();
     // A successful resolution or dismissal closes its dialog.

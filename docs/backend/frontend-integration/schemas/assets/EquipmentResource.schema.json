@@ -78,6 +78,11 @@
       "type": "integer",
       "format": "int32",
       "description": "Version of the configuration the unit's edge gateway enforces; incremented whenever the threshold, the alert policy or the technician grants of the unit change"
+    },
+    "version": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Concurrency version; grows on every change of name, type, reminder interval, threshold or status, not on telemetry. Send it back in If-Match to update the unit"
     }
   },
   "x-source": "src/main/java/pe/edu/upc/ice/track/platform/assets/interfaces/rest/resources/EquipmentResource.java"

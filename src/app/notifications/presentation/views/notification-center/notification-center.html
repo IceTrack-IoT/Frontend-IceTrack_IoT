@@ -147,6 +147,33 @@
           />
         }
       } @else {
+        @if (store.selectableNotifications().length > 0) {
+          <div class="notification-center__selection">
+            <label class="notification-center__select-all">
+              <input
+                type="checkbox"
+                [checked]="allSelected()"
+                [indeterminate]="someSelected()"
+                (change)="toggleAllSelected($event)"
+              />
+              {{ 'notifications.center.selectAllUnread' | translate }}
+            </label>
+            <button
+              class="ui-button ui-button--secondary ui-button--small"
+              type="button"
+              [disabled]="store.selectedIds().size === 0 || store.markSelectedPending()"
+              (click)="markSelectedAsRead()"
+            >
+              <app-icon class="ui-button__icon" name="check" />
+              {{
+                (store.markSelectedPending()
+                  ? 'notifications.center.markingSelectedAsRead'
+                  : 'notifications.center.markSelectedAsRead'
+                ) | translate: { count: store.selectedIds().size }
+              }}
+            </button>
+          </div>
+        }
         <ul class="notification-center__list" [attr.aria-busy]="store.loading()">
           @for (notification of page.items; track notification.id) {
             @let equipment = equipmentName(notification);
@@ -154,6 +181,16 @@
               class="notification-center__item"
               [class.notification-center__item--unread]="!notification.is_read"
             >
+              @if (notification.canBeMarkedAsRead()) {
+                <input
+                  class="notification-center__select"
+                  type="checkbox"
+                  [checked]="store.selectedIds().has(notification.id)"
+                  [attr.aria-label]="'notifications.center.select' | translate"
+                  [attr.aria-describedby]="'notification-' + notification.id"
+                  (change)="toggleSelected(notification, $event)"
+                />
+              }
               <span class="notification-center__type-icon">
                 <app-icon [name]="typeIcons[notification.type]" />
               </span>
@@ -180,12 +217,15 @@
                   </span>
                 </div>
 
+                @let localized = localizedMessage(notification);
                 <p
                   class="notification-center__message"
-                  lang="en"
+                  [attr.lang]="localized ? null : 'en'"
                   [id]="'notification-' + notification.id"
                 >
-                  {{ notification.message }}
+                  {{
+                    localized ? (localized.key | translate: localized.params) : notification.message
+                  }}
                 </p>
 
                 <p class="notification-center__details">

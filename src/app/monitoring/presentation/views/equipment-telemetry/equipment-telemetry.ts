@@ -17,6 +17,7 @@ import {
   type TelemetryRange,
 } from '@monitoring/presentation/telemetry-range';
 import { Icon } from '@shared/presentation/components/icon/icon';
+import { SHELL_LIFETIME } from '@shared/presentation/components/private-layout/shell-lifetime';
 import { StatePanel } from '@shared/presentation/components/state-panel/state-panel';
 import { LocalizedDatePipe } from '@shared/presentation/pipes/localized-date.pipe';
 import { LocalizedNumberPipe } from '@shared/presentation/pipes/localized-number.pipe';
@@ -138,7 +139,7 @@ export class EquipmentTelemetry {
   });
 
   constructor() {
-    this.store.connectLiveUpdates(inject(DestroyRef));
+    this.store.connectLiveUpdates(inject(DestroyRef), inject(SHELL_LIFETIME));
     inject(ActivatedRoute)
       .paramMap.pipe(takeUntilDestroyed())
       .subscribe((params) => {

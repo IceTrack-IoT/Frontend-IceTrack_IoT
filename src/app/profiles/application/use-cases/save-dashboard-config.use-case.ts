@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { concat, defer, type Observable, of } from 'rxjs';
+import { concat, defer, type Observable, of, tap } from 'rxjs';
 import type { DashboardConfigChange } from '@profiles/application/contracts/dashboard-config-change';
 import { DashboardConfigPort } from '@profiles/application/ports/dashboard-config.port';
 import type { DashboardConfig } from '@profiles/domain/model/dashboard-config.entity';
@@ -7,7 +7,8 @@ import type { DashboardConfig } from '@profiles/domain/model/dashboard-config.en
 /**
  * Saves the layout and defaults the owner chose for an existing dashboard. The backend changes them
  * through separate requests, so only the parts that differ from the current configuration are sent: the
- * layout first, then the defaults.
+ * layout first, then the defaults. Each request names the version it was made from, so a configuration
+ * changed meanwhile (another tab or session) is refused instead of overwritten.
  */
 @Injectable({
   providedIn: 'root',
@@ -30,22 +31,26 @@ export class SaveDashboardConfigUseCase {
     if (!layoutChanged && !defaultsChanged) {
       return of(config);
     }
-    const requests: Observable<DashboardConfig>[] = [];
+    // Each request is made from the version the previous one stored, starting from the loaded one.
+    let version = config.version;
+    const requests: ((fromVersion: number) => Observable<DashboardConfig>)[] = [];
     if (layoutChanged) {
-      requests.push(
-        defer(() => this.dashboardConfigs.updateDashboardLayout(config.user_id, change.cards)),
+      requests.push((fromVersion) =>
+        this.dashboardConfigs.updateDashboardLayout(config.user_id, fromVersion, change.cards),
       );
     }
     if (defaultsChanged) {
-      requests.push(
-        defer(() =>
-          this.dashboardConfigs.updateDashboardDefaults(config.user_id, {
-            defaultSiteId: change.defaultSiteId,
-            defaultTemperatureRange: change.defaultTemperatureRange,
-          }),
-        ),
+      requests.push((fromVersion) =>
+        this.dashboardConfigs.updateDashboardDefaults(config.user_id, fromVersion, {
+          defaultSiteId: change.defaultSiteId,
+          defaultTemperatureRange: change.defaultTemperatureRange,
+        }),
       );
     }
-    return concat(...requests);
+    return concat(
+      ...requests.map((request) =>
+        defer(() => request(version)).pipe(tap((stored) => (version = stored.version))),
+      ),
+    );
   }
 }

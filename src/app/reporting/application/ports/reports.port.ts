@@ -5,11 +5,14 @@ import type {
   ReportPage,
   ReportQuery,
 } from '@reporting/application/contracts/report-page';
-import type { ReportRequest } from '@reporting/application/contracts/report-request';
+import type {
+  ReportRequest,
+  ServiceReportRequest,
+} from '@reporting/application/contracts/report-request';
 
 /**
- * ReportsPort is the outbound port used by Reporting use cases to request reports, follow their generation
- * and obtain the download link of their files. The backend scopes every request to the signed-in owner.
+ * ReportsPort is the outbound port used by Reporting use cases to request reports, follow their generation,
+ * obtain the download link of their files and delete them. The backend scopes every request to the signed-in owner.
  *
  * Definitive backend rejections are reported as ReportingError; any other error is transient. Declared as
  * an abstract class so it can be used as an Angular dependency injection token.
@@ -22,6 +25,24 @@ export abstract class ReportsPort {
    * @returns An Observable of the accepted report.
    */
   abstract requestReport(request: ReportRequest): Observable<Report>;
+
+  /**
+   * Requests the `SERVICE_INTERVENTION` document of a completed service request; it is accepted as
+   * PENDING and generated in the background. Fails with `VALIDATION_ERROR`, `NOT_FOUND` when the request
+   * is not the owner's, or `INVALID_STATUS_TRANSITION` when it is not COMPLETED.
+   * @param request - The service request to document.
+   * @returns An Observable of the accepted report.
+   */
+  abstract requestServiceReport(request: ServiceReportRequest): Observable<Report>;
+
+  /**
+   * Deletes a COMPLETED or FAILED report and its file; a link issued before stops working.
+   * Fails with `NOT_FOUND` (also when already deleted), or `INVALID_STATUS_TRANSITION` while it is
+   * PENDING or GENERATING.
+   * @param reportId - The identifier of the report.
+   * @returns An Observable that completes once the report is deleted.
+   */
+  abstract deleteReport(reportId: number): Observable<void>;
 
   /**
    * Lists one page of the reports the owner requested, most recent first, as summaries without KPIs.

@@ -33,6 +33,8 @@ export class NotificationAssembler {
       source_alert_id: resource.source_alert_id ?? null,
       service_request_id: resource.service_request_id ?? null,
       message: resource.message,
+      message_key: resource.message_key ?? UNTEMPLATED_MESSAGE_KEY,
+      message_params: toMessageParams(resource.message_params),
       type,
       severity,
       is_read: resource.is_read,
@@ -56,6 +58,28 @@ export class NotificationAssembler {
       totalPages: Math.max(1, resource.total_pages),
     };
   }
+}
+
+/** The template key of a notification stored before templates existed, or received without one. */
+const UNTEMPLATED_MESSAGE_KEY = 'notification.untemplated';
+
+/**
+ * Reads the untrusted template values of a notification, keeping only the string and finite number
+ * values the contract allows.
+ */
+function toMessageParams(
+  params: Record<string, unknown> | null | undefined,
+): Readonly<Record<string, string | number>> {
+  if (typeof params !== 'object' || params === null) {
+    return {};
+  }
+  const values: Record<string, string | number> = {};
+  for (const [name, value] of Object.entries(params)) {
+    if (typeof value === 'string' || (typeof value === 'number' && Number.isFinite(value))) {
+      values[name] = value;
+    }
+  }
+  return values;
 }
 
 function toOptionalInstant(value: string | null | undefined): Date | null {

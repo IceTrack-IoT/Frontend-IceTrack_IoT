@@ -106,4 +106,12 @@ export class Report implements BaseEntity {
   isDownloadable(): boolean {
     return this._status === ReportStatus.COMPLETED;
   }
+
+  /**
+   * Whether the report can be deleted: only once its generation finished, since the worker owns it before.
+   * @returns True when COMPLETED or FAILED.
+   */
+  canBeDeleted(): boolean {
+    return this._status === ReportStatus.COMPLETED || this._status === ReportStatus.FAILED;
+  }
 }

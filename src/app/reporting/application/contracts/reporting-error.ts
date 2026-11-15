@@ -3,12 +3,16 @@
  *
  * Every `404` is reported as `NOT_FOUND`, whatever its code (`REPORT_NOT_FOUND`, or a site or equipment
  * filter not reachable by the caller): "does not exist" and "is not yours" must not be distinguished.
+ * `INVALID_STATUS_TRANSITION` means the report (or the service request it documents) is not in a status
+ * that allows the operation; `IDEMPOTENCY_KEY_CONFLICT` means the same request is still being processed.
  */
 export const REPORTING_ERROR_CODES = [
   'VALIDATION_ERROR',
   'UNAUTHORIZED',
   'ACCESS_DENIED',
   'NOT_FOUND',
+  'INVALID_STATUS_TRANSITION',
+  'IDEMPOTENCY_KEY_CONFLICT',
 ] as const;
 
 export type ReportingErrorCode = (typeof REPORTING_ERROR_CODES)[number];

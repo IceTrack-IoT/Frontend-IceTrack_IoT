@@ -35,7 +35,7 @@ Created by `NotificationCreatedEventHandler` (async, after the notification exis
 | Batching | 500 tokens per multicast |
 | Dead tokens | `UNREGISTERED` and `SENDER_ID_MISMATCH` responses delete the token. When the Admin SDK cannot read FCM's error body (observed against the real provider: the code arrives empty), an HTTP `404` still counts as `UNREGISTERED`. Other errors, such as `400 INVALID_ARGUMENT` for a malformed token, are only logged and the token is kept |
 
-`type` values: `MAINTENANCE_REMINDER`, `TEMPERATURE_EXCURSION`, `DEVICE_OFFLINE`, `LOW_BATTERY`, `SENSOR_FAILURE`, `SERVICE_REQUEST_UPDATE`, `MAINTENANCE_WINDOW`, `UNLINKED_MAINTENANCE_WINDOW`. Not every value has a producer today: `MAINTENANCE_REMINDER`, `LOW_BATTERY` and `SENSOR_FAILURE` are never created, and `DEVICE_OFFLINE` is only created once offline detection is scheduled (pending; see [../bounded-contexts/monitoring.md](../bounded-contexts/monitoring.md#device-offline-detection)).
+`type` values: `MAINTENANCE_REMINDER`, `TEMPERATURE_EXCURSION`, `DEVICE_OFFLINE`, `LOW_BATTERY`, `SENSOR_FAILURE`, `SERVICE_REQUEST_UPDATE`, `MAINTENANCE_WINDOW`, `UNLINKED_MAINTENANCE_WINDOW`. Not every value has a producer today: `MAINTENANCE_REMINDER`, `LOW_BATTERY` and `SENSOR_FAILURE` are never created, and `DEVICE_OFFLINE` is created by the scheduled offline detection (see [../bounded-contexts/monitoring.md](../bounded-contexts/monitoring.md#device-offline-detection)).
 
 ## Who is notified (from the event listeners)
 

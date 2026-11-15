@@ -5,7 +5,15 @@
   "device_id": 7,
   "source_alert_id": 301,
   "service_request_id": null,
-  "message": "Equipment 10 is above its maximum temperature",
+  "message": "Cold Room #01 reached 9.4 °C, above its maximum of 8.0 °C",
+  "message_key": "alert.temperature_excursion.raised",
+  "message_params": {
+    "equipment_id": 10,
+    "equipment_name": "Cold Room #01",
+    "temperature": 9.4,
+    "limit": "MAX",
+    "threshold": 8.0
+  },
   "type": "TEMPERATURE_EXCURSION",
   "severity": "CRITICAL",
   "is_read": false,

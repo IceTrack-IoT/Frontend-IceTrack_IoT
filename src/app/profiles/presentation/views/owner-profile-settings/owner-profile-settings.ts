@@ -13,6 +13,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { ProfilesStore } from '@profiles/application/profiles-store';
 import { ownerProfileSaveErrorKey } from '@profiles/presentation/profiles-feedback';
 import { Icon } from '@shared/presentation/components/icon/icon';
+import { SHELL_LIFETIME } from '@shared/presentation/components/private-layout/shell-lifetime';
 import { SIGNED_IN_ACCOUNT } from '@shared/presentation/components/private-layout/signed-in-account';
 import { StatePanel } from '@shared/presentation/components/state-panel/state-panel';
 
@@ -36,8 +37,8 @@ const FORMAT_ERROR_KEYS: Partial<Record<OwnerProfileControl, string>> = {
  * phone, address and RUC). The settings view renders it in its outlet.
  *
  * The owner can edit the name, phone, address and RUC; the email belongs to the account and cannot be
- * changed. The backend returns the address as one text but stores it as separate parts, so the address is
- * entered again in full on every save, with the current one shown for reference.
+ * changed. The form starts from the stored profile, address parts included. A save made from an outdated
+ * profile is refused; the current profile is then loaded again and the owner's edits are kept.
  */
 @Component({
   imports: [ReactiveFormsModule, TranslatePipe, Icon, StatePanel],
@@ -85,6 +86,7 @@ export class OwnerProfileSettings {
   );
 
   constructor() {
+    this.store.retain(inject(SHELL_LIFETIME));
     this.load();
     // A successful save returns to the profile, which now shows the stored data.
     effect(() => {
@@ -111,11 +113,11 @@ export class OwnerProfileSettings {
       fullName: profile.full_name,
       phone: profile.phone,
       ruc: String(profile.ruc),
-      street: '',
-      number: '',
-      city: '',
-      postalCode: '',
-      country: '',
+      street: profile.street,
+      number: profile.number ?? '',
+      city: profile.city,
+      postalCode: profile.postal_code,
+      country: profile.country,
     });
     this.editing.set(true);
     this.focus('#owner-profile-fullName');

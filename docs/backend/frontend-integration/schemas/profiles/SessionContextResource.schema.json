@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SessionContextResource",
+  "description": "Session bootstrap: the signed-in account, its owner profile and dashboard configuration, its site and unit counts, and the server time. Never carries a token.",
+  "type": "object",
+  "properties": {
+    "user": {
+      "type": "object",
+      "description": "The signed-in account; the same shape as CurrentUserResponse",
+      "properties": {
+        "id": { "type": "integer", "format": "int64" },
+        "username": { "type": "string" },
+        "email": { "type": ["string", "null"], "description": "Email on the profile; null without a profile" },
+        "role": { "type": "string", "enum": ["OWNER_ROLE", "TECHNICIAN_ROLE"] },
+        "provider": { "type": "string", "enum": ["LOCAL", "GOOGLE"] }
+      }
+    },
+    "owner_profile": {
+      "description": "The owner profile, in full; null for a technician",
+      "$ref": "OwnerProfileResource.schema.json"
+    },
+    "dashboard_config": {
+      "description": "The dashboard configuration; null while not set up",
+      "$ref": "DashboardConfigResource.schema.json"
+    },
+    "counts": {
+      "type": "object",
+      "properties": {
+        "sites": { "type": "integer", "format": "int64" },
+        "equipment": { "type": "integer", "format": "int64" }
+      },
+      "description": "Sites and units of the owner; both 0 for a technician"
+    },
+    "server_time": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Server time of the read, UTC"
+    }
+  },
+  "required": ["user", "counts", "server_time"],
+  "x-source": "src/main/java/pe/edu/upc/ice/track/platform/profiles/interfaces/rest/resources/SessionContextResource.java"
+}

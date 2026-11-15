@@ -203,6 +203,9 @@
             >
               {{ 'monitoring.alertDetail.viewTelemetry' | translate }}
             </a>
+            <a class="ui-link" routerLink="/service-requests" [queryParams]="{ alertId: item.id }">
+              {{ 'monitoring.alertDetail.viewServiceRequests' | translate }}
+            </a>
           </section>
         </div>
 

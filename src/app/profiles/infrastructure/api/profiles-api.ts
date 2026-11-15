@@ -34,9 +34,13 @@ export class ProfilesApi extends BaseApi implements ProfilesPort {
     );
   }
 
-  updateOwnerProfile(ownerId: number, update: OwnerProfileUpdate): Observable<OwnerProfile> {
+  updateOwnerProfile(
+    ownerId: number,
+    version: number,
+    update: OwnerProfileUpdate,
+  ): Observable<OwnerProfile> {
     return this.ownerProfilesEndpoint
-      .update(ownerId, this.ownerProfileAssembler.toRequestFromUpdate(update))
+      .update(ownerId, version, this.ownerProfileAssembler.toRequestFromUpdate(update))
       .pipe(
         map((resource) => this.ownerProfileAssembler.toEntityFromResource(resource)),
         mapProfilesErrors(),

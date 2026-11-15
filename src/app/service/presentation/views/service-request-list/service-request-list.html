@@ -116,6 +116,20 @@
       }
     </section>
   } @else {
+    @if (alertFilter(); as alertId) {
+      <p class="ui-alert ui-alert--info">
+        <app-icon class="ui-alert__icon" name="info-circle" />
+        <span>
+          {{ 'serviceRequests.list.alertFilter' | translate: { id: alertId } }}
+          <a class="ui-link" routerLink="/service-requests">{{
+            'serviceRequests.list.showAll' | translate
+          }}</a>
+          <a class="ui-link" [routerLink]="['/monitoring/alerts', alertId]">{{
+            'serviceRequests.list.viewAlert' | translate
+          }}</a>
+        </span>
+      </p>
+    }
     <section
       class="ui-panel"
       aria-labelledby="service-requests-table-title"
@@ -182,6 +196,46 @@
                 </option>
               }
             </select>
+          </div>
+          <div class="ui-field">
+            <label class="ui-field__label" for="service-request-site">{{
+              'serviceRequests.fields.site' | translate
+            }}</label>
+            <select class="ui-field__control" id="service-request-site" formControlName="siteId">
+              <option [ngValue]="'ALL'">{{ 'serviceRequests.list.allSites' | translate }}</option>
+              @for (site of store.sites(); track site.id) {
+                <option [ngValue]="site.id">{{ site.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="ui-field">
+            <label class="ui-field__label" for="service-request-from">{{
+              'serviceRequests.list.createdFrom' | translate
+            }}</label>
+            <input
+              class="ui-field__control"
+              id="service-request-from"
+              type="date"
+              formControlName="from"
+            />
+          </div>
+          <div class="ui-field">
+            <label class="ui-field__label" for="service-request-to">{{
+              'serviceRequests.list.createdTo' | translate
+            }}</label>
+            <input
+              class="ui-field__control"
+              id="service-request-to"
+              type="date"
+              formControlName="to"
+              [attr.aria-invalid]="invalidRange() ? true : null"
+              [attr.aria-describedby]="invalidRange() ? 'service-request-range-error' : null"
+            />
+            @if (invalidRange()) {
+              <p class="ui-field__error" id="service-request-range-error">
+                {{ 'serviceRequests.list.invalidRange' | translate }}
+              </p>
+            }
           </div>
         </form>
       </div>

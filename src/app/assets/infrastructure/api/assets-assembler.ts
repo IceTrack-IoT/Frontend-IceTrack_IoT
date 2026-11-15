@@ -6,6 +6,7 @@ import {
   isConnectivityState,
 } from '@assets/domain/value-objects/equipment-connectivity';
 import { isEquipmentType } from '@assets/domain/value-objects/equipment-type';
+import { isGeocodingFailureReason } from '@assets/domain/value-objects/geocoding-failure-reason';
 import { isGeocodingStatus } from '@assets/domain/value-objects/geocoding-status';
 import { isStatusEquipment } from '@assets/domain/value-objects/status-equipment';
 import type { EquipmentPage } from '@assets/application/contracts/equipment-page';
@@ -50,6 +51,10 @@ export class AssetsAssembler {
     if (!isGeocodingStatus(resource.geocoding_status)) {
       throw new Error('The site has an unknown geocoding status.');
     }
+    const failureReason = resource.geocoding_failure_reason ?? null;
+    if (failureReason !== null && !isGeocodingFailureReason(failureReason)) {
+      throw new Error('The site has an unknown geocoding failure reason.');
+    }
     const location = resource.location ?? null;
     return new Site({
       id: resource.id,
@@ -69,6 +74,8 @@ export class AssetsAssembler {
               place_id: location.place_id ?? null,
             },
       navigation_url: resource.navigation_url ?? null,
+      geocoding_failure_reason: failureReason,
+      version: resource.version,
     });
   }
 
@@ -99,6 +106,7 @@ export class AssetsAssembler {
       last_reading_at: toOptionalInstant(resource.last_reading_at),
       last_known_temperature: resource.last_known_temperature ?? null,
       config_version: resource.config_version,
+      version: resource.version,
     });
   }
 

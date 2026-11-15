@@ -45,7 +45,7 @@ Legend: **Required** = enforced by Bean Validation (`@NotNull` / `@NotBlank`). O
 
 - Source: `src/main/java/pe/edu/upc/ice/track/platform/profiles/interfaces/rest/resources/DashboardConfigResource.java`
 - Example: [`responses/DashboardConfigResource.json`](responses/DashboardConfigResource.json) | JSON Schema: [`schemas/profiles/DashboardConfigResource.schema.json`](../../schemas/profiles/DashboardConfigResource.schema.json)
-- Used by: `GET /api/v1/profiles/dashboard-configs/user/{userId}`, `POST /api/v1/profiles/dashboard-configs`, `PUT /api/v1/profiles/dashboard-configs/user/{userId}/layout`, `PATCH /api/v1/profiles/dashboard-configs/user/{userId}/cards/{cardId}/visibility`, `POST /api/v1/profiles/dashboard-configs/user/{userId}/reset-defaults`, `PUT /api/v1/profiles/dashboard-configs/user/{userId}/defaults`
+- Used by: `GET /api/v1/profiles/dashboard-configs/me`, `GET /api/v1/profiles/dashboard-configs/user/{userId}`, `POST /api/v1/profiles/dashboard-configs`, `PUT /api/v1/profiles/dashboard-configs/user/{userId}/layout`, `PATCH /api/v1/profiles/dashboard-configs/user/{userId}/cards/{cardId}/visibility`, `POST /api/v1/profiles/dashboard-configs/user/{userId}/reset-defaults`, `PUT /api/v1/profiles/dashboard-configs/user/{userId}/defaults`
 
 | JSON property | Type | Required | Validation | Notes |
 |---|---|---|---|---|
@@ -54,12 +54,15 @@ Legend: **Required** = enforced by Bean Validation (`@NotNull` / `@NotBlank`). O
 | `default_site_id` | integer | no |  | Identifier of the site the dashboard opens on |
 | `default_temperature_range` | object (`TemperatureRangeResource`) | no |  | Temperature range the dashboard opens on |
 | `cards` | array<object (`DashboardCardResource`)> | no |  | Cards of the dashboard, one per card type, sorted by their order |
+| `version` | integer | no |  | Concurrency version, starting at 0; grows on every change, cards included. Send it back in `If-Match` on the layout, visibility and defaults updates |
 
 ## `OwnerProfileResource` (response)
 
 - Source: `src/main/java/pe/edu/upc/ice/track/platform/profiles/interfaces/rest/resources/OwnerProfileResource.java`
 - Example: [`responses/OwnerProfileResource.json`](responses/OwnerProfileResource.json) | JSON Schema: [`schemas/profiles/OwnerProfileResource.schema.json`](../../schemas/profiles/OwnerProfileResource.schema.json)
-- Used by: `GET /api/v1/profiles/owners`, `GET /api/v1/profiles/owners/{ownerId}`, `GET /api/v1/profiles/owners/user/{userId}`, `PUT /api/v1/profiles/owners/{ownerId}`
+- Used by: `GET /api/v1/profiles/owners`, `GET /api/v1/profiles/owners/me`, `GET /api/v1/profiles/owners/{ownerId}`, `GET /api/v1/profiles/owners/user/{userId}`, `PUT /api/v1/profiles/owners/{ownerId}`, `GET /api/v1/me/context` (`owner_profile`)
+
+A caller who may only see the owner's contact channels (a technician working on one of its requests) receives every address field, `ruc` and `version` as `null`.
 
 | JSON property | Type | Required | Validation | Notes |
 |---|---|---|---|---|
@@ -68,8 +71,28 @@ Legend: **Required** = enforced by Bean Validation (`@NotNull` / `@NotBlank`). O
 | `full_name` | string | no |  | Owner full name |
 | `email` | string | no |  | Owner email address |
 | `phone` | string | no |  | Owner phone number |
-| `address` | string | no |  | Owner complete street address |
+| `address` | string | no |  | Owner complete street address, composed from the parts below |
+| `street` | string | no |  | Street of the address |
+| `number` | string | no |  | Street number or apartment; nullable |
+| `city` | string | no |  | City of the address |
+| `postal_code` | string | no |  | Postal code of the address |
+| `country` | string | no |  | Country of the address |
 | `ruc` | integer | no |  | 11 digit taxpayer registration number (RUC) |
+| `version` | integer | no |  | Concurrency version, starting at 0; grows on every change. Send it back in `If-Match` on `PUT /api/v1/profiles/owners/{ownerId}` |
+
+## `SessionContextResource` (response)
+
+- Source: `src/main/java/pe/edu/upc/ice/track/platform/profiles/interfaces/rest/resources/SessionContextResource.java`
+- Used by: `GET /api/v1/me/context`
+- Serialization: every property is always written; `owner_profile` and `dashboard_config` as `null` when absent. It never carries a token.
+
+| JSON property | Type | Required | Validation | Notes |
+|---|---|---|---|---|
+| `user` | object (`SessionUserResource`) | no |  | The signed-in account: `id`, `username`, `email` (the profile's; `null` without a profile), `role`, `provider`; the shape of `CurrentUserResponse` |
+| `owner_profile` | object (`OwnerProfileResource`) | no |  | The caller's owner profile, in full; `null` for a technician; nullable |
+| `dashboard_config` | object (`DashboardConfigResource`) | no |  | The caller's dashboard configuration; `null` while not set up; nullable |
+| `counts` | object | no |  | `sites` and `equipment` (integers); both `0` for a technician |
+| `server_time` | string (date-time, UTC with Z) | no |  | Server time of the read, for the client to compute its clock skew once |
 
 ## `TechnicianProfileResource` (response)
 

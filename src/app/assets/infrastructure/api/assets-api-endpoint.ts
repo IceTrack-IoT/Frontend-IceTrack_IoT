@@ -1,6 +1,7 @@
 import { type HttpClient, HttpParams } from '@angular/common/http';
 import type { Observable } from 'rxjs';
 import { environment } from '@env/environment';
+import { ifMatchHeaders, sendIdempotent } from '@shared/infrastructure/http/write-preconditions';
 import type {
   ChangeStatusRequest,
   ChangeThresholdRequest,
@@ -40,6 +41,7 @@ export class AssetsApiEndpoint {
   private readonly validateAddressUrl = `${baseUrl}${environment.iceTrackProviderValidateSiteAddressEndpointPath}`;
   private readonly siteByIdUrl = `${baseUrl}${environment.iceTrackProviderSiteByIdEndpointPath}`;
   private readonly siteAddressUrl = `${baseUrl}${environment.iceTrackProviderSiteAddressEndpointPath}`;
+  private readonly siteGeocodingRetryUrl = `${baseUrl}${environment.iceTrackProviderSiteGeocodingRetryEndpointPath}`;
   private readonly equipmentUrl = `${baseUrl}${environment.iceTrackProviderEquipmentEndpointPath}`;
   private readonly equipmentByIdUrl = `${baseUrl}${environment.iceTrackProviderEquipmentByIdEndpointPath}`;
   private readonly thresholdUrl = `${baseUrl}${environment.iceTrackProviderEquipmentThresholdEndpointPath}`;
@@ -52,9 +54,11 @@ export class AssetsApiEndpoint {
     return this.http.post<AddressValidationResource>(this.validateAddressUrl, request);
   }
 
-  /** `POST /assets/sites` */
+  /** `POST /assets/sites`, with an `Idempotency-Key` so a retry never registers the site twice. */
   registerSite(request: RegisterSiteRequest): Observable<SiteResource> {
-    return this.http.post<SiteResource>(this.sitesUrl, request);
+    return sendIdempotent((headers) =>
+      this.http.post<SiteResource>(this.sitesUrl, request, { headers }),
+    );
   }
 
   /** `GET /assets/sites` */
@@ -62,19 +66,44 @@ export class AssetsApiEndpoint {
     return this.http.get<SiteResource[]>(this.sitesUrl);
   }
 
-  /** `PUT /assets/sites/{siteId}` */
-  updateSite(siteId: number, request: UpdateSiteRequest): Observable<SiteResource> {
-    return this.http.put<SiteResource>(withId(this.siteByIdUrl, '{siteId}', siteId), request);
+  /** `PUT /assets/sites/{siteId}` with `If-Match` */
+  updateSite(
+    siteId: number,
+    version: number,
+    request: UpdateSiteRequest,
+  ): Observable<SiteResource> {
+    return this.http.put<SiteResource>(withId(this.siteByIdUrl, '{siteId}', siteId), request, {
+      headers: ifMatchHeaders(version),
+    });
   }
 
-  /** `PUT /assets/sites/{siteId}/address` */
-  updateSiteAddress(siteId: number, request: UpdateSiteAddressRequest): Observable<SiteResource> {
-    return this.http.put<SiteResource>(withId(this.siteAddressUrl, '{siteId}', siteId), request);
+  /** `PUT /assets/sites/{siteId}/address` with `If-Match` */
+  updateSiteAddress(
+    siteId: number,
+    version: number,
+    request: UpdateSiteAddressRequest,
+  ): Observable<SiteResource> {
+    return this.http.put<SiteResource>(withId(this.siteAddressUrl, '{siteId}', siteId), request, {
+      headers: ifMatchHeaders(version),
+    });
   }
 
-  /** `POST /assets/equipments` */
+  /**
+   * `POST /assets/sites/{siteId}/geocoding/retry`, without a body. It answers 200 when the lookup finished
+   * and 202 with the site `PENDING` when it continues in the background; both carry the site.
+   */
+  retrySiteGeocoding(siteId: number): Observable<SiteResource> {
+    return this.http.post<SiteResource>(
+      withId(this.siteGeocodingRetryUrl, '{siteId}', siteId),
+      null,
+    );
+  }
+
+  /** `POST /assets/equipments`, with an `Idempotency-Key` so a retry never registers the unit twice. */
   registerEquipment(request: RegisterEquipmentRequest): Observable<EquipmentResource> {
-    return this.http.post<EquipmentResource>(this.equipmentUrl, request);
+    return sendIdempotent((headers) =>
+      this.http.post<EquipmentResource>(this.equipmentUrl, request, { headers }),
+    );
   }
 
   /**
@@ -105,33 +134,42 @@ export class AssetsApiEndpoint {
     );
   }
 
-  /** `PUT /assets/equipments/{equipmentId}` */
+  /** `PUT /assets/equipments/{equipmentId}` with `If-Match` */
   updateEquipment(
     equipmentId: number,
+    version: number,
     request: UpdateEquipmentRequest,
   ): Observable<EquipmentResource> {
     return this.http.put<EquipmentResource>(
       withId(this.equipmentByIdUrl, '{equipmentId}', equipmentId),
       request,
+      { headers: ifMatchHeaders(version) },
     );
   }
 
-  /** `PUT /assets/equipments/{equipmentId}/threshold` */
+  /** `PUT /assets/equipments/{equipmentId}/threshold` with `If-Match` */
   changeThreshold(
     equipmentId: number,
+    version: number,
     request: ChangeThresholdRequest,
   ): Observable<EquipmentResource> {
     return this.http.put<EquipmentResource>(
       withId(this.thresholdUrl, '{equipmentId}', equipmentId),
       request,
+      { headers: ifMatchHeaders(version) },
     );
   }
 
-  /** `PUT /assets/equipments/{equipmentId}/status` */
-  changeStatus(equipmentId: number, request: ChangeStatusRequest): Observable<EquipmentResource> {
+  /** `PUT /assets/equipments/{equipmentId}/status` with `If-Match` */
+  changeStatus(
+    equipmentId: number,
+    version: number,
+    request: ChangeStatusRequest,
+  ): Observable<EquipmentResource> {
     return this.http.put<EquipmentResource>(
       withId(this.statusUrl, '{equipmentId}', equipmentId),
       request,
+      { headers: ifMatchHeaders(version) },
     );
   }
 }

@@ -337,7 +337,7 @@ The recovery half (diagram 10) runs on every reading.
 
 ```mermaid
 sequenceDiagram
-  participant TR as Periodic trigger (pending)
+  participant TR as Periodic trigger (OfflineDetectionScheduler)
   participant C as EquipmentConnectivityCommandService
   participant A as AssetContextFacade
   participant R as SensorReadingRepository

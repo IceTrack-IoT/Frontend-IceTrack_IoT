@@ -23,8 +23,28 @@ export function reportRequestErrorKey(failure: ReportingFailure | null): string 
       return 'reporting.errors.scopeNotFound';
     case 'ACCESS_DENIED':
       return 'reporting.errors.accessDenied';
+    case 'IDEMPOTENCY_KEY_CONFLICT':
+      return 'reporting.errors.requestInProgress';
     default:
       return 'reporting.errors.unexpected';
+  }
+}
+
+/**
+ * Resolves the translation key shown when deleting a report fails.
+ * @param failure - Why it failed.
+ * @returns The translation key.
+ */
+export function reportDeletionErrorKey(failure: ReportingFailure | null): string {
+  switch (failure) {
+    case 'NOT_FOUND':
+      return 'reporting.errors.alreadyDeleted';
+    case 'INVALID_STATUS_TRANSITION':
+      return 'reporting.errors.deleteInProgress';
+    case 'ACCESS_DENIED':
+      return 'reporting.errors.accessDenied';
+    default:
+      return 'reporting.errors.deleteFailed';
   }
 }
 

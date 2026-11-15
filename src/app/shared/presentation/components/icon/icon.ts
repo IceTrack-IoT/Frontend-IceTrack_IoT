@@ -1,6 +1,6 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
+import { IconSprite } from '@shared/presentation/components/icon/icon-sprite';
 
-const ICON_SPRITE_PATH = '/assets/icons/icons.svg';
 
 /**
  * Symbols available in the icon sprite `public/assets/icons/icons.svg` (Tabler outline icons).
@@ -78,5 +78,6 @@ export class Icon {
   /** The translated accessible name of a meaningful icon. Omit it for decorative icons. */
   readonly label = input<string | null>(null);
 
-  protected readonly href = computed(() => `${ICON_SPRITE_PATH}#${this.name()}`);
+  private readonly sprite = inject(IconSprite);
+  protected readonly href = computed(() => this.sprite.href(this.name()));
 }

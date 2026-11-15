@@ -100,6 +100,52 @@
                   <dd class="telemetry">{{ site.phone.value }}</dd>
                 </div>
               </dl>
+              @if (geocodingHintKey(site); as hintKey) {
+                <div class="site-list__geocoding">
+                  <p
+                    class="ui-alert"
+                    [class.ui-alert--info]="geocodingPending(site)"
+                    [class.ui-alert--warning]="!geocodingPending(site)"
+                  >
+                    <app-icon class="ui-alert__icon" name="info-circle" />
+                    {{ hintKey | translate }}
+                  </p>
+                  <button
+                    class="ui-button ui-button--secondary ui-button--small"
+                    type="button"
+                    [disabled]="retryingGeocoding(site)"
+                    [attr.aria-label]="
+                      'assets.siteList.geocoding.retryOf' | translate: { site: site.name }
+                    "
+                    (click)="retryGeocoding(site)"
+                  >
+                    <app-icon class="ui-button__icon" name="refresh" />
+                    {{
+                      (retryingGeocoding(site)
+                        ? 'assets.siteList.geocoding.retrying'
+                        : 'assets.siteList.geocoding.retry'
+                      ) | translate
+                    }}
+                  </button>
+                </div>
+              }
+              <div class="site-list__geocoding-feedback" aria-live="polite">
+                @if (geocodingFeedback(); as feedback) {
+                  @if (feedback.siteId === site.id) {
+                    <p
+                      class="ui-alert"
+                      [class.ui-alert--success]="feedback.tone === 'success'"
+                      [class.ui-alert--critical]="feedback.tone === 'critical'"
+                    >
+                      <app-icon
+                        class="ui-alert__icon"
+                        [name]="feedback.tone === 'success' ? 'circle-check' : 'alert-triangle'"
+                      />
+                      {{ feedback.key | translate }}
+                    </p>
+                  }
+                }
+              </div>
               <p class="site-list__count">
                 <app-icon name="fridge" />
                 {{ 'assets.siteList.equipmentCount' | translate: { count: site.equipment_count } }}

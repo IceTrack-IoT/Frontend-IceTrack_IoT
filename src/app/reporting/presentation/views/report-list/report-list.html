@@ -135,6 +135,13 @@
         </p>
       }
 
+      @if (deletionAnnounced()) {
+        <p class="ui-alert ui-alert--success" role="status">
+          <app-icon class="ui-alert__icon" name="circle-check" />
+          {{ 'reporting.delete.deleted' | translate }}
+        </p>
+      }
+
       @if (total() === 0 && !filtered()) {
         <app-state-panel
           kind="empty"
@@ -210,6 +217,19 @@
                       >
                         {{ 'reporting.actions.view' | translate }}
                       </a>
+                      @if (report.canBeDeleted()) {
+                        <button
+                          class="ui-button ui-button--ghost ui-button--small"
+                          type="button"
+                          [attr.aria-label]="
+                            'reporting.list.deleteFor' | translate: { title: report.name }
+                          "
+                          (click)="openDeletion(report)"
+                        >
+                          <app-icon class="ui-button__icon" name="trash" />
+                          {{ 'reporting.actions.delete' | translate }}
+                        </button>
+                      }
                     </span>
                   </td>
                 </tr>
@@ -227,3 +247,13 @@
     }
   </section>
 </div>
+
+@if (deleting(); as report) {
+  <app-delete-report-dialog
+    [reportName]="report.name"
+    [pending]="store.deletionPending()"
+    [errorKey]="deletionErrorKey()"
+    (confirmed)="delete()"
+    (closed)="closeDeletion()"
+  />
+}

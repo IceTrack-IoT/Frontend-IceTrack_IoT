@@ -30,24 +30,31 @@ export abstract class DashboardConfigPort {
   ): Observable<DashboardConfig>;
 
   /**
-   * Replaces the position and visibility of every card. The layout must place each card exactly once, at
-   * the positions 1 to N. Fails with ProfilesError code `VALIDATION_ERROR` or `DASHBOARD_CONFIG_NOT_FOUND`.
+   * Replaces the position and visibility of every card, only when the configuration is still at the given
+   * version. The layout must place each card exactly once, at the positions 1 to N. Fails with
+   * ProfilesError code `VALIDATION_ERROR`, `DASHBOARD_CONFIG_NOT_FOUND` or
+   * `CONCURRENT_MODIFICATION_CONFLICT` (the configuration changed since that version; nothing is changed).
    * @param userId - The identifier of the caller's own platform account.
+   * @param version - The version of the configuration the change was made from.
    * @param layout - Every card with its position and visibility.
    */
   abstract updateDashboardLayout(
     userId: number,
+    version: number,
     layout: readonly DashboardCard[],
   ): Observable<DashboardConfig>;
 
   /**
-   * Replaces the site and temperature range the dashboard opens on.
-   * Fails with ProfilesError code `VALIDATION_ERROR` or `DASHBOARD_CONFIG_NOT_FOUND`.
+   * Replaces the site and temperature range the dashboard opens on, only when the configuration is still
+   * at the given version. Fails with ProfilesError code `VALIDATION_ERROR`, `DASHBOARD_CONFIG_NOT_FOUND`
+   * or `CONCURRENT_MODIFICATION_CONFLICT`.
    * @param userId - The identifier of the caller's own platform account.
+   * @param version - The version of the configuration the change was made from.
    * @param defaults - The new defaults.
    */
   abstract updateDashboardDefaults(
     userId: number,
+    version: number,
     defaults: DashboardDefaults,
   ): Observable<DashboardConfig>;
 }

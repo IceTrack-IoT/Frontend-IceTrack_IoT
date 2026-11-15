@@ -21,7 +21,13 @@ export class OwnerProfileAssembler {
       email: resource.email,
       phone: resource.phone,
       address: resource.address,
+      street: resource.street,
+      number: resource.number ?? null,
+      city: resource.city,
+      postal_code: resource.postal_code,
+      country: resource.country,
       ruc: resource.ruc,
+      version: resource.version,
     });
   }
 

@@ -14,11 +14,11 @@ export class UpdateOwnerProfileUseCase {
   private readonly profiles = inject(ProfilesPort);
 
   /**
-   * @param ownerId - The identifier of the owner profile (not the account id).
+   * @param profile - The owner profile as it was read; the update is refused when it changed since.
    * @param update - The new profile data, with the complete address.
    * @returns An Observable of the updated owner profile, as the backend stored it.
    */
-  execute(ownerId: number, update: OwnerProfileUpdate): Observable<OwnerProfile> {
-    return this.profiles.updateOwnerProfile(ownerId, update);
+  execute(profile: OwnerProfile, update: OwnerProfileUpdate): Observable<OwnerProfile> {
+    return this.profiles.updateOwnerProfile(profile.id, profile.version, update);
   }
 }

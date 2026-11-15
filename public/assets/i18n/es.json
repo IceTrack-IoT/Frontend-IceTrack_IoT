@@ -247,7 +247,23 @@
       "changeAddressOf": "Cambiar la dirección de {{site}}",
       "openMap": "Abrir en mapas",
       "openMapOf": "Abrir {{site}} en mapas (nueva pestaña)",
-      "addressChanged": "La dirección de la sede fue cambiada. Sus equipos siguen registrados en la sede."
+      "addressChanged": "La dirección de la sede fue cambiada. Sus equipos siguen registrados en la sede.",
+      "geocoding": {
+        "pending": "Todavía estamos ubicando esta dirección en el mapa.",
+        "addressNotFound": "El servicio de mapas no encontró esta dirección. Reintenta, o cambia la dirección si es incorrecta.",
+        "outOfCoverage": "El mapa ubicó esta dirección fuera de Lima Metropolitana y el Callao. Reintenta, o cambia la dirección.",
+        "providerUnavailable": "El servicio de mapas no estaba disponible. Vuelve a intentar ubicar la sede.",
+        "unknown": "No se pudo ubicar esta sede en el mapa.",
+        "retry": "Reintentar ubicación",
+        "retryOf": "Reintentar ubicar {{site}} en el mapa",
+        "retrying": "Ubicando…",
+        "located": "La sede se ubicó en el mapa.",
+        "stillLocating": "El servicio de mapas tarda en responder; la ubicación continúa en segundo plano. Vuelve a revisar en un minuto.",
+        "stillNotLocated": "Todavía no se pudo ubicar la dirección.",
+        "alreadyLocated": "Esta sede ya está ubicada. Recargamos las sedes.",
+        "tooManyRetries": "Demasiadas búsquedas de direcciones. Espera un minuto e inténtalo de nuevo.",
+        "unavailable": "El servicio de mapas rechazó la búsqueda. Inténtalo de nuevo en unos 30 segundos."
+      }
     },
     "siteForm": {
       "createTitle": "Registrar sede",
@@ -381,7 +397,9 @@
       "addressOutOfCoverage": "La dirección está fuera del área de servicio. IceTrack atiende solo Lima Metropolitana y el Callao.",
       "tooManyVerifications": "Demasiadas verificaciones de dirección. Espera un minuto e inténtalo de nuevo.",
       "verificationUnavailable": "El servicio de verificación de direcciones no está disponible. Inténtalo de nuevo en unos 30 segundos.",
-      "unexpected": "Algo salió mal. Inténtalo de nuevo en un momento."
+      "unexpected": "Algo salió mal. Inténtalo de nuevo en un momento.",
+      "siteChangedMeanwhile": "Esta sede se cambió en otro lugar mientras tanto. La recargamos; revísala e inténtalo de nuevo.",
+      "submissionInProgress": "Este registro todavía se está procesando. Espera un momento y actualiza la lista antes de volver a intentarlo."
     },
     "connectivity": {
       "REPORTING": "Reportando",
@@ -405,7 +423,7 @@
       "equipment": "Equipo",
       "site": "Sede",
       "credential": "Clave API",
-      "lastSeen": "Última actividad"
+      "connectivity": "Conectividad"
     },
     "list": {
       "title": "Dispositivos de monitoreo",
@@ -444,7 +462,8 @@
       "revoke": "Revocar clave",
       "revokeFor": "Revocar la clave del dispositivo {{uid}}",
       "unpair": "Desvincular",
-      "unpairFor": "Desvincular el dispositivo {{uid}}"
+      "unpairFor": "Desvincular el dispositivo {{uid}}",
+      "lastSeen": "Visto por última vez {{time}}"
     },
     "feedback": {
       "paired": "El dispositivo fue vinculado.",
@@ -459,7 +478,8 @@
       "deviceNotFound": "El dispositivo no existe o ya no está asociado a tus equipos. La lista se actualizó.",
       "invalidPairing": "Revisa los datos del dispositivo e inténtalo de nuevo.",
       "accessDenied": "No tienes permiso para hacer esto.",
-      "unexpected": "No pudimos completar la acción. Revisa tu conexión e inténtalo de nuevo."
+      "unexpected": "No pudimos completar la acción. Revisa tu conexión e inténtalo de nuevo.",
+      "pairingInProgress": "Esta vinculación todavía se está procesando. Espera un momento y revisa la lista de dispositivos antes de volver a intentarlo."
     },
     "credential": {
       "rotate": {
@@ -528,7 +548,16 @@
       "confirmStoredToContinue": "Confirma que guardaste la clave para continuar.",
       "pairAnother": "Vincular otro dispositivo",
       "viewEquipment": "Ver equipo",
-      "goToDevices": "Ir a dispositivos"
+      "goToDevices": "Ir a dispositivos",
+      "successMessageNoKey": "El dispositivo {{uid}} ahora está vinculado con {{equipment}}.",
+      "keyNotReturned": "La vinculación se confirmó tras un reintento, así que su clave API ya no se puede mostrar. Rota la clave desde la lista de dispositivos para obtener una nueva para la placa."
+    },
+    "connectivity": {
+      "REPORTING": "Reportando",
+      "SILENT": "Sin reportar",
+      "NEVER_REPORTED": "Nunca reportó",
+      "KEY_REVOKED": "Clave revocada",
+      "UNPAIRED": "Desvinculado"
     }
   },
   "monitoring": {
@@ -652,7 +681,8 @@
       "triggerTitle": {
         "TEMPERATURE_EXCURSION": "Lectura que activó la alerta",
         "DEVICE_OFFLINE": "Última lectura antes de que el dispositivo se desconectara"
-      }
+      },
+      "viewServiceRequests": "Ver las solicitudes de servicio abiertas para esta alerta"
     },
     "dismiss": {
       "title": "Descartar alerta",
@@ -838,7 +868,8 @@
       "alreadyReviewed": "Este servicio ya fue calificado. Recargamos la calificación.",
       "concurrentChange": "Otra persona cambió esta solicitud al mismo tiempo. La recargamos; inténtalo de nuevo.",
       "unexpected": "No pudimos completar la acción. Revisa tu conexión e inténtalo de nuevo.",
-      "equipmentOrAlertNotFound": "El equipo seleccionado o la alerta de la que proviene esta solicitud no existe o no pertenece a tu cuenta."
+      "equipmentOrAlertNotFound": "El equipo seleccionado o la alerta de la que proviene esta solicitud no existe o no pertenece a tu cuenta.",
+      "submissionInProgress": "Este envío todavía se está procesando. Espera un momento y recarga antes de volver a intentarlo."
     },
     "list": {
       "title": "Solicitudes de servicio",
@@ -855,11 +886,17 @@
       "emptyTitle": "Aún no hay solicitudes de servicio",
       "emptyMessage": "Solicita una reparación o un mantenimiento preventivo para cualquiera de tus equipos.",
       "noMatchesTitle": "Ninguna solicitud coincide con los filtros",
-      "noMatchesMessage": "Prueba con otro estado, tipo o prioridad.",
+      "noMatchesMessage": "Prueba con otro estado, tipo, prioridad, sede o rango de fechas.",
       "assignFor": "Asignar un técnico a la solicitud #{{id}}",
       "viewFor": "Ver la solicitud #{{id}}",
       "allTypes": "Todos los tipos",
-      "allPriorities": "Todas las prioridades"
+      "allPriorities": "Todas las prioridades",
+      "alertFilter": "Mostrando las solicitudes abiertas para la alerta #{{id}}.",
+      "viewAlert": "Ver la alerta",
+      "allSites": "Todas las sedes",
+      "createdFrom": "Creadas desde",
+      "createdTo": "Creadas hasta",
+      "invalidRange": "La fecha de inicio debe ser igual o anterior a la fecha de fin."
     },
     "interventions": {
       "title": "Historial de servicio",
@@ -1051,6 +1088,14 @@
       "submit": "Enviar calificación",
       "save": "Guardar cambios",
       "pending": "Guardando…"
+    },
+    "serviceReport": {
+      "generate": "Generar informe del servicio",
+      "pending": "Solicitando…",
+      "requested": "Se solicitó el informe del servicio (PDF) y se está generando.",
+      "open": "Abre el reporte para descargarlo",
+      "failed": "No pudimos solicitar el informe del servicio. Inténtalo de nuevo en un momento.",
+      "name": "Servicio #{{id}} - {{equipment}}"
     }
   },
   "notifications": {
@@ -1110,12 +1155,52 @@
       "noMatchesTitle": "Ninguna notificación coincide con los filtros",
       "noMatchesMessage": "Prueba otra severidad u otro tipo.",
       "receivedAt": "Recibida {{date}}",
-      "viewServiceRequest": "Ver solicitud de servicio"
+      "viewServiceRequest": "Ver solicitud de servicio",
+      "selectAllUnread": "Seleccionar todas las no leídas de esta página",
+      "select": "Seleccionar esta notificación",
+      "markSelectedAsRead": "Marcar seleccionadas como leídas ({{count}})",
+      "markingSelectedAsRead": "Marcando como leídas…",
+      "markedSelectedAsRead": "Notificaciones marcadas como leídas: {{count}}."
     },
     "errors": {
       "notificationChanged": "Esta notificación ya no está disponible o ya cambió. La lista se actualizó.",
       "accessDenied": "No tienes permiso para hacer esto.",
       "unexpected": "No pudimos completar la acción. Revisa tu conexión e inténtalo de nuevo."
+    },
+    "messages": {
+      "alert": {
+        "temperature_excursion": {
+          "raised": {
+            "MAX": "{{equipment_name}} llegó a {{temperature}} °C, por encima de su máximo de {{threshold}} °C.",
+            "MIN": "{{equipment_name}} llegó a {{temperature}} °C, por debajo de su mínimo de {{threshold}} °C."
+          }
+        },
+        "device_offline": {
+          "raised": "El dispositivo de monitoreo de {{equipment_name}} no envía lecturas desde hace {{silent_minutes}} minutos."
+        },
+        "sensor_failure": {
+          "raised": "Falló el sensor de temperatura de {{equipment_name}}."
+        }
+      },
+      "service_request": {
+        "assigned": "Se asignó a {{technician_name}} a la solicitud de servicio #{{service_request_id}} de {{equipment_name}}.",
+        "unassigned": "Se desasignó al técnico de la solicitud de servicio #{{service_request_id}} de {{equipment_name}}.",
+        "rejected": "Se rechazó la solicitud de servicio #{{service_request_id}} de {{equipment_name}}. Motivo: {{reason}}",
+        "canceled": "Se canceló la solicitud de servicio #{{service_request_id}} de {{equipment_name}}. Motivo: {{reason}}"
+      },
+      "maintenance_window": {
+        "opened": {
+          "APP": "Se abrió una ventana de mantenimiento en {{equipment_name}} desde la aplicación.",
+          "BUTTON": "Se abrió una ventana de mantenimiento en {{equipment_name}} con el botón del dispositivo."
+        },
+        "closed": {
+          "MANUAL_APP": "Se cerró la ventana de mantenimiento de {{equipment_name}} desde la aplicación.",
+          "MANUAL_BUTTON": "Se cerró la ventana de mantenimiento de {{equipment_name}} con el botón del dispositivo.",
+          "INTERVENTION_COMPLETED": "La ventana de mantenimiento de {{equipment_name}} se cerró al completarse la intervención.",
+          "EXPIRED": "La ventana de mantenimiento de {{equipment_name}} venció.",
+          "SAFETY_LIMIT": "Se cerró la ventana de mantenimiento de {{equipment_name}} porque la temperatura alcanzó el límite de seguridad."
+        }
+      }
     }
   },
   "reporting": {
@@ -1124,7 +1209,8 @@
       "MAINTENANCE_COMPLIANCE": "Cumplimiento de mantenimiento",
       "EQUIPMENT_UPTIME": "Disponibilidad de equipos",
       "TECHNICIAN_PERFORMANCE": "Desempeño de técnicos",
-      "TEMPERATURE_EXCURSION": "Excursiones de temperatura"
+      "TEMPERATURE_EXCURSION": "Excursiones de temperatura",
+      "SERVICE_INTERVENTION": "Intervención de servicio"
     },
     "status": {
       "PENDING": "Pendiente",
@@ -1147,11 +1233,13 @@
       "dateRange": "Periodo",
       "requestedAt": "Solicitado",
       "completedAt": "Completado",
-      "name": "Nombre del reporte"
+      "name": "Nombre del reporte",
+      "serviceRequest": "Solicitud de servicio"
     },
     "actions": {
       "view": "Ver",
-      "download": "Descargar"
+      "download": "Descargar",
+      "delete": "Eliminar"
     },
     "validation": {
       "invalidRange": "La fecha de inicio debe ser igual o anterior a la fecha de fin."
@@ -1185,7 +1273,8 @@
       "viewFor": "Ver {{title}}",
       "refresh": "Actualizar",
       "refreshing": "Actualizando…",
-      "refreshFailed": "No pudimos actualizar tus reportes. La lista podría estar desactualizada."
+      "refreshFailed": "No pudimos actualizar tus reportes. La lista podría estar desactualizada.",
+      "deleteFor": "Eliminar {{title}}"
     },
     "form": {
       "title": "Generar reporte",
@@ -1235,7 +1324,10 @@
       "watchingHint": "El estado se actualiza automáticamente mientras se genera el reporte.",
       "refreshFailed": "No pudimos consultar el estado del reporte. La información mostrada podría estar desactualizada.",
       "failureReason": "Motivo:",
-      "period": "{{from}} – {{to}}"
+      "period": "{{from}} – {{to}}",
+      "serviceFailedMessage": "Vuelve a solicitar el informe desde su solicitud de servicio.",
+      "openServiceRequest": "Abrir la solicitud de servicio",
+      "serviceRequestLabel": "Solicitud #{{id}}"
     },
     "errors": {
       "invalidRequest": "Revisa los datos del reporte: necesita un nombre, un tipo y un periodo válido.",
@@ -1243,7 +1335,18 @@
       "reportNotFound": "Este reporte no existe o no pertenece a tu cuenta.",
       "accessDenied": "No tienes permiso para hacer esto.",
       "downloadUnavailable": "No pudimos obtener el enlace de descarga. Vuelve a intentarlo en un momento.",
-      "unexpected": "No pudimos completar la solicitud. Revisa tu conexión e inténtalo de nuevo."
+      "unexpected": "No pudimos completar la solicitud. Revisa tu conexión e inténtalo de nuevo.",
+      "requestInProgress": "Esta solicitud de reporte todavía se está procesando. Espera un momento y revisa la lista antes de volver a intentarlo.",
+      "alreadyDeleted": "Este reporte ya no existe. Recargamos la lista.",
+      "deleteInProgress": "Este reporte todavía se está generando, así que aún no se puede eliminar.",
+      "deleteFailed": "No pudimos eliminar el reporte. Inténtalo de nuevo en un momento."
+    },
+    "delete": {
+      "title": "¿Eliminar «{{name}}»?",
+      "message": "El reporte y su archivo se eliminan definitivamente, y cualquier enlace de descarga compartido antes deja de funcionar.",
+      "confirm": "Eliminar reporte",
+      "pending": "Eliminando…",
+      "deleted": "Se eliminó el reporte."
     }
   },
   "profiles": {
@@ -1318,7 +1421,8 @@
         "save": "Guardar panel",
         "create": "Crear panel",
         "invalid": "Algunos valores fueron rechazados. Revísalos e inténtalo de nuevo.",
-        "saveFailed": "No pudimos guardar tu panel. Inténtalo de nuevo."
+        "saveFailed": "No pudimos guardar tu panel. Inténtalo de nuevo.",
+        "changedMeanwhile": "Tu panel se cambió en otro lugar mientras tanto. Cargamos la versión más reciente; revisa tus elecciones y vuelve a guardar."
       }
     },
     "ownerProfile": {
@@ -1341,7 +1445,6 @@
       "emailNote": "Tu correo pertenece a tu cuenta y no se puede cambiar aquí.",
       "rucHint": "11 dígitos, solo números.",
       "addressSection": "Dirección",
-      "addressNote": "Ingresa tu dirección completa cada vez que guardes. Dirección actual: {{address}}",
       "street": "Calle",
       "number": "Número",
       "numberHint": "Opcional.",
@@ -1351,7 +1454,8 @@
       "validation": {
         "phone": "Ingresa un teléfono válido: dígitos, espacios, guiones o paréntesis, con un + inicial opcional.",
         "ruc": "El RUC debe tener exactamente 11 dígitos."
-      }
+      },
+      "changedMeanwhile": "Tu perfil se cambió en otro lugar mientras lo editabas. Cargamos la versión más reciente; revisa tus cambios y vuelve a guardar."
     }
   }
 }

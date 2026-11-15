@@ -18,18 +18,21 @@
       "format": "int64",
       "description": "Technician to report on"
     },
+    "service_request_id": {
+      "type": "integer",
+      "format": "int64",
+      "description": "Completed service request of the caller that a SERVICE_INTERVENTION report documents. Required for that type and refused (400) for every other type"
+    },
     "from": {
       "type": "string",
-      "description": "Format: date-time (ISO 8601 UTC with Z, e.g. 2026-09-29T08:30:00Z) Inclusive start of the period"
+      "format": "date-time",
+      "description": "Inclusive start of the period, ISO 8601 UTC with Z (e.g. 2026-09-29T08:30:00Z). Required except for SERVICE_INTERVENTION, which defaults to the start of the request's work. Checked by the service, not by the schema"
     },
     "to": {
       "type": "string",
-      "description": "Format: date-time (ISO 8601 UTC with Z, e.g. 2026-09-29T08:30:00Z) Inclusive end of the period"
+      "format": "date-time",
+      "description": "Inclusive end of the period, ISO 8601 UTC with Z (e.g. 2026-09-29T08:30:00Z). Required except for SERVICE_INTERVENTION, which defaults to the request's completion. Checked by the service, not by the schema"
     }
   },
-  "required": [
-    "from",
-    "to"
-  ],
   "x-source": "src/main/java/pe/edu/upc/ice/track/platform/reporting/interfaces/rest/resources/ReportFiltersResource.java"
 }

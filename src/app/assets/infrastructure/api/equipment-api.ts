@@ -57,18 +57,26 @@ export class EquipmentApi extends BaseApi implements EquipmentPort {
     );
   }
 
-  updateEquipment(equipmentId: number, changes: EquipmentChanges): Observable<Equipment> {
+  updateEquipment(
+    equipmentId: number,
+    version: number,
+    changes: EquipmentChanges,
+  ): Observable<Equipment> {
     return this.endpoint
-      .updateEquipment(equipmentId, this.assembler.toUpdateEquipmentRequest(changes))
+      .updateEquipment(equipmentId, version, this.assembler.toUpdateEquipmentRequest(changes))
       .pipe(
         mapAssetsErrors(),
         map((resource) => this.assembler.toEquipmentFromResource(resource)),
       );
   }
 
-  changeThreshold(equipmentId: number, threshold: TemperatureThreshold): Observable<Equipment> {
+  changeThreshold(
+    equipmentId: number,
+    version: number,
+    threshold: TemperatureThreshold,
+  ): Observable<Equipment> {
     return this.endpoint
-      .changeThreshold(equipmentId, {
+      .changeThreshold(equipmentId, version, {
         min_celsius: threshold.min_celsius,
         max_celsius: threshold.max_celsius,
       })
@@ -78,8 +86,12 @@ export class EquipmentApi extends BaseApi implements EquipmentPort {
       );
   }
 
-  changeStatus(equipmentId: number, status: StatusEquipment): Observable<Equipment> {
-    return this.endpoint.changeStatus(equipmentId, { new_status: status }).pipe(
+  changeStatus(
+    equipmentId: number,
+    version: number,
+    status: StatusEquipment,
+  ): Observable<Equipment> {
+    return this.endpoint.changeStatus(equipmentId, version, { new_status: status }).pipe(
       mapAssetsErrors(),
       map((resource) => this.assembler.toEquipmentFromResource(resource)),
     );

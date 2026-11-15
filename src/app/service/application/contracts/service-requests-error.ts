@@ -3,7 +3,7 @@
  *
  * Every `404` is reported as `NOT_FOUND`, whatever its specific code: the backend answers "not found" for
  * resources that do not exist and for resources the caller may not reach, and the two must not be
- * distinguished.
+ * distinguished. `IDEMPOTENCY_KEY_CONFLICT` means the same creation or review is still being processed.
  */
 export const SERVICE_REQUESTS_ERROR_CODES = [
   'VALIDATION_ERROR',
@@ -14,6 +14,7 @@ export const SERVICE_REQUESTS_ERROR_CODES = [
   'REVIEW_NOT_ALLOWED',
   'DUPLICATE_RESOURCE_CONFLICT',
   'CONCURRENT_MODIFICATION_CONFLICT',
+  'IDEMPOTENCY_KEY_CONFLICT',
 ] as const;
 
 export type ServiceRequestsErrorCode = (typeof SERVICE_REQUESTS_ERROR_CODES)[number];

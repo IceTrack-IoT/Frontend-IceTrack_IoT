@@ -75,6 +75,15 @@
     "dismissed_at": {
       "type": "string",
       "description": "Format: date-time (ISO 8601 UTC with Z, e.g. 2026-09-29T08:30:00Z) When the user dismissed the notification; null while not dismissed"
+    },
+    "message_key": {
+      "type": "string",
+      "description": "Stable key of the message template, for client-side translation; never null. notification.untemplated marks a notification stored before templates were recorded"
+    },
+    "message_params": {
+      "type": "object",
+      "description": "Values filled into the template named by message_key; never null, possibly empty. Strings, numbers or booleans, never markup",
+      "additionalProperties": { "type": ["string", "number", "boolean"] }
     }
   },
   "x-source": "src/main/java/pe/edu/upc/ice/track/platform/notifications/interfaces/rest/resources/NotificationResource.java"

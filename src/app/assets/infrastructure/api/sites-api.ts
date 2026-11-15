@@ -41,15 +41,26 @@ export class SitesApi extends BaseApi implements SitesPort {
     );
   }
 
-  updateSite(siteId: number, details: SiteDetails): Observable<Site> {
-    return this.endpoint.updateSite(siteId, this.assembler.toUpdateSiteRequest(details)).pipe(
-      mapAssetsErrors(),
-      map((resource) => this.assembler.toSiteFromResource(resource)),
-    );
+  updateSite(siteId: number, version: number, details: SiteDetails): Observable<Site> {
+    return this.endpoint
+      .updateSite(siteId, version, this.assembler.toUpdateSiteRequest(details))
+      .pipe(
+        mapAssetsErrors(),
+        map((resource) => this.assembler.toSiteFromResource(resource)),
+      );
   }
 
-  changeSiteAddress(siteId: number, validationToken: string): Observable<Site> {
-    return this.endpoint.updateSiteAddress(siteId, { validation_token: validationToken }).pipe(
+  changeSiteAddress(siteId: number, version: number, validationToken: string): Observable<Site> {
+    return this.endpoint
+      .updateSiteAddress(siteId, version, { validation_token: validationToken })
+      .pipe(
+        mapAssetsErrors(),
+        map((resource) => this.assembler.toSiteFromResource(resource)),
+      );
+  }
+
+  retrySiteGeocoding(siteId: number): Observable<Site> {
+    return this.endpoint.retrySiteGeocoding(siteId).pipe(
       mapAssetsErrors(),
       map((resource) => this.assembler.toSiteFromResource(resource)),
     );

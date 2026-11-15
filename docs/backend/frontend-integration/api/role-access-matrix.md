@@ -55,6 +55,7 @@ Every endpoint grouped by who may call it, derived from `@PreAuthorize` and the 
 | `GET` | `/api/v1/assets/sites` | List my sites | assets |
 | `PUT` | `/api/v1/assets/sites/{siteId}` | Update a site | assets |
 | `PUT` | `/api/v1/assets/sites/{siteId}/address` | Change the address of a site | assets |
+| `POST` | `/api/v1/assets/sites/{siteId}/geocoding/retry` | Retry locating a site | assets |
 | `POST` | `/api/v1/devices` | Pair a device with an owned equipment unit | device |
 | `GET` | `/api/v1/devices/{deviceId}` | Get a device by ID | device |
 | `GET` | `/api/v1/devices` | List my devices | device |
@@ -72,6 +73,7 @@ Every endpoint grouped by who may call it, derived from `@PreAuthorize` and the 
 | `POST` | `/api/v1/telemetry/stream-ticket` | Issue a telemetry stream ticket | monitoring |
 | `POST` | `/api/v1/reports` | Request a new report | reporting |
 | `GET` | `/api/v1/reports/{reportId}` | Get a report by id | reporting |
+| `DELETE` | `/api/v1/reports/{reportId}` | Delete a report | reporting |
 | `GET` | `/api/v1/reports` | List my reports | reporting |
 | `POST` | `/api/v1/reviews` | Submit a review | service-request |
 | `PUT` | `/api/v1/reviews/{reviewId}` | Update a review | service-request |
@@ -135,6 +137,9 @@ Every endpoint grouped by who may call it, derived from `@PreAuthorize` and the 
 | Method | Path | Summary | Context |
 |---|---|---|---|
 | `PUT` | `/api/v1/profiles/owners/{ownerId}` | Update an owner | profiles |
+| `GET` | `/api/v1/profiles/owners/me` | Get my owner profile | profiles |
+| `GET` | `/api/v1/profiles/dashboard-configs/me` | Get my dashboard configuration | profiles |
+| `GET` | `/api/v1/me/context` | Get my session context | profiles |
 
 ## Account-scoped: TECHNICIAN_ROLE and the technician profile must be the caller's own (1)
 

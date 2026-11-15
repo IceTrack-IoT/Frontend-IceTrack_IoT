@@ -1,6 +1,7 @@
 import type { HttpClient } from '@angular/common/http';
 import type { Observable } from 'rxjs';
 import { environment } from '@env/environment';
+import { ifMatchHeaders } from '@shared/infrastructure/http/write-preconditions';
 import type { OwnerProfileResource } from '@profiles/infrastructure/api/owner-profile.response';
 import type { UpdateOwnerProfileRequest } from '@profiles/infrastructure/api/update-owner-profile.request';
 
@@ -25,15 +26,22 @@ export class OwnerProfileApiEndpoint {
   }
 
   /**
-   * Replaces the caller's own owner profile (`PUT /profiles/owners/{ownerId}`).
+   * Replaces the caller's own owner profile (`PUT /profiles/owners/{ownerId}`), only when it is still at
+   * the given version (`If-Match`).
    * @param ownerId - The identifier of the owner profile.
+   * @param version - The version of the profile the update was made from.
    * @param request - The UpdateOwnerProfileRequest.
    * @returns An Observable of the updated OwnerProfileResource.
    */
-  update(ownerId: number, request: UpdateOwnerProfileRequest): Observable<OwnerProfileResource> {
+  update(
+    ownerId: number,
+    version: number,
+    request: UpdateOwnerProfileRequest,
+  ): Observable<OwnerProfileResource> {
     return this.http.put<OwnerProfileResource>(
       this.updateEndpointUrl.replace('{ownerId}', String(ownerId)),
       request,
+      { headers: ifMatchHeaders(version) },
     );
   }
 }

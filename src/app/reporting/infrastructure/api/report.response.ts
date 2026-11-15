@@ -29,6 +29,8 @@ export interface ReportResource {
   site_id?: number | null;
   equipment_id?: number | null;
   technician_id?: number | null;
+  /** Present only for a `SERVICE_INTERVENTION` report. */
+  service_request_id?: number | null;
   from: string;
   to: string;
   requested_at: string;

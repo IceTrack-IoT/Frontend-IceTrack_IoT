@@ -31,19 +31,21 @@ export class DashboardConfigApi extends BaseApi implements DashboardConfigPort {
 
   updateDashboardLayout(
     userId: number,
+    version: number,
     layout: readonly DashboardCard[],
   ): Observable<DashboardConfig> {
     return this.toEntity(
-      this.endpoint.updateLayout(userId, this.assembler.toLayoutRequest(layout)),
+      this.endpoint.updateLayout(userId, version, this.assembler.toLayoutRequest(layout)),
     );
   }
 
   updateDashboardDefaults(
     userId: number,
+    version: number,
     defaults: DashboardDefaults,
   ): Observable<DashboardConfig> {
     return this.toEntity(
-      this.endpoint.updateDefaults(userId, this.assembler.toDefaultsRequest(defaults)),
+      this.endpoint.updateDefaults(userId, version, this.assembler.toDefaultsRequest(defaults)),
     );
   }
 

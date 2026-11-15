@@ -46,6 +46,20 @@
     "last_seen_at": {
       "type": "string",
       "description": "When the platform received the device's latest reading batch; null before the first one"
+    },
+    "connectivity": {
+      "type": "object",
+      "description": "Connectivity evaluated by the server at read time (read-only)",
+      "required": ["state", "evaluated_at"],
+      "properties": {
+        "state": {
+          "type": "string",
+          "enum": ["REPORTING", "SILENT", "NEVER_REPORTED", "KEY_REVOKED", "UNPAIRED"]
+        },
+        "silent_after_seconds": { "type": ["integer", "null"], "format": "int32" },
+        "silent_since": { "type": ["string", "null"], "format": "date-time" },
+        "evaluated_at": { "type": "string", "format": "date-time" }
+      }
     }
   },
   "x-source": "src/main/java/pe/edu/upc/ice/track/platform/device/interfaces/rest/resources/DeviceResource.java"

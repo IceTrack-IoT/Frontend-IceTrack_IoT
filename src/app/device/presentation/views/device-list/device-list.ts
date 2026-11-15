@@ -9,13 +9,17 @@ import {
   CredentialActionDialog,
   type CredentialActionResult,
 } from '@device/presentation/components/credential-action-dialog/credential-action-dialog';
-import { DEVICE_STATUS_APPEARANCE } from '@device/presentation/device-appearance';
+import {
+  DEVICE_CONNECTIVITY_APPEARANCE,
+  DEVICE_STATUS_APPEARANCE,
+} from '@device/presentation/device-appearance';
 import {
   DEVICE_ACTION_SUCCESS_KEYS,
   deviceActionErrorKey,
 } from '@device/presentation/device-feedback';
 import { Dialog } from '@shared/presentation/components/dialog/dialog';
 import { Icon } from '@shared/presentation/components/icon/icon';
+import { SHELL_LIFETIME } from '@shared/presentation/components/private-layout/shell-lifetime';
 import { StatePanel } from '@shared/presentation/components/state-panel/state-panel';
 import { StatusTag } from '@shared/presentation/components/status-tag/status-tag';
 import { RelativeTimePipe } from '@shared/presentation/pipes/relative-time.pipe';
@@ -52,6 +56,7 @@ interface Confirmation {
 export class DeviceList {
   protected readonly store = inject(DevicesStore);
   protected readonly statusAppearance = DEVICE_STATUS_APPEARANCE;
+  protected readonly connectivityAppearance = DEVICE_CONNECTIVITY_APPEARANCE;
   protected readonly DeviceStatus = DeviceStatus;
 
   protected readonly equipmentFilter = this.equipmentIdParam();
@@ -103,7 +108,7 @@ export class DeviceList {
   });
 
   constructor() {
-    this.store.attach(inject(DestroyRef));
+    this.store.attach(inject(DestroyRef), inject(SHELL_LIFETIME));
     this.store.clearAction();
     this.load();
     // A successful unpairing closes its dialog; the device leaves the list.

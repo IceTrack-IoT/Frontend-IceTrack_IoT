@@ -26,6 +26,7 @@ import {
 } from '@service/presentation/service-request-appearance';
 import { createErrorKey } from '@service/presentation/service-requests-feedback';
 import { Icon } from '@shared/presentation/components/icon/icon';
+import { SHELL_LIFETIME } from '@shared/presentation/components/private-layout/shell-lifetime';
 import { StatePanel } from '@shared/presentation/components/state-panel/state-panel';
 import { StatusTag } from '@shared/presentation/components/status-tag/status-tag';
 import { LocalizedDatePipe } from '@shared/presentation/pipes/localized-date.pipe';
@@ -129,6 +130,7 @@ export class CreateServiceRequest {
   );
 
   constructor() {
+    this.store.retain(inject(SHELL_LIFETIME));
     this.store.clearCreation();
     this.store.loadEquipmentDirectory();
     this.prefillType();

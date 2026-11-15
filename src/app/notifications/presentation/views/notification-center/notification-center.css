@@ -11,6 +11,38 @@
   cursor: pointer;
 }
 
+.notification-center__selection {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1);
+  margin-block-end: var(--space-1);
+}
+
+.notification-center__select-all {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 44px;
+  font-size: 0.9375rem;
+  cursor: pointer;
+}
+
+.notification-center__select-all input,
+.notification-center__select {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--brand-600);
+  cursor: pointer;
+}
+
+.notification-center__select {
+  align-self: center;
+}
+
 .notification-center__list {
   display: grid;
   gap: var(--space-1);

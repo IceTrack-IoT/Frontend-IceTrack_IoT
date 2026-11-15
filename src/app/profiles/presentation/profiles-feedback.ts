@@ -17,6 +17,8 @@ export function ownerProfileSaveErrorKey(failure: ProfilesFailure | null): strin
       return 'profiles.ownerProfile.invalid';
     case 'ACCESS_DENIED':
       return 'profiles.ownerProfile.notAllowed';
+    case 'CONCURRENT_MODIFICATION_CONFLICT':
+      return 'profiles.ownerProfile.changedMeanwhile';
     default:
       return 'profiles.ownerProfile.saveFailed';
   }
@@ -33,6 +35,8 @@ export function dashboardSaveErrorKey(failure: ProfilesFailure | null): string |
       return null;
     case 'VALIDATION_ERROR':
       return 'profiles.dashboard.customize.invalid';
+    case 'CONCURRENT_MODIFICATION_CONFLICT':
+      return 'profiles.dashboard.customize.changedMeanwhile';
     default:
       return 'profiles.dashboard.customize.saveFailed';
   }

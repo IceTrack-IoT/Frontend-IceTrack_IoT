@@ -18,6 +18,7 @@
         "MAINTENANCE_COMPLIANCE",
         "EQUIPMENT_UPTIME",
         "TECHNICIAN_PERFORMANCE",
+        "SERVICE_INTERVENTION",
         "TEMPERATURE_EXCURSION"
       ],
       "description": "Report type's enum name"
@@ -95,6 +96,11 @@
         "$ref": "KpiResource.schema.json"
       },
       "description": "The KPIs of a COMPLETED report as a JSON array; omitted when not COMPLETED and in summaries"
+    },
+    "service_request_id": {
+      "type": ["integer", "null"],
+      "format": "int64",
+      "description": "Service request a SERVICE_INTERVENTION report documents; omitted for other types"
     }
   },
   "x-source": "src/main/java/pe/edu/upc/ice/track/platform/reporting/interfaces/rest/resources/ReportResource.java"
