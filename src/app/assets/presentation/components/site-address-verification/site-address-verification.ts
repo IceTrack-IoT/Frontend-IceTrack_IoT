@@ -5,8 +5,8 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import {
   catchError,
   debounceTime,
-  distinctUntilChanged,
   from,
+  map,
   of,
   switchMap,
   tap,
@@ -26,6 +26,13 @@ import { activeLanguage } from '@shared/presentation/pipes/active-language';
 
 /** How long the field waits after a keystroke before asking for place suggestions. */
 const SUGGESTION_DEBOUNCE_MS = 250;
+
+/**
+ * Where the place lookup of the field stands: `idle` shows no panel, `searching` waits for the provider
+ * (keeping the previous suggestions visible so the panel does not flicker), and `settled` shows what the
+ * provider answered, which may be nothing.
+ */
+type LookupStatus = 'idle' | 'searching' | 'settled';
 
 let nextVerificationId = 0;
 
@@ -65,8 +72,16 @@ export class SiteAddressVerification {
   });
 
   protected readonly suggestions = signal<readonly PlaceSuggestion[]>([]);
+  protected readonly lookupStatus = signal<LookupStatus>('idle');
   protected readonly activeIndex = signal(-1);
+  /** Whether the listbox has options the owner can move through and pick. */
   protected readonly open = computed(() => this.suggestions().length > 0);
+  protected readonly searching = computed(() => this.lookupStatus() === 'searching');
+  /** Whether the panel below the field shows suggestions, a search in progress, or no matches. */
+  protected readonly panelOpen = computed(() => this.lookupStatus() !== 'idle');
+  protected readonly noMatches = computed(
+    () => this.lookupStatus() === 'settled' && this.suggestions().length === 0,
+  );
   protected readonly activeOptionId = computed(() => {
     const index = this.activeIndex();
     return this.open() && index >= 0 ? `${this.suggestionsId}-${index}` : null;
@@ -81,13 +96,12 @@ export class SiteAddressVerification {
   constructor() {
     this.address.valueChanges
       .pipe(
-        tap(() => this.closeSuggestions()),
+        tap((query) => this.startLookup(query)),
         debounceTime(SUGGESTION_DEBOUNCE_MS),
-        distinctUntilChanged(),
         switchMap((query) => this.lookup(query)),
         takeUntilDestroyed(),
       )
-      .subscribe((suggestions) => this.suggestions.set(suggestions));
+      .subscribe((suggestions) => this.settleLookup(suggestions));
   }
 
   protected submit(): void {
@@ -137,7 +151,7 @@ export class SiteAddressVerification {
         }
         return;
       case 'Escape':
-        if (this.open()) {
+        if (this.panelOpen()) {
           this.closeSuggestions();
         }
         return;
@@ -172,14 +186,50 @@ export class SiteAddressVerification {
       : null;
   }
 
-  /** Asks the provider for places; a provider failure is the same as having no suggestions. */
-  private lookup(query: string): Observable<readonly PlaceSuggestion[]> {
-    if (this.disabled() || this.verifying() || query.trim().length < PLACE_QUERY_MIN_LENGTH) {
+  /** Whether a query is worth asking the provider for places. */
+  private canLookup(query: string): boolean {
+    return !this.disabled() && !this.verifying() && query.trim().length >= PLACE_QUERY_MIN_LENGTH;
+  }
+
+  /**
+   * Shows the search as soon as the owner types, before the debounce elapses, so the field never looks
+   * idle while places are on their way. The previous suggestions stay until the new ones arrive.
+   */
+  private startLookup(query: string): void {
+    if (!this.canLookup(query)) {
+      this.closeSuggestions();
+      return;
+    }
+    this.activeIndex.set(-1);
+    this.lookupStatus.set('searching');
+  }
+
+  /**
+   * Shows the places the provider answered, unless the owner closed the panel meanwhile. A provider
+   * failure (`null`) closes the panel instead of claiming there are no matches.
+   */
+  private settleLookup(suggestions: readonly PlaceSuggestion[] | null): void {
+    if (this.lookupStatus() !== 'searching') {
+      return;
+    }
+    if (suggestions === null) {
+      this.closeSuggestions();
+      return;
+    }
+    this.suggestions.set(suggestions);
+    this.activeIndex.set(-1);
+    this.lookupStatus.set('settled');
+  }
+
+  /** Asks the provider for places; emits `null` when the provider fails. */
+  private lookup(query: string): Observable<readonly PlaceSuggestion[] | null> {
+    if (!this.canLookup(query)) {
       return of([]);
     }
 
     return from(this.places.suggest(query, activeLanguage(this.translate))).pipe(
-      catchError(() => of([])),
+      map((suggestions): readonly PlaceSuggestion[] | null => suggestions),
+      catchError(() => of(null)),
     );
   }
 
@@ -194,5 +244,6 @@ export class SiteAddressVerification {
   private closeSuggestions(): void {
     this.suggestions.set([]);
     this.activeIndex.set(-1);
+    this.lookupStatus.set('idle');
   }
 }

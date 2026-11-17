@@ -34,7 +34,7 @@
     <div class="address-verification__row">
       <input
         class="ui-field__control"
-        autocomplete="street-address"
+        autocomplete="off"
         role="combobox"
         aria-autocomplete="list"
         [id]="id"
@@ -65,32 +65,62 @@
       </button>
     </div>
 
-    @if (open()) {
-      <ul
-        class="address-verification__suggestions"
-        role="listbox"
-        [id]="suggestionsId"
-        [attr.aria-label]="'assets.addressVerification.suggestions' | translate"
+    @if (panelOpen()) {
+      <div
+        class="address-verification__panel"
+        [class.address-verification__panel--searching]="searching()"
+        (mousedown)="$event.preventDefault()"
       >
-        @for (suggestion of suggestions(); track suggestion.placeId; let index = $index) {
-          <li
-            class="address-verification__suggestion"
-            role="option"
-            [id]="suggestionsId + '-' + index"
-            [attr.aria-selected]="index === activeIndex()"
-            (mousedown)="$event.preventDefault()"
-            (click)="pickSuggestion(suggestion)"
-          >
-            <span class="address-verification__suggestion-main">{{ suggestion.mainText }}</span>
-            @if (suggestion.secondaryText) {
-              <span class="address-verification__suggestion-secondary">
-                {{ suggestion.secondaryText }}
-              </span>
-            }
-          </li>
+        @if (searching()) {
+          <span class="address-verification__progress" aria-hidden="true"></span>
         }
-      </ul>
+        @if (open()) {
+          <ul
+            class="address-verification__suggestions"
+            role="listbox"
+            [id]="suggestionsId"
+            [attr.aria-label]="'assets.addressVerification.suggestions' | translate"
+            [attr.aria-busy]="searching()"
+          >
+            @for (suggestion of suggestions(); track suggestion.placeId; let index = $index) {
+              <li
+                class="address-verification__suggestion"
+                role="option"
+                [id]="suggestionsId + '-' + index"
+                [attr.aria-selected]="index === activeIndex()"
+                (click)="pickSuggestion(suggestion)"
+              >
+                <span class="address-verification__suggestion-main">{{ suggestion.mainText }}</span>
+                @if (suggestion.secondaryText) {
+                  <span class="address-verification__suggestion-secondary">
+                    {{ suggestion.secondaryText }}
+                  </span>
+                }
+              </li>
+            }
+          </ul>
+        } @else if (searching()) {
+          <p class="address-verification__panel-status">
+            <span class="address-verification__spinner" aria-hidden="true"></span>
+            {{ 'assets.addressVerification.searching' | translate }}
+          </p>
+        } @else if (noMatches()) {
+          <p class="address-verification__panel-status">
+            <app-icon name="map-pin" />
+            {{ 'assets.addressVerification.noMatches' | translate }}
+          </p>
+        }
+      </div>
     }
+    <p class="visually-hidden" aria-live="polite">
+      @if (searching()) {
+        {{ 'assets.addressVerification.searching' | translate }}
+      } @else if (noMatches()) {
+        {{ 'assets.addressVerification.noMatches' | translate }}
+      } @else if (open()) {
+        {{ 'assets.addressVerification.matches' | translate: { count: suggestions().length } }}
+      }
+    </p>
 
     <p class="ui-field__hint" [id]="id + '-hint'">
       {{ 'assets.addressVerification.hint' | translate }}
