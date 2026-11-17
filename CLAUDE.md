@@ -76,3 +76,7 @@ Ask for clarification when ambiguity changes context ownership, authorization, A
 ## Completion report
 
 Report: files created or modified; bounded context and layers affected; behavior implemented; architectural decisions; validation commands actually executed with results; tests added, updated, skipped, or not run; known limitations, assumptions, or pending backend dependencies. Never claim validation or tests passed unless they were run successfully.
+
+## Connection with backend
+
+Full documentation of the backend API is at: `docs/backend/`
